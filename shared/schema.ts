@@ -31,13 +31,12 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 // Customize the show schema to validate the date
 export const insertShowSchema = createInsertSchema(shows).extend({
-  date: z.string().transform((str) => {
-    const date = new Date(str);
-    if (date < new Date()) {
-      throw new Error("Show cannot be scheduled in the past");
+  date: z.string().refine(
+    (str) => new Date(str) > new Date(),
+    {
+      message: "Shows cannot be scheduled in the past. Please select a future date."
     }
-    return date;
-  }),
+  ).transform(str => new Date(str)),
 });
 
 export const insertReservationSchema = createInsertSchema(reservations).pick({
