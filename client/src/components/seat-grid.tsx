@@ -49,25 +49,40 @@ export function SeatGrid() {
     queryKey: [`/api/shows/${showId}`],
   });
 
-  const { data: reservations, isLoading: reservationsLoading } = useQuery<Reservation[]>({
+  const { data: reservations = [], isLoading: reservationsLoading } = useQuery<Reservation[]>({
     queryKey: [`/api/reservations/show/${showId}`],
+    enabled: !!showId,
   });
 
   const reserveMutation = useMutation({
     mutationFn: async () => {
+      const payload = {
+        showId: parseInt(showId),
+        seatNumbers: selectedSeats,
+      };
+
+      const parsed = insertReservationSchema.safeParse(payload);
+      if (!parsed.success) {
+        throw new Error(parsed.error.message);
+      }
+
       const res = await fetch("/api/reservations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          showId: parseInt(showId),
-          seatNumbers: selectedSeats,
-        }),
+        body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error(await res.text());
+
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(error);
+      }
+
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/reservations"] });
+      // Invalidate both show's reservations and user's reservations
+      queryClient.invalidateQueries({ queryKey: [`/api/reservations/show/${showId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/reservations/user"] });
       toast({
         title: "Success",
         description: "Seats reserved successfully",
@@ -96,7 +111,7 @@ export function SeatGrid() {
   }
 
   const reservedSeats = new Set(
-    reservations?.flatMap((r) => r.seatNumbers) ?? []
+    reservations.flatMap((r) => r.seatNumbers)
   );
 
   const handleSeatSelect = (seatId: string) => {
@@ -112,7 +127,7 @@ export function SeatGrid() {
         });
         return current;
       }
-      return [...current, seatId];
+      return [...current, seatId].sort();
     });
   };
 
@@ -121,7 +136,10 @@ export function SeatGrid() {
       <div>
         <h2 className="text-2xl font-bold">{show.title}</h2>
         <p className="text-muted-foreground">
-          {format(new Date(show.date), "PPP")} - ${show.price}
+          {format(new Date(show.date), "PPP")} at {format(new Date(show.date), "p")}
+        </p>
+        <p className="text-muted-foreground">
+          Ticket price: ${show.price}
         </p>
       </div>
 
@@ -179,9 +197,9 @@ export function SeatGrid() {
               disabled={selectedSeats.length === 0 || reserveMutation.isPending}
               className="min-w-[120px]"
             >
-              {reserveMutation.isPending ? (
+              {reserveMutation.isPending && (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : null}
+              )}
               Reserve ({selectedSeats.length})
             </Button>
           </div>
