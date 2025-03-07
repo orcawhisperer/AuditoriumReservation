@@ -29,7 +29,10 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
 });
 
-export const insertShowSchema = createInsertSchema(shows);
+// Customize the show schema to handle the date string from the form
+export const insertShowSchema = createInsertSchema(shows).extend({
+  date: z.string().transform((str) => new Date(str)),
+});
 
 export const insertReservationSchema = createInsertSchema(reservations).pick({
   showId: true,

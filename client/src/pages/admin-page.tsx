@@ -23,11 +23,13 @@ import { useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
-import { ShowCalendar } from "@/components/show-calendar";
+import { Loader2, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   // Redirect if not admin
   if (user && !user.isAdmin) {
@@ -62,13 +64,13 @@ export default function AdminPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Show Calendar</CardTitle>
+              <CardTitle>Manage Shows</CardTitle>
               <CardDescription>
                 View and manage scheduled shows
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ShowCalendar />
+              <ShowList />
             </CardContent>
           </Card>
         </div>
@@ -78,45 +80,47 @@ export default function AdminPage() {
 }
 
 function ShowForm() {
+  const { toast } = useToast();
   const form = useForm({
     resolver: zodResolver(insertShowSchema),
     defaultValues: {
       title: "",
-      date: new Date().toISOString(),
+      date: new Date().toISOString().slice(0, 16), // Format: YYYY-MM-DDTHH:mm
       price: 0,
     },
   });
 
   const createShowMutation = useMutation({
-    mutationFn: async (data: Show) => {
+    mutationFn: async (data: any) => {
       const res = await fetch("/api/shows", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          date: new Date(data.date), // Ensure date is properly converted
-        }),
+        body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create show");
+      if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/shows"] });
       form.reset();
+      toast({
+        title: "Success",
+        description: "Show created successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to create show",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit((data) => {
-          // Convert the string date to a proper Date object before submission
-          const formattedData = {
-            ...data,
-            date: new Date(data.date).toISOString(),
-          };
-          createShowMutation.mutate(formattedData as Show);
-        })}
+        onSubmit={form.handleSubmit((data) => createShowMutation.mutate(data))}
         className="space-y-4"
       >
         <FormField
@@ -137,13 +141,9 @@ function ShowForm() {
           name="date"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Date</FormLabel>
+              <FormLabel>Date and Time</FormLabel>
               <FormControl>
-                <Input
-                  type="datetime-local"
-                  value={format(new Date(field.value), "yyyy-MM-dd'T'HH:mm")}
-                  onChange={(e) => field.onChange(new Date(e.target.value).toISOString())}
-                />
+                <Input type="datetime-local" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -154,12 +154,12 @@ function ShowForm() {
           name="price"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Price</FormLabel>
+              <FormLabel>Price ($)</FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   {...field}
-                  onChange={(e) => field.onChange(parseInt(e.target.value))}
+                  onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                 />
               </FormControl>
               <FormMessage />
@@ -171,9 +171,85 @@ function ShowForm() {
           className="w-full"
           disabled={createShowMutation.isPending}
         >
+          {createShowMutation.isPending && (
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          )}
           Create Show
         </Button>
       </form>
     </Form>
+  );
+}
+
+function ShowList() {
+  const { toast } = useToast();
+  const { data: shows = [], isLoading } = useQuery<Show[]>({
+    queryKey: ["/api/shows"],
+  });
+
+  const deleteShowMutation = useMutation({
+    mutationFn: async (showId: number) => {
+      const res = await fetch(`/api/shows/${showId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete show");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/shows"] });
+      toast({
+        title: "Success",
+        description: "Show deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete show",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-32">
+        <Loader2 className="h-8 w-8 animate-spin text-border" />
+      </div>
+    );
+  }
+
+  if (shows.length === 0) {
+    return <p className="text-muted-foreground">No shows scheduled</p>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {shows.map((show) => (
+        <div
+          key={show.id}
+          className="flex items-center justify-between p-3 border rounded-lg"
+        >
+          <div>
+            <p className="font-medium">{show.title}</p>
+            <p className="text-sm text-muted-foreground">
+              {format(new Date(show.date), "PPP p")} - ${show.price}
+            </p>
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => deleteShowMutation.mutate(show.id)}
+            disabled={deleteShowMutation.isPending}
+          >
+            {deleteShowMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <Trash2 className="h-4 w-4 mr-2" />
+            )}
+            Delete
+          </Button>
+        </div>
+      ))}
+    </div>
   );
 }
