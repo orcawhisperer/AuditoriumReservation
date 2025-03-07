@@ -9,6 +9,8 @@ export default function ShowPage() {
   const [, setLocation] = useLocation();
   const { showId } = useParams<{ showId: string }>();
 
+  console.log("TEST",showId)
+
   const { data: show, isLoading } = useQuery<Show>({
     queryKey: [`/api/shows/${showId}`],
   });
