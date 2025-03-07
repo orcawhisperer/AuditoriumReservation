@@ -13,6 +13,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(shows);
   });
 
+  // Add endpoint for fetching a single show
+  app.get("/api/shows/:id", async (req, res) => {
+    const show = await storage.getShow(parseInt(req.params.id));
+    if (!show) {
+      return res.status(404).send("Show not found");
+    }
+    res.json(show);
+  });
+
   app.post("/api/shows", async (req, res) => {
     if (!req.user?.isAdmin) {
       return res.status(403).send("Admin access required");
@@ -81,10 +90,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/reservations/:id", async (req, res) => {
     if (!req.user) return res.sendStatus(401);
-    
+
     const reservations = await storage.getReservationsByUser(req.user.id);
     const reservation = reservations.find(r => r.id === parseInt(req.params.id));
-    
+
     if (!reservation) {
       return res.status(404).send("Reservation not found");
     }
