@@ -38,7 +38,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
-        <div className="container flex items-center justify-between h-16">
+        <div className="container mx-auto flex items-center justify-between h-16">
           <h1 className="text-2xl font-bold">Auditorium</h1>
           <div className="flex items-center gap-4">
             {user?.isAdmin && (
@@ -57,7 +57,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="container py-8 space-y-8">
+      <main className="container mx-auto py-8 space-y-8">
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>

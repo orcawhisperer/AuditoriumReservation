@@ -22,14 +22,14 @@ type SeatProps = {
 
 function Seat({ row, seat, isReserved, isSelected, onSelect }: SeatProps) {
   const seatId = `${String.fromCharCode(65 + row)}${seat + 1}`;
-  
+
   return (
     <button
       className={cn(
-        "w-8 h-8 rounded border text-xs font-medium transition-colors",
-        isReserved && "bg-muted text-muted-foreground cursor-not-allowed",
-        isSelected && "bg-primary text-primary-foreground",
-        !isReserved && !isSelected && "hover:bg-accent hover:text-accent-foreground"
+        "w-8 h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm",
+        isReserved && "bg-muted border-muted-foreground/20 text-muted-foreground cursor-not-allowed",
+        isSelected && "bg-primary border-primary text-primary-foreground",
+        !isReserved && !isSelected && "hover:bg-accent hover:border-accent hover:text-accent-foreground active:scale-95"
       )}
       disabled={isReserved}
       onClick={() => onSelect(seatId)}
@@ -125,11 +125,14 @@ export function SeatGrid() {
         </p>
       </div>
 
-      <div className="space-y-4">
-        <div className="w-full bg-muted/30 p-8 rounded-lg overflow-x-auto">
-          <div className="space-y-2 min-w-fit">
+      <div className="space-y-6">
+        <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
+          <div className="space-y-3 min-w-fit">
             {Array.from({ length: ROWS }).map((_, row) => (
-              <div key={row} className="flex gap-2 justify-center">
+              <div key={row} className="flex gap-3 justify-center">
+                <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
+                  {String.fromCharCode(65 + row)}
+                </span>
                 {Array.from({ length: SEATS_PER_ROW }).map((_, seat) => {
                   const seatId = `${String.fromCharCode(65 + row)}${seat + 1}`;
                   return (
@@ -143,23 +146,26 @@ export function SeatGrid() {
                     />
                   );
                 })}
+                <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
+                  {String.fromCharCode(65 + row)}
+                </span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex gap-4 items-center text-sm">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex gap-6 items-center text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded border" />
+              <div className="w-4 h-4 rounded border-2" />
               <span>Available</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-primary" />
+              <div className="w-4 h-4 rounded bg-primary border-2 border-primary" />
               <span>Selected</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-muted" />
+              <div className="w-4 h-4 rounded bg-muted border-2 border-muted-foreground/20" />
               <span>Reserved</span>
             </div>
           </div>
@@ -171,6 +177,7 @@ export function SeatGrid() {
             <Button
               onClick={() => reserveMutation.mutate()}
               disabled={selectedSeats.length === 0 || reserveMutation.isPending}
+              className="min-w-[120px]"
             >
               {reserveMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />

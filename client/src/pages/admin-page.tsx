@@ -40,7 +40,7 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#4B5320]/10 to-[#4B5320]/5">
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container flex items-center justify-between h-16">
+        <div className="container mx-auto flex items-center justify-between h-16">
           <div className="flex items-center gap-2">
             <Shield className="h-6 w-6 text-primary" />
             <h1 className="text-2xl font-bold">Admin Control</h1>
@@ -51,7 +51,7 @@ export default function AdminPage() {
         </div>
       </header>
 
-      <main className="container py-8 space-y-8">
+      <main className="container mx-auto py-8 space-y-8">
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="border-2">
             <CardHeader>
