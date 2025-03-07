@@ -3,6 +3,9 @@ import session from "express-session";
 import createMemoryStore from "memorystore";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import { users, shows, reservations } from "@shared/schema";
 
 const MemoryStore = createMemoryStore(session);
 const scryptAsync = promisify(scrypt);
@@ -34,98 +37,89 @@ export interface IStorage {
   sessionStore: session.SessionStore;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private shows: Map<number, Show>;
-  private reservations: Map<number, Reservation>;
+export class SQLiteStorage implements IStorage {
   sessionStore: session.SessionStore;
-  private currentId: { users: number; shows: number; reservations: number };
 
   constructor() {
-    this.users = new Map();
-    this.shows = new Map();
-    this.reservations = new Map();
-    this.currentId = { users: 1, shows: 1, reservations: 1 };
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
 
-    // Create default admin user with hashed password
+    // Create default admin user
     this.initializeAdmin();
   }
 
   private async initializeAdmin() {
-    const hashedPassword = await hashPassword("admin");
-    this.createUser({
-      username: "admin",
-      password: hashedPassword,
-      isAdmin: true,
-    });
+    const existingAdmin = await this.getUserByUsername("admin");
+    if (!existingAdmin) {
+      const hashedPassword = await hashPassword("admin");
+      await this.createUser({
+        username: "admin",
+        password: hashedPassword,
+        isAdmin: true,
+      });
+    }
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const result = await db.select().from(users).where(eq(users.id, id));
+    return result[0];
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const result = await db.select().from(users).where(eq(users.username, username));
+    return result[0];
   }
 
   async createUser(insertUser: InsertUser & { isAdmin?: boolean }): Promise<User> {
-    const id = this.currentId.users++;
-    const user: User = { ...insertUser, id, isAdmin: insertUser.isAdmin ?? false };
-    this.users.set(id, user);
-    return user;
+    const result = await db.insert(users).values({
+      ...insertUser,
+      isAdmin: insertUser.isAdmin ?? false,
+    }).returning();
+    return result[0];
   }
 
   async createShow(insertShow: InsertShow): Promise<Show> {
-    const id = this.currentId.shows++;
-    const show: Show = { ...insertShow, id };
-    this.shows.set(id, show);
-    return show;
+    const result = await db.insert(shows).values(insertShow).returning();
+    return result[0];
   }
 
   async getShow(id: number): Promise<Show | undefined> {
-    return this.shows.get(id);
+    const result = await db.select().from(shows).where(eq(shows.id, id));
+    return result[0];
   }
 
   async getShows(): Promise<Show[]> {
-    return Array.from(this.shows.values());
+    return await db.select().from(shows);
   }
 
   async deleteShow(id: number): Promise<void> {
-    this.shows.delete(id);
+    await db.delete(shows).where(eq(shows.id, id));
   }
 
   async createReservation(userId: number, insertReservation: InsertReservation): Promise<Reservation> {
-    const id = this.currentId.reservations++;
-    const reservation: Reservation = {
+    const result = await db.insert(reservations).values({
       ...insertReservation,
-      id,
       userId,
-      createdAt: new Date(),
-    };
-    this.reservations.set(id, reservation);
-    return reservation;
+    }).returning();
+    return result[0];
   }
 
   async getReservationsByShow(showId: number): Promise<Reservation[]> {
-    return Array.from(this.reservations.values()).filter(
-      (reservation) => reservation.showId === showId,
-    );
+    return await db.select()
+      .from(reservations)
+      .where(eq(reservations.showId, showId));
   }
 
   async getReservationsByUser(userId: number): Promise<Reservation[]> {
-    return Array.from(this.reservations.values()).filter(
-      (reservation) => reservation.userId === userId,
-    );
+    return await db.select()
+      .from(reservations)
+      .where(eq(reservations.userId, userId));
   }
 
   async deleteReservation(id: number): Promise<void> {
-    this.reservations.delete(id);
+    await db.delete(reservations).where(eq(reservations.id, id));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new SQLiteStorage();
