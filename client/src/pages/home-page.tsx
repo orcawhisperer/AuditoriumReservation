@@ -12,18 +12,17 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
-import { SeatGrid } from "@/components/seat-grid";
 import { queryClient } from "@/lib/queryClient";
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
   const [, setLocation] = useLocation();
 
-  const { data: shows, isLoading: showsLoading } = useQuery<Show[]>({
+  const { data: shows = [], isLoading: showsLoading } = useQuery<Show[]>({
     queryKey: ["/api/shows"],
   });
 
-  const { data: reservations } = useQuery<Reservation[]>({
+  const { data: reservations = [] } = useQuery<Reservation[]>({
     queryKey: ["/api/reservations/user"],
   });
 
@@ -67,11 +66,11 @@ export default function HomePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {shows?.length === 0 ? (
+              {shows.length === 0 ? (
                 <p className="text-muted-foreground">No shows available</p>
               ) : (
                 <div className="space-y-4">
-                  {shows?.map((show) => (
+                  {shows.map((show) => (
                     <ShowCard key={show.id} show={show} />
                   ))}
                 </div>
@@ -87,15 +86,15 @@ export default function HomePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {reservations?.length === 0 ? (
+              {reservations.length === 0 ? (
                 <p className="text-muted-foreground">No reservations yet</p>
               ) : (
                 <div className="space-y-4">
-                  {reservations?.map((reservation) => (
+                  {reservations.map((reservation) => (
                     <ReservationCard
                       key={reservation.id}
                       reservation={reservation}
-                      show={shows?.find((s) => s.id === reservation.showId)}
+                      show={shows.find((s) => s.id === reservation.showId)}
                     />
                   ))}
                 </div>
@@ -136,9 +135,10 @@ function ShowCard({ show }: { show: Show }) {
 function ReservationCard({ reservation, show }: { reservation: Reservation; show?: Show }) {
   const cancelMutation = useMutation({
     mutationFn: async () => {
-      await fetch(`/api/reservations/${reservation.id}`, {
+      const res = await fetch(`/api/reservations/${reservation.id}`, {
         method: "DELETE",
       });
+      if (!res.ok) throw new Error("Failed to cancel reservation");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/reservations/user"] });
