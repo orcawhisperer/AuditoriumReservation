@@ -23,7 +23,7 @@ import { useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Trash2, Shield, CalendarPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminPage() {
@@ -38,10 +38,13 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
+    <div className="min-h-screen bg-gradient-to-br from-[#4B5320]/10 to-[#4B5320]/5">
+      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container flex items-center justify-between h-16">
-          <h1 className="text-2xl font-bold">Admin Panel</h1>
+          <div className="flex items-center gap-2">
+            <Shield className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl font-bold">Admin Control</h1>
+          </div>
           <Button variant="outline" onClick={() => setLocation("/")}>
             Back to Home
           </Button>
@@ -49,10 +52,13 @@ export default function AdminPage() {
       </header>
 
       <main className="container py-8 space-y-8">
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card className="border-2">
             <CardHeader>
-              <CardTitle>Add New Show</CardTitle>
+              <div className="flex items-center gap-2">
+                <CalendarPlus className="h-5 w-5 text-primary" />
+                <CardTitle>Add New Show</CardTitle>
+              </div>
               <CardDescription>
                 Schedule a new show in the auditorium
               </CardDescription>
@@ -62,7 +68,7 @@ export default function AdminPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-2">
             <CardHeader>
               <CardTitle>Manage Shows</CardTitle>
               <CardDescription>
@@ -130,7 +136,7 @@ function ShowForm() {
             <FormItem>
               <FormLabel>Title</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input placeholder="Enter show title" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -158,6 +164,7 @@ function ShowForm() {
               <FormControl>
                 <Input
                   type="number"
+                  placeholder="Enter ticket price"
                   {...field}
                   onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                 />
@@ -219,7 +226,12 @@ function ShowList() {
   }
 
   if (shows.length === 0) {
-    return <p className="text-muted-foreground">No shows scheduled</p>;
+    return (
+      <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+        <CalendarPlus className="h-8 w-8 mb-2" />
+        <p>No shows scheduled</p>
+      </div>
+    );
   }
 
   return (
@@ -227,12 +239,15 @@ function ShowList() {
       {shows.map((show) => (
         <div
           key={show.id}
-          className="flex items-center justify-between p-3 border rounded-lg"
+          className="flex items-center justify-between p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors"
         >
           <div>
             <p className="font-medium">{show.title}</p>
             <p className="text-sm text-muted-foreground">
-              {format(new Date(show.date), "PPP p")} - ${show.price}
+              {format(new Date(show.date), "PPP p")}
+            </p>
+            <p className="text-sm font-medium text-primary">
+              ${show.price}
             </p>
           </div>
           <Button
