@@ -70,7 +70,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
+      // Clear user data
       queryClient.setQueryData(["/api/user"], null);
+      // Clear all reservation-related queries
+      queryClient.removeQueries({ queryKey: ["/api/reservations"] });
+      queryClient.removeQueries({ queryKey: ["/api/shows"] });
     },
     onError: (error: Error) => {
       toast({

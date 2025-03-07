@@ -118,12 +118,14 @@ function ShowCard({ show }: { show: Show }) {
         <div className="flex justify-between items-start">
           <div className="flex gap-4">
             {show.poster && (
-              <div className="relative aspect-[3/4] w-24 overflow-hidden rounded-lg border">
-                <img
-                  src={show.poster}
-                  alt={`Poster for ${show.title}`}
-                  className="object-cover w-full h-full"
-                />
+              <div className="relative w-24 sm:w-32 overflow-hidden rounded-lg border">
+                <div className="relative aspect-video">
+                  <img
+                    src={show.poster}
+                    alt={`Poster for ${show.title}`}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                </div>
               </div>
             )}
             <div>

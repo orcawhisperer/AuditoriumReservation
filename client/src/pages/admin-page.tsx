@@ -188,12 +188,14 @@ function ShowForm() {
                     onChange={handlePosterChange}
                   />
                   {previewUrl && (
-                    <div className="relative aspect-[3/4] w-full max-w-[200px] overflow-hidden rounded-lg border">
-                      <img
-                        src={previewUrl}
-                        alt="Poster preview"
-                        className="object-cover w-full h-full"
-                      />
+                    <div className="relative w-full max-w-lg overflow-hidden rounded-lg border">
+                      <div className="relative aspect-video">
+                        <img
+                          src={previewUrl}
+                          alt="Poster preview"
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -273,12 +275,14 @@ function ShowList() {
         >
           <div className="flex gap-4">
             {show.poster && (
-              <div className="relative aspect-[3/4] w-12 overflow-hidden rounded-lg border">
-                <img
-                  src={show.poster}
-                  alt={`Poster for ${show.title}`}
-                  className="object-cover w-full h-full"
-                />
+              <div className="relative w-16 sm:w-24 overflow-hidden rounded-lg border">
+                <div className="relative aspect-video">
+                  <img
+                    src={show.poster}
+                    alt={`Poster for ${show.title}`}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                </div>
               </div>
             )}
             <div>

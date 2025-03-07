@@ -139,12 +139,14 @@ export function SeatGrid() {
           {format(new Date(show.date), "PPP")} at {format(new Date(show.date), "p")}
         </p>
         {show.poster && (
-          <div className="mt-4 relative aspect-[3/4] w-48 overflow-hidden rounded-lg border">
-            <img
-              src={show.poster}
-              alt={`Poster for ${show.title}`}
-              className="object-cover w-full h-full"
-            />
+          <div className="mt-4 relative w-full max-w-md overflow-hidden rounded-lg border">
+            <div className="relative aspect-video">
+              <img
+                src={show.poster}
+                alt={`Poster for ${show.title}`}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </div>
           </div>
         )}
       </div>
