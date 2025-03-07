@@ -1,27 +1,36 @@
 import { InsertUser, InsertShow, InsertReservation, User, Show, Reservation } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import { scrypt, randomBytes } from "crypto";
+import { promisify } from "util";
 
 const MemoryStore = createMemoryStore(session);
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
 
 export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   // Show operations
   createShow(show: InsertShow): Promise<Show>;
   getShow(id: number): Promise<Show | undefined>;
   getShows(): Promise<Show[]>;
   deleteShow(id: number): Promise<void>;
-  
+
   // Reservation operations
   createReservation(userId: number, reservation: InsertReservation): Promise<Reservation>;
   getReservationsByShow(showId: number): Promise<Reservation[]>;
   getReservationsByUser(userId: number): Promise<Reservation[]>;
   deleteReservation(id: number): Promise<void>;
-  
+
   sessionStore: session.SessionStore;
 }
 
@@ -40,11 +49,16 @@ export class MemStorage implements IStorage {
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
-    
-    // Create default admin user
+
+    // Create default admin user with hashed password
+    this.initializeAdmin();
+  }
+
+  private async initializeAdmin() {
+    const hashedPassword = await hashPassword("admin");
     this.createUser({
       username: "admin",
-      password: "admin",
+      password: hashedPassword,
       isAdmin: true,
     });
   }
