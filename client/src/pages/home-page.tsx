@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { queryClient } from "@/lib/queryClient";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";  // Updated import path
 
 
 export default function HomePage() {
