@@ -138,9 +138,15 @@ export function SeatGrid() {
         <p className="text-muted-foreground">
           {format(new Date(show.date), "PPP")} at {format(new Date(show.date), "p")}
         </p>
-        <p className="text-muted-foreground">
-          Ticket price: ${show.price}
-        </p>
+        {show.poster && (
+          <div className="mt-4 relative aspect-[3/4] w-48 overflow-hidden rounded-lg border">
+            <img
+              src={show.poster}
+              alt={`Poster for ${show.title}`}
+              className="object-cover w-full h-full"
+            />
+          </div>
+        )}
       </div>
 
       <div className="space-y-6">

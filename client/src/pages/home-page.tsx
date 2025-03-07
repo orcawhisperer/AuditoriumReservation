@@ -13,6 +13,8 @@ import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/components/ui/use-toast";
+
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
@@ -114,14 +116,22 @@ function ShowCard({ show }: { show: Show }) {
     <Card>
       <CardContent className="pt-6">
         <div className="flex justify-between items-start">
-          <div>
-            <h3 className="font-semibold">{show.title}</h3>
-            <p className="text-sm text-muted-foreground">
-              {format(new Date(show.date), "PPP")}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Price: ${show.price}
-            </p>
+          <div className="flex gap-4">
+            {show.poster && (
+              <div className="relative aspect-[3/4] w-24 overflow-hidden rounded-lg border">
+                <img
+                  src={show.poster}
+                  alt={`Poster for ${show.title}`}
+                  className="object-cover w-full h-full"
+                />
+              </div>
+            )}
+            <div>
+              <h3 className="font-semibold">{show.title}</h3>
+              <p className="text-sm text-muted-foreground">
+                {format(new Date(show.date), "PPP")}
+              </p>
+            </div>
           </div>
           <Button onClick={() => setLocation(`/show/${show.id}`)}>
             Reserve
@@ -133,6 +143,7 @@ function ShowCard({ show }: { show: Show }) {
 }
 
 function ReservationCard({ reservation, show }: { reservation: Reservation; show?: Show }) {
+  const { toast } = useToast();
   const cancelMutation = useMutation({
     mutationFn: async () => {
       const res = await fetch(`/api/reservations/${reservation.id}`, {
@@ -141,7 +152,20 @@ function ReservationCard({ reservation, show }: { reservation: Reservation; show
       if (!res.ok) throw new Error("Failed to cancel reservation");
     },
     onSuccess: () => {
+      // Invalidate both user's reservations and show's reservations
       queryClient.invalidateQueries({ queryKey: ["/api/reservations/user"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/reservations/show/${reservation.showId}`] });
+      toast({
+        title: "Success",
+        description: "Reservation cancelled successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -165,6 +189,9 @@ function ReservationCard({ reservation, show }: { reservation: Reservation; show
             onClick={() => cancelMutation.mutate()}
             disabled={cancelMutation.isPending}
           >
+            {cancelMutation.isPending && (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            )}
             Cancel
           </Button>
         </div>

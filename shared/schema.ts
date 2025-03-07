@@ -13,7 +13,7 @@ export const shows = pgTable("shows", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   date: timestamp("date").notNull(),
-  price: integer("price").notNull(),
+  poster: text("poster"),
 });
 
 export const reservations = pgTable("reservations", {
@@ -37,6 +37,7 @@ export const insertShowSchema = createInsertSchema(shows).extend({
       message: "Shows cannot be scheduled in the past. Please select a future date."
     }
   ).transform(str => new Date(str)),
+  poster: z.string().optional(),
 });
 
 export const insertReservationSchema = createInsertSchema(reservations).pick({

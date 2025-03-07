@@ -25,6 +25,7 @@ import { queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { Loader2, Trash2, Shield, CalendarPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -87,14 +88,29 @@ export default function AdminPage() {
 
 function ShowForm() {
   const { toast } = useToast();
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+
   const form = useForm({
     resolver: zodResolver(insertShowSchema),
     defaultValues: {
       title: "",
       date: new Date().toISOString().slice(0, 16), // Format: YYYY-MM-DDTHH:mm
-      price: 0,
+      poster: "",
     },
   });
+
+  const handlePosterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        form.setValue("poster", base64String);
+        setPreviewUrl(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const createShowMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -109,6 +125,7 @@ function ShowForm() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/shows"] });
       form.reset();
+      setPreviewUrl("");
       toast({
         title: "Success",
         description: "Show created successfully",
@@ -142,6 +159,7 @@ function ShowForm() {
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="date"
@@ -155,24 +173,36 @@ function ShowForm() {
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
-          name="price"
+          name="poster"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Price ($)</FormLabel>
+              <FormLabel>Poster Image</FormLabel>
               <FormControl>
-                <Input
-                  type="number"
-                  placeholder="Enter ticket price"
-                  {...field}
-                  onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                />
+                <div className="space-y-4">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePosterChange}
+                  />
+                  {previewUrl && (
+                    <div className="relative aspect-[3/4] w-full max-w-[200px] overflow-hidden rounded-lg border">
+                      <img
+                        src={previewUrl}
+                        alt="Poster preview"
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                  )}
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
         <Button
           type="submit"
           className="w-full"
@@ -241,14 +271,22 @@ function ShowList() {
           key={show.id}
           className="flex items-center justify-between p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors"
         >
-          <div>
-            <p className="font-medium">{show.title}</p>
-            <p className="text-sm text-muted-foreground">
-              {format(new Date(show.date), "PPP p")}
-            </p>
-            <p className="text-sm font-medium text-primary">
-              ${show.price}
-            </p>
+          <div className="flex gap-4">
+            {show.poster && (
+              <div className="relative aspect-[3/4] w-12 overflow-hidden rounded-lg border">
+                <img
+                  src={show.poster}
+                  alt={`Poster for ${show.title}`}
+                  className="object-cover w-full h-full"
+                />
+              </div>
+            )}
+            <div>
+              <p className="font-medium">{show.title}</p>
+              <p className="text-sm text-muted-foreground">
+                {format(new Date(show.date), "PPP p")}
+              </p>
+            </div>
           </div>
           <Button
             variant="destructive"
