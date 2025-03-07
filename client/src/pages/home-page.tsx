@@ -45,8 +45,8 @@ export default function HomePage() {
                 Admin Panel
               </Button>
             )}
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => logoutMutation.mutate()}
               disabled={logoutMutation.isPending}
             >
@@ -123,7 +123,7 @@ function ShowCard({ show }: { show: Show }) {
               Price: ${show.price}
             </p>
           </div>
-          <Button onClick={() => setLocation(`/shows/${show.id}`)}>
+          <Button onClick={() => setLocation(`/show/${show.id}`)}>
             Reserve
           </Button>
         </div>

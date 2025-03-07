@@ -8,15 +8,14 @@ import AuthPage from "@/pages/auth-page";
 import HomePage from "@/pages/home-page";
 import AdminPage from "@/pages/admin-page";
 import { ProtectedRoute } from "./lib/protected-route";
-import ShowPage from "@/pages/show-page"; // Import the new ShowPage component
-
+import ShowPage from "@/pages/show-page";
 
 function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/admin" component={AdminPage} />
-      <ProtectedRoute path="/shows/:showId" component={ShowPage} />
+      <ProtectedRoute path="/show/:showId" component={ShowPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
