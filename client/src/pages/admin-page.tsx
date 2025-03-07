@@ -92,7 +92,10 @@ function ShowForm() {
       const res = await fetch("/api/shows", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          date: new Date(data.date), // Ensure date is properly converted
+        }),
       });
       if (!res.ok) throw new Error("Failed to create show");
       return res.json();
@@ -106,7 +109,14 @@ function ShowForm() {
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit((data) => createShowMutation.mutate(data))}
+        onSubmit={form.handleSubmit((data) => {
+          // Convert the string date to a proper Date object before submission
+          const formattedData = {
+            ...data,
+            date: new Date(data.date).toISOString(),
+          };
+          createShowMutation.mutate(formattedData as Show);
+        })}
         className="space-y-4"
       >
         <FormField
@@ -132,7 +142,7 @@ function ShowForm() {
                 <Input
                   type="datetime-local"
                   value={format(new Date(field.value), "yyyy-MM-dd'T'HH:mm")}
-                  onChange={(e) => field.onChange(e.target.value)}
+                  onChange={(e) => field.onChange(new Date(e.target.value).toISOString())}
                 />
               </FormControl>
               <FormMessage />
