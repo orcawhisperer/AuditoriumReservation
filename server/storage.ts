@@ -45,19 +45,28 @@ export class SQLiteStorage implements IStorage {
       checkPeriod: 86400000,
     });
 
+    // Check for required environment variables
+    if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
+      console.warn('Warning: ADMIN_USERNAME and/or ADMIN_PASSWORD not set. Using defaults: admin/admin');
+    }
+
     // Create default admin user
     this.initializeAdmin();
   }
 
   private async initializeAdmin() {
-    const existingAdmin = await this.getUserByUsername("admin");
+    const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin';
+
+    const existingAdmin = await this.getUserByUsername(adminUsername);
     if (!existingAdmin) {
-      const hashedPassword = await hashPassword("admin");
+      const hashedPassword = await hashPassword(adminPassword);
       await this.createUser({
-        username: "admin",
+        username: adminUsername,
         password: hashedPassword,
         isAdmin: true,
       });
+      console.log(`Admin user '${adminUsername}' created successfully`);
     }
   }
 
