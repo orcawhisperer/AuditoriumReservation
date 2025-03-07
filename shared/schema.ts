@@ -29,14 +29,22 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
 });
 
-// Customize the show schema to handle the date string from the form
+// Customize the show schema to validate the date
 export const insertShowSchema = createInsertSchema(shows).extend({
-  date: z.string().transform((str) => new Date(str)),
+  date: z.string().transform((str) => {
+    const date = new Date(str);
+    if (date < new Date()) {
+      throw new Error("Show cannot be scheduled in the past");
+    }
+    return date;
+  }),
 });
 
 export const insertReservationSchema = createInsertSchema(reservations).pick({
   showId: true,
   seatNumbers: true,
+}).extend({
+  seatNumbers: z.array(z.string()).max(4, "Maximum 4 seats per reservation"),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

@@ -65,18 +65,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json(parsed.error);
     }
 
-    if (parsed.data.seatNumbers.length > 4) {
-      return res.status(400).send("Maximum 4 seats per reservation");
-    }
-
     const show = await storage.getShow(parsed.data.showId);
     if (!show) {
       return res.status(404).send("Show not found");
     }
 
+    // Check if show date is in the past
+    if (new Date(show.date) < new Date()) {
+      return res.status(400).send("Cannot make reservations for past shows");
+    }
+
+    // Check if user already has a reservation for this show
+    const userReservations = await storage.getReservationsByUser(req.user.id);
+    const existingReservation = userReservations.find(r => r.showId === show.id);
+    if (existingReservation) {
+      return res.status(400).send("You already have a reservation for this show");
+    }
+
+    // Check for seat conflicts
     const existingReservations = await storage.getReservationsByShow(show.id);
     const reservedSeats = existingReservations.flatMap(r => r.seatNumbers);
-    const hasConflict = parsed.data.seatNumbers.some(seat => 
+    const hasConflict = parsed.data.seatNumbers.some(seat =>
       reservedSeats.includes(seat)
     );
 
