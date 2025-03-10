@@ -47,7 +47,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Reservation routes
   app.get("/api/reservations/show/:showId", async (req, res) => {
-    const reservations = await storage.getReservationsByShow(parseInt(req.params.showId));
+    const reservations = await storage.getReservationsByShow(
+      parseInt(req.params.showId),
+    );
     res.json(reservations);
   });
 
@@ -77,23 +79,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     // Check if user already has a reservation for this show
     const userReservations = await storage.getReservationsByUser(req.user.id);
-    const existingReservation = userReservations.find(r => r.showId === show.id);
+    const existingReservation = userReservations.find(
+      (r) => r.showId === show.id,
+    );
     if (existingReservation) {
-      return res.status(400).send("You already have a reservation for this show");
+      return res
+        .status(400)
+        .send("You already have a reservation for this show");
     }
 
     // Check for seat conflicts
     const existingReservations = await storage.getReservationsByShow(show.id);
-    const reservedSeats = existingReservations.flatMap(r => JSON.parse(r.seatNumbers));
-    const hasConflict = parsed.data.seatNumbers.some(seat =>
-      reservedSeats.includes(seat)
+    const reservedSeats = existingReservations.flatMap((r) =>
+      JSON.parse(r.seatNumbers),
+    );
+    console.log(parsed.data.seatNumbers, reservedSeats);
+    const hasConflict = JSON.parse(parsed.data.seatNumbers).some((seat) =>
+      reservedSeats.includes(seat),
     );
 
     if (hasConflict) {
       return res.status(400).send("Some seats are already reserved");
     }
 
-    const reservation = await storage.createReservation(req.user.id, parsed.data);
+    const reservation = await storage.createReservation(
+      req.user.id,
+      parsed.data,
+    );
     res.status(201).json(reservation);
   });
 
@@ -101,7 +113,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.user) return res.sendStatus(401);
 
     const reservations = await storage.getReservationsByUser(req.user.id);
-    const reservation = reservations.find(r => r.id === parseInt(req.params.id));
+    const reservation = reservations.find(
+      (r) => r.id === parseInt(req.params.id),
+    );
 
     if (!reservation) {
       return res.status(404).send("Reservation not found");

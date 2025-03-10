@@ -156,6 +156,7 @@ function ShowCard({ show }: { show: Show }) {
 
 function ReservationCard({ reservation, show }: { reservation: Reservation; show?: Show }) {
   const { toast } = useToast();
+  const isPastShow = show && new Date(show.date) < new Date();
   const cancelMutation = useMutation({
     mutationFn: async () => {
       const res = await fetch(`/api/reservations/${reservation.id}`, {
@@ -195,11 +196,16 @@ function ReservationCard({ reservation, show }: { reservation: Reservation; show
             <p className="text-sm text-muted-foreground">
               Seats: {JSON.parse(reservation.seatNumbers).join(", ")}
             </p>
+            {isPastShow && (
+              <p className="text-sm text-destructive mt-1">
+                This show has passed - cancellation disabled
+              </p>
+            )}
           </div>
           <Button
             variant="destructive"
             onClick={() => cancelMutation.mutate()}
-            disabled={cancelMutation.isPending}
+            disabled={cancelMutation.isPending || isPastShow}
           >
             {cancelMutation.isPending && (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
