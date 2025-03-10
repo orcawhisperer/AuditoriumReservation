@@ -16,6 +16,61 @@ import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/theme-toggle";
 
+function ShowCard({ show, reservations }: { show: Show; reservations: Reservation[] }) {
+  const [, setLocation] = useLocation();
+  const isPastShow = new Date(show.date) < new Date();
+  const hasReservation = reservations.some(r => r.showId === show.id);
+
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex justify-between items-start">
+          <div className="flex gap-4">
+            {show.poster && (
+              <div className="relative w-24 sm:w-32 overflow-hidden rounded-lg border">
+                <div className="relative aspect-video">
+                  <img
+                    src={show.poster}
+                    alt={`Poster for ${show.title}`}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            )}
+            <div>
+              <h3 className="font-semibold">{show.title}</h3>
+              <p className="text-sm text-muted-foreground">
+                {format(new Date(show.date), "PPP")}
+              </p>
+              {isPastShow && (
+                <p className="text-sm text-destructive mt-1">
+                  This show has already passed
+                </p>
+              )}
+              {hasReservation && (
+                <p className="text-sm text-primary mt-1">
+                  You have a reservation for this show
+                </p>
+              )}
+            </div>
+          </div>
+          <Button
+            onClick={() => setLocation(`/show/${show.id}`)}
+            disabled={isPastShow || hasReservation}
+            variant={isPastShow || hasReservation ? "outline" : "default"}
+          >
+            {isPastShow 
+              ? "Past Show" 
+              : hasReservation 
+                ? "Reserved" 
+                : "Reserve"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
   const [, setLocation] = useLocation();
@@ -74,7 +129,7 @@ export default function HomePage() {
               ) : (
                 <div className="space-y-4">
                   {shows.map((show) => (
-                    <ShowCard key={show.id} show={show} />
+                    <ShowCard key={show.id} show={show} reservations={reservations} />
                   ))}
                 </div>
               )}
@@ -107,51 +162,6 @@ export default function HomePage() {
         </div>
       </main>
     </div>
-  );
-}
-
-function ShowCard({ show }: { show: Show }) {
-  const [, setLocation] = useLocation();
-  const isPastShow = new Date(show.date) < new Date();
-
-  return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex justify-between items-start">
-          <div className="flex gap-4">
-            {show.poster && (
-              <div className="relative w-24 sm:w-32 overflow-hidden rounded-lg border">
-                <div className="relative aspect-video">
-                  <img
-                    src={show.poster}
-                    alt={`Poster for ${show.title}`}
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-            )}
-            <div>
-              <h3 className="font-semibold">{show.title}</h3>
-              <p className="text-sm text-muted-foreground">
-                {format(new Date(show.date), "PPP")}
-              </p>
-              {isPastShow && (
-                <p className="text-sm text-destructive mt-1">
-                  This show has already passed
-                </p>
-              )}
-            </div>
-          </div>
-          <Button
-            onClick={() => setLocation(`/show/${show.id}`)}
-            disabled={isPastShow}
-            variant={isPastShow ? "outline" : "default"}
-          >
-            {isPastShow ? "Past Show" : "Reserve"}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 
