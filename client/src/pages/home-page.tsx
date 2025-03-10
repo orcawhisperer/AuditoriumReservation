@@ -111,6 +111,7 @@ export default function HomePage() {
 
 function ShowCard({ show }: { show: Show }) {
   const [, setLocation] = useLocation();
+  const isPastShow = new Date(show.date) < new Date();
 
   return (
     <Card>
@@ -133,10 +134,19 @@ function ShowCard({ show }: { show: Show }) {
               <p className="text-sm text-muted-foreground">
                 {format(new Date(show.date), "PPP")}
               </p>
+              {isPastShow && (
+                <p className="text-sm text-destructive mt-1">
+                  This show has already passed
+                </p>
+              )}
             </div>
           </div>
-          <Button onClick={() => setLocation(`/show/${show.id}`)}>
-            Reserve
+          <Button 
+            onClick={() => setLocation(`/show/${show.id}`)}
+            disabled={isPastShow}
+            variant={isPastShow ? "outline" : "default"}
+          >
+            {isPastShow ? "Past Show" : "Reserve"}
           </Button>
         </div>
       </CardContent>
