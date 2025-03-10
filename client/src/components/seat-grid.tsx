@@ -49,10 +49,19 @@ export function SeatGrid() {
     queryKey: [`/api/shows/${showId}`],
   });
 
-  const { data: reservations = [], isLoading: reservationsLoading } = useQuery<Reservation[]>({
+  const { data: showReservations = [], isLoading: reservationsLoading } = useQuery<Reservation[]>({
     queryKey: [`/api/reservations/show/${showId}`],
     enabled: !!showId,
   });
+
+  const { data: userReservations = [], isLoading: userReservationsLoading } = useQuery<Reservation[]>({
+    queryKey: ["/api/reservations/user"],
+  });
+
+  // Check if user already has a reservation for this show
+  const hasExistingReservation = userReservations.some(
+    reservation => reservation.showId === parseInt(showId)
+  );
 
   const reserveMutation = useMutation({
     mutationFn: async () => {
@@ -98,7 +107,7 @@ export function SeatGrid() {
     },
   });
 
-  if (showLoading || reservationsLoading) {
+  if (showLoading || reservationsLoading || userReservationsLoading) {
     return (
       <div className="flex items-center justify-center min-h-[500px]">
         <Loader2 className="h-8 w-8 animate-spin text-border" />
@@ -111,7 +120,7 @@ export function SeatGrid() {
   }
 
   const reservedSeats = new Set(
-    reservations.flatMap((r) => r.seatNumbers)
+    showReservations.flatMap((r) => r.seatNumbers)
   );
 
   const handleSeatSelect = (seatId: string) => {
@@ -202,13 +211,19 @@ export function SeatGrid() {
             </p>
             <Button
               onClick={() => reserveMutation.mutate()}
-              disabled={selectedSeats.length === 0 || reserveMutation.isPending}
+              disabled={
+                selectedSeats.length === 0 ||
+                reserveMutation.isPending ||
+                hasExistingReservation
+              }
               className="min-w-[120px]"
             >
               {reserveMutation.isPending && (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               )}
-              Reserve ({selectedSeats.length})
+              {hasExistingReservation
+                ? "Already Reserved"
+                : `Reserve (${selectedSeats.length})`}
             </Button>
           </div>
         </div>
