@@ -13,8 +13,8 @@ import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";  // Updated import path
-
+import { useToast } from "@/hooks/use-toast";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
@@ -42,6 +42,7 @@ export default function HomePage() {
         <div className="container mx-auto flex items-center justify-between h-16">
           <h1 className="text-2xl font-bold">Auditorium</h1>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             {user?.isAdmin && (
               <Button variant="outline" onClick={() => setLocation("/admin")}>
                 Admin Panel
@@ -141,7 +142,7 @@ function ShowCard({ show }: { show: Show }) {
               )}
             </div>
           </div>
-          <Button 
+          <Button
             onClick={() => setLocation(`/show/${show.id}`)}
             disabled={isPastShow}
             variant={isPastShow ? "outline" : "default"}
