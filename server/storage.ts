@@ -6,15 +6,9 @@ import { promisify } from "util";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { users, shows, reservations } from "@shared/schema";
+import { hashPassword } from "./auth";
 
 const MemoryStore = createMemoryStore(session);
-const scryptAsync = promisify(scrypt);
-
-async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
-}
 
 export interface IStorage {
   // User operations
@@ -61,15 +55,21 @@ export class SQLiteStorage implements IStorage {
     const adminUsername = process.env.ADMIN_USERNAME || 'admin';
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin';
 
-    const existingAdmin = await this.getUserByUsername(adminUsername);
-    if (!existingAdmin) {
-      const hashedPassword = await hashPassword(adminPassword);
-      await this.createUser({
-        username: adminUsername,
-        password: hashedPassword,
-        isAdmin: true,
-      });
-      console.log(`Admin user '${adminUsername}' created successfully`);
+    try {
+      const existingAdmin = await this.getUserByUsername(adminUsername);
+      if (!existingAdmin) {
+        const hashedPassword = await hashPassword(adminPassword);
+        await this.createUser({
+          username: adminUsername,
+          password: hashedPassword,
+          isAdmin: true,
+        });
+        console.log(`Admin user '${adminUsername}' created successfully`);
+      } else {
+        console.log(`Admin user '${adminUsername}' already exists`);
+      }
+    } catch (error) {
+      console.error('Error initializing admin user:', error);
     }
   }
 
