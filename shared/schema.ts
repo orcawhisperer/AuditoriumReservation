@@ -8,6 +8,7 @@ export const users = sqliteTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   isAdmin: integer("is_admin", { mode: "boolean" }).notNull().default(false),
+  isEnabled: integer("is_enabled", { mode: "boolean" }).notNull().default(true),
 });
 
 export const shows = sqliteTable("shows", {

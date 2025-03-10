@@ -3,9 +3,75 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertShowSchema, insertReservationSchema } from "@shared/schema";
+import { randomBytes } from "crypto";
+import { hash } from "bcrypt";
+
+async function hashPassword(password: string): Promise<string> {
+  const saltRounds = 10;
+  const hashedPassword = await hash(password, saltRounds);
+  return hashedPassword;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
+
+  // User management routes
+  app.get("/api/users", async (req, res) => {
+    if (!req.user?.isAdmin) {
+      return res.status(403).send("Admin access required");
+    }
+    const users = await storage.getUsers();
+    res.json(users);
+  });
+
+  app.post("/api/users/:id/reset-password", async (req, res) => {
+    if (!req.user?.isAdmin) {
+      return res.status(403).send("Admin access required");
+    }
+
+    const userId = parseInt(req.params.id);
+    const user = await storage.getUser(userId);
+
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    if (user.isAdmin) {
+      return res.status(403).send("Cannot reset admin password");
+    }
+
+    // Generate a temporary password
+    const temporaryPassword = randomBytes(4).toString("hex");
+    const hashedPassword = await hashPassword(temporaryPassword);
+    await storage.resetUserPassword(userId, hashedPassword);
+
+    res.json({ temporaryPassword });
+  });
+
+  app.post("/api/users/:id/toggle-status", async (req, res) => {
+    if (!req.user?.isAdmin) {
+      return res.status(403).send("Admin access required");
+    }
+
+    const userId = parseInt(req.params.id);
+    const user = await storage.getUser(userId);
+
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    if (user.isAdmin) {
+      return res.status(403).send("Cannot modify admin status");
+    }
+
+    const { isEnabled } = req.body;
+    if (typeof isEnabled !== "boolean") {
+      return res.status(400).send("Invalid status");
+    }
+
+    await storage.toggleUserStatus(userId, isEnabled);
+    res.sendStatus(200);
+  });
 
   // Show routes
   app.get("/api/shows", async (_req, res) => {
@@ -13,7 +79,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(shows);
   });
 
-  // Add endpoint for fetching a single show
   app.get("/api/shows/:id", async (req, res) => {
     const show = await storage.getShow(parseInt(req.params.id));
     if (!show) {
@@ -93,8 +158,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const reservedSeats = existingReservations.flatMap((r) =>
       JSON.parse(r.seatNumbers),
     );
-    console.log(parsed.data.seatNumbers, reservedSeats);
-    const hasConflict = JSON.parse(parsed.data.seatNumbers).some((seat) =>
+    const seatNumbers = JSON.parse(parsed.data.seatNumbers) as string[];
+    const hasConflict = seatNumbers.some((seat: string) =>
       reservedSeats.includes(seat),
     );
 

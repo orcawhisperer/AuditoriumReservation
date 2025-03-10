@@ -20,7 +20,10 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  createUser(user: InsertUser & { isAdmin?: boolean }): Promise<User>;
+  getUsers(): Promise<User[]>;
+  resetUserPassword(userId: number, newPassword: string): Promise<void>;
+  toggleUserStatus(userId: number, isEnabled: boolean): Promise<void>;
 
   // Show operations
   createShow(show: InsertShow): Promise<Show>;
@@ -34,11 +37,11 @@ export interface IStorage {
   getReservationsByUser(userId: number): Promise<Reservation[]>;
   deleteReservation(id: number): Promise<void>;
 
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 }
 
 export class SQLiteStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 
   constructor() {
     this.sessionStore = new MemoryStore({
@@ -86,6 +89,22 @@ export class SQLiteStorage implements IStorage {
       isAdmin: insertUser.isAdmin ?? false,
     }).returning();
     return result[0];
+  }
+
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  async resetUserPassword(userId: number, newPassword: string): Promise<void> {
+    await db.update(users)
+      .set({ password: newPassword })
+      .where(eq(users.id, userId));
+  }
+
+  async toggleUserStatus(userId: number, isEnabled: boolean): Promise<void> {
+    await db.update(users)
+      .set({ isEnabled })
+      .where(eq(users.id, userId));
   }
 
   async createShow(insertShow: InsertShow): Promise<Show> {

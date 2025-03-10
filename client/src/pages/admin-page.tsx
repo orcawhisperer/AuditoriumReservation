@@ -16,16 +16,28 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
-import { Show, insertShowSchema } from "@shared/schema";
+import { Show, insertShowSchema, User } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
-import { Loader2, Trash2, Shield, CalendarPlus } from "lucide-react";
+import { Loader2, Trash2, Shield, CalendarPlus, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Switch } from "@/components/ui/switch";
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -78,6 +90,21 @@ export default function AdminPage() {
             </CardHeader>
             <CardContent>
               <ShowList />
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 lg:col-span-2">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                <CardTitle>Manage Users</CardTitle>
+              </div>
+              <CardDescription>
+                View and manage user accounts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <UserList />
             </CardContent>
           </Card>
         </div>
@@ -305,6 +332,148 @@ function ShowList() {
             )}
             Delete
           </Button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function UserList() {
+  const { toast } = useToast();
+  const { data: users = [], isLoading } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+  });
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      const res = await fetch(`/api/users/${userId}/reset-password`, {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Success",
+        description: `Temporary password: ${data.temporaryPassword}`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to reset password",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const toggleUserStatusMutation = useMutation({
+    mutationFn: async ({ userId, isEnabled }: { userId: number; isEnabled: boolean }) => {
+      const res = await fetch(`/api/users/${userId}/toggle-status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isEnabled }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      toast({
+        title: "Success",
+        description: "User status updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to update user status",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-32">
+        <Loader2 className="h-8 w-8 animate-spin text-border" />
+      </div>
+    );
+  }
+
+  if (users.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+        <Users className="h-8 w-8 mb-2" />
+        <p>No users found</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {users.map((user) => (
+        <div
+          key={user.id}
+          className="flex items-center justify-between p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors"
+        >
+          <div>
+            <div className="flex items-center gap-2">
+              <p className="font-medium">{user.username}</p>
+              {user.isAdmin && (
+                <span className="px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary">
+                  Admin
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Account status: {user.isEnabled ? "Active" : "Disabled"}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={user.isEnabled}
+                onCheckedChange={(checked) =>
+                  toggleUserStatusMutation.mutate({ userId: user.id, isEnabled: checked })
+                }
+                disabled={user.isAdmin || toggleUserStatusMutation.isPending}
+              />
+              <span className="text-sm">
+                {user.isEnabled ? "Enabled" : "Disabled"}
+              </span>
+            </div>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={user.isAdmin || resetPasswordMutation.isPending}
+                >
+                  Reset Password
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Reset Password</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will reset the user's password to a temporary one. The user
+                    will need to change it upon next login.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => resetPasswordMutation.mutate(user.id)}
+                  >
+                    Reset Password
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
       ))}
     </div>
