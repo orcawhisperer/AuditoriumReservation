@@ -59,10 +59,10 @@ function ShowCard({ show, reservations }: { show: Show; reservations: Reservatio
             disabled={isPastShow || hasReservation}
             variant={isPastShow || hasReservation ? "outline" : "default"}
           >
-            {isPastShow 
-              ? "Past Show" 
-              : hasReservation 
-                ? "Reserved" 
+            {isPastShow
+              ? "Past Show"
+              : hasReservation
+                ? "Reserved"
                 : "Reserve"}
           </Button>
         </div>
@@ -202,7 +202,7 @@ function ReservationCard({ reservation, show }: { reservation: Reservation; show
           <div>
             <h3 className="font-semibold">{show.title}</h3>
             <p className="text-sm text-muted-foreground">
-              {format(new Date(show.date), "PPP")}
+              {format(new Date(show.date), "PPP")} at {format(new Date(show.date), "p")}
             </p>
             <p className="text-sm text-muted-foreground">
               Seats: {JSON.parse(reservation.seatNumbers).join(", ")}
