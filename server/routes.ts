@@ -84,7 +84,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     // Check for seat conflicts
     const existingReservations = await storage.getReservationsByShow(show.id);
-    const reservedSeats = existingReservations.flatMap(r => r.seatNumbers);
+    const reservedSeats = existingReservations.flatMap(r => JSON.parse(r.seatNumbers));
     const hasConflict = parsed.data.seatNumbers.some(seat =>
       reservedSeats.includes(seat)
     );

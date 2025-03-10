@@ -193,7 +193,7 @@ function ReservationCard({ reservation, show }: { reservation: Reservation; show
               {format(new Date(show.date), "PPP")}
             </p>
             <p className="text-sm text-muted-foreground">
-              Seats: {reservation.seatNumbers.join(", ")}
+              Seats: {JSON.parse(reservation.seatNumbers).join(", ")}
             </p>
           </div>
           <Button
