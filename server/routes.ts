@@ -70,7 +70,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     await storage.toggleUserStatus(userId, isEnabled);
-    res.sendStatus(200);
+    // Return the updated user data instead of just OK
+    const updatedUser = await storage.getUser(userId);
+    res.json(updatedUser);
   });
 
   // Show routes

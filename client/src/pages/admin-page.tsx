@@ -377,8 +377,13 @@ function UserList() {
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+    onSuccess: (data) => {
+      // Optimistically update the user in the cache
+      queryClient.setQueryData<User[]>(["/api/users"], (oldUsers) => {
+        if (!oldUsers) return [data];
+        return oldUsers.map(user => user.id === data.id ? data : user);
+      });
+
       toast({
         title: "Success",
         description: "User status updated successfully",
@@ -390,6 +395,8 @@ function UserList() {
         description: error.message,
         variant: "destructive",
       });
+      // Invalidate the query to ensure we have the correct data
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
     },
   });
 
