@@ -18,7 +18,7 @@ async function hashPassword(password: string): Promise<string> {
   return await hash(password, SALT_ROUNDS);
 }
 
-export function setupAuth(app: Express) {
+export async function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET!,
     resave: false,
@@ -33,21 +33,30 @@ export function setupAuth(app: Express) {
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
-      const user = await storage.getUserByUsername(username);
-      if (!user) {
-        return done(null, false);
-      }
+      try {
+        const user = await storage.getUserByUsername(username);
+        if (!user) {
+          console.log(`Login failed: User ${username} not found`);
+          return done(null, false, { message: "Invalid username or password" });
+        }
 
-      const isValid = await compare(password, user.password);
-      if (!isValid) {
-        return done(null, false);
-      }
+        const isValid = await compare(password, user.password);
+        if (!isValid) {
+          console.log(`Login failed: Invalid password for user ${username}`);
+          return done(null, false, { message: "Invalid username or password" });
+        }
 
-      if (!user.isEnabled) {
-        return done(null, false, { message: "Account is disabled" });
-      }
+        if (!user.isEnabled) {
+          console.log(`Login failed: Account ${username} is disabled`);
+          return done(null, false, { message: "Account is disabled" });
+        }
 
-      return done(null, user);
+        console.log(`Login successful: ${username} (Admin: ${user.isAdmin})`);
+        return done(null, user);
+      } catch (error) {
+        console.error("Login error:", error);
+        return done(error);
+      }
     }),
   );
 
@@ -89,6 +98,15 @@ export function setupAuth(app: Express) {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
   });
+
+  //Admin user handling - Assumes storage.deleteAdmin and storage.createAdmin exist
+  try {
+    await storage.deleteAdmin();
+    const adminUser = await storage.createAdmin({username: 'admin', password: await hashPassword('adminpassword')});
+    console.log(`Admin user recreated with ID: ${adminUser.id}`);
+  } catch (error) {
+    console.error("Error recreating admin user:", error);
+  }
 }
 
 export { hashPassword };

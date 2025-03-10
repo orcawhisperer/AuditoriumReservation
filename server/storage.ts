@@ -1,8 +1,6 @@
 import { InsertUser, InsertShow, InsertReservation, User, Show, Reservation } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
-import { scrypt, randomBytes } from "crypto";
-import { promisify } from "util";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { users, shows, reservations } from "@shared/schema";
@@ -56,17 +54,26 @@ export class SQLiteStorage implements IStorage {
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin';
 
     try {
+      // First, try to delete any existing admin user to ensure clean state
       const existingAdmin = await this.getUserByUsername(adminUsername);
-      if (!existingAdmin) {
-        const hashedPassword = await hashPassword(adminPassword);
-        await this.createUser({
-          username: adminUsername,
-          password: hashedPassword,
-          isAdmin: true,
-        });
-        console.log(`Admin user '${adminUsername}' created successfully`);
+      if (existingAdmin) {
+        console.log(`Deleting existing admin user '${adminUsername}' to recreate with correct password hash`);
+        await db.delete(users).where(eq(users.username, adminUsername));
+      }
+
+      // Create new admin user with bcrypt-hashed password
+      const hashedPassword = await hashPassword(adminPassword);
+      const result = await db.insert(users).values({
+        username: adminUsername,
+        password: hashedPassword,
+        isAdmin: true,
+        isEnabled: true,
+      }).returning();
+
+      if (result[0]) {
+        console.log(`Admin user '${adminUsername}' created successfully with bcrypt hash`);
       } else {
-        console.log(`Admin user '${adminUsername}' already exists`);
+        console.error('Failed to create admin user');
       }
     } catch (error) {
       console.error('Error initializing admin user:', error);
