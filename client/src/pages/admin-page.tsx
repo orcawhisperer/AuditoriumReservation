@@ -23,7 +23,7 @@ import { useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
-import { Loader2, Trash2, Shield, CalendarPlus, Users } from "lucide-react";
+import { Loader2, Trash2, Shield, CalendarPlus, Users, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import {
@@ -38,6 +38,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -340,9 +348,23 @@ function ShowList() {
 
 function UserList() {
   const { toast } = useToast();
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 5;
+
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],
   });
+
+  const filteredUsers = users.filter(user =>
+    user.username.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const paginatedUsers = filteredUsers.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage
+  );
 
   const resetPasswordMutation = useMutation({
     mutationFn: async (userId: number) => {
@@ -419,7 +441,20 @@ function UserList() {
 
   return (
     <div className="space-y-4">
-      {users.map((user) => (
+      <div className="relative">
+        <Input
+          placeholder="Search users..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1); // Reset to first page when searching
+          }}
+          className="pl-10"
+        />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      </div>
+
+      {paginatedUsers.map((user) => (
         <div
           key={user.id}
           className="flex items-center justify-between p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors"
@@ -483,6 +518,37 @@ function UserList() {
           </div>
         </div>
       ))}
+
+      {filteredUsers.length > itemsPerPage && (
+        <div className="mt-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                />
+              </PaginationItem>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                <PaginationItem key={pageNum}>
+                  <PaginationLink
+                    onClick={() => setPage(pageNum)}
+                    isActive={page === pageNum}
+                  >
+                    {pageNum}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 }
