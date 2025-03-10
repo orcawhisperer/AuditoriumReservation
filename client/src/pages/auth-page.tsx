@@ -23,6 +23,7 @@ import { useForm } from "react-hook-form";
 import { useLocation } from "wouter";
 import { Shield, Lock } from "lucide-react";
 import { z } from "zod";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
@@ -36,6 +37,9 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#4B5320]/20 to-[#4B5320]/5 flex items-center justify-center p-4">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="max-w-5xl w-full grid lg:grid-cols-2 gap-8">
         <div className="flex flex-col justify-center space-y-6">
           <div className="space-y-2">
@@ -138,8 +142,8 @@ function LoginForm() {
             </FormItem>
           )}
         />
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           className="w-full"
           disabled={loginMutation.isPending}
         >
