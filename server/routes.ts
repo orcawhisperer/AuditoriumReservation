@@ -1,16 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth } from "./auth";
+import { setupAuth, hashPassword } from "./auth";
 import { insertShowSchema, insertReservationSchema } from "@shared/schema";
 import { randomBytes } from "crypto";
-import { hash } from "bcrypt";
-
-async function hashPassword(password: string): Promise<string> {
-  const saltRounds = 10;
-  const hashedPassword = await hash(password, saltRounds);
-  return hashedPassword;
-}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);

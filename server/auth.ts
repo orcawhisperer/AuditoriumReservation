@@ -2,8 +2,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";
 import session from "express-session";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
+import { hash, compare } from "bcrypt";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 
@@ -13,19 +12,10 @@ declare global {
   }
 }
 
-const scryptAsync = promisify(scrypt);
+const SALT_ROUNDS = 10;
 
-async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
-}
-
-async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+async function hashPassword(password: string): Promise<string> {
+  return await hash(password, SALT_ROUNDS);
 }
 
 export function setupAuth(app: Express) {
@@ -44,11 +34,20 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       const user = await storage.getUserByUsername(username);
-      if (!user || !(await comparePasswords(password, user.password))) {
+      if (!user) {
         return done(null, false);
-      } else {
-        return done(null, user);
       }
+
+      const isValid = await compare(password, user.password);
+      if (!isValid) {
+        return done(null, false);
+      }
+
+      if (!user.isEnabled) {
+        return done(null, false, { message: "Account is disabled" });
+      }
+
+      return done(null, user);
     }),
   );
 
@@ -91,3 +90,5 @@ export function setupAuth(app: Express) {
     res.json(req.user);
   });
 }
+
+export { hashPassword };
