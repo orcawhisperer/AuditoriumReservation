@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
-import { Show, insertShowSchema, User, insertUserSchema } from "@shared/schema";
+import { Show, insertShowSchema, User, insertUserSchema, Venue, insertVenueSchema } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useLocation } from "wouter";
@@ -34,6 +34,8 @@ import {
   UserPlus,
   Palette,
   Smile,
+  Building2,
+  Edit,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -56,34 +58,361 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface Reservation {
-  id: number;
-  showId: number;
-  seatNumbers: string;
+
+// Add VenueForm component
+function VenueForm() {
+  const { toast } = useToast();
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [editingVenue, setEditingVenue] = useState<Venue | null>(null);
+
+  const form = useForm({
+    resolver: zodResolver(insertVenueSchema),
+    defaultValues: {
+      name: "",
+      rows: 10,
+      seatsPerRow: 10,
+      image: "",
+    },
+  });
+
+  const { data: venues = [], isLoading: isLoadingVenues } = useQuery<Venue[]>({
+    queryKey: ["/api/venues"],
+  });
+
+  const { data: shows = [] } = useQuery<Show[]>({
+    queryKey: ["/api/shows"],
+  });
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        form.setValue("image", base64String);
+        setPreviewUrl(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const createVenueMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await fetch("/api/venues", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/venues"] });
+      form.reset();
+      setPreviewUrl("");
+      toast({
+        title: "Success",
+        description: "Venue created successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to create venue",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateVenueMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      const res = await fetch(`/api/venues/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/venues"] });
+      form.reset();
+      setPreviewUrl("");
+      setEditingVenue(null);
+      toast({
+        title: "Success",
+        description: "Venue updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to update venue",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteVenueMutation = useMutation({
+    mutationFn: async (venueId: number) => {
+      const res = await fetch(`/api/venues/${venueId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error(await res.text());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/venues"] });
+      toast({
+        title: "Success",
+        description: "Venue deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete venue",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEdit = (venue: Venue) => {
+    form.reset({
+      name: venue.name,
+      rows: venue.rows,
+      seatsPerRow: venue.seatsPerRow,
+      image: venue.image || "",
+    });
+    setEditingVenue(venue);
+    setPreviewUrl(venue.image || "");
+  };
+
+  const onSubmit = (data: any) => {
+    if (editingVenue) {
+      updateVenueMutation.mutate({ id: editingVenue.id, data });
+    } else {
+      createVenueMutation.mutate(data);
+    }
+  };
+
+  if (isLoadingVenues) {
+    return (
+      <div className="flex items-center justify-center h-32">
+        <Loader2 className="h-8 w-8 animate-spin text-border" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Venue Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter venue name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="rows"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Number of Rows</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={50}
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="seatsPerRow"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Seats per Row</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={50}
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="image"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Venue Image (Optional)</FormLabel>
+                <FormControl>
+                  <div className="space-y-4">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                    />
+                    {previewUrl && (
+                      <div className="relative w-full max-w-lg overflow-hidden rounded-lg border">
+                        <div className="relative aspect-video">
+                          <img
+                            src={previewUrl}
+                            alt="Venue preview"
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={createVenueMutation.isPending || updateVenueMutation.isPending}
+          >
+            {(createVenueMutation.isPending || updateVenueMutation.isPending) && (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            )}
+            {editingVenue ? "Update Venue" : "Create Venue"}
+          </Button>
+
+          {editingVenue && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full mt-2"
+              onClick={() => {
+                setEditingVenue(null);
+                form.reset();
+                setPreviewUrl("");
+              }}
+            >
+              Cancel Editing
+            </Button>
+          )}
+        </form>
+      </Form>
+
+      <div className="space-y-4">
+        <h3 className="font-medium">Existing Venues</h3>
+        {venues.map((venue) => {
+          const venueShows = shows.filter(show => show.venueId === venue.id);
+
+          return (
+            <div
+              key={venue.id}
+              className="flex items-center justify-between p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors"
+            >
+              <div className="flex gap-4">
+                {venue.image && (
+                  <div className="relative w-16 sm:w-24 overflow-hidden rounded-lg border">
+                    <div className="relative aspect-video">
+                      <img
+                        src={venue.image}
+                        alt={`Image of ${venue.name}`}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <p className="font-medium">{venue.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {venue.rows} rows × {venue.seatsPerRow} seats per row (Total: {venue.rows * venue.seatsPerRow})
+                  </p>
+                  {venueShows.length > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      {venueShows.length} show(s) scheduled
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEdit(venue)}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={venueShows.length > 0}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Venue</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this venue? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteVenueMutation.mutate(venue.id)}
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
-
 
 function ShowForm() {
   const { toast } = useToast();
   const [previewUrl, setPreviewUrl] = useState<string>("");
-  const [showColorPicker, setShowColorPicker] = useState(false);
+
+  const { data: venues = [], isLoading: isLoadingVenues } = useQuery<Venue[]>({
+    queryKey: ["/api/venues"],
+  });
 
   const form = useForm({
     resolver: zodResolver(insertShowSchema),
@@ -91,7 +420,7 @@ function ShowForm() {
       title: "",
       date: new Date().toISOString().slice(0, 16),
       poster: "",
-      totalSeats: 100,
+      venueId: 0,
       description: "",
       themeColor: "#4B5320",
       emoji: "🎭",
@@ -139,6 +468,27 @@ function ShowForm() {
     },
   });
 
+  if (isLoadingVenues) {
+    return (
+      <div className="flex items-center justify-center h-32">
+        <Loader2 className="h-8 w-8 animate-spin text-border" />
+      </div>
+    );
+  }
+
+  if (venues.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+        <Building2 className="h-8 w-8 mb-2" />
+        <p>Create a venue first before adding shows</p>
+      </div>
+    );
+  }
+
+  const selectedVenue = venues.find(
+    (venue) => venue.id === form.watch("venueId")
+  );
+
   return (
     <Form {...form}>
       <form
@@ -163,7 +513,6 @@ function ShowForm() {
                         variant="outline"
                         className="w-12"
                         onClick={() => {
-                          // Simple emoji picker - in production use a proper emoji picker
                           const emojis = ["🎭", "🎪", "🎫", "🎬", "🎸", "🎹", "🎺", "🎻"];
                           const currentIndex = emojis.indexOf(field.value || "🎭");
                           const nextEmoji = emojis[(currentIndex + 1) % emojis.length];
@@ -212,24 +561,44 @@ function ShowForm() {
 
           <FormField
             control={form.control}
-            name="totalSeats"
+            name="venueId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Total Seats</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={500}
-                    {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value))}
-                  />
-                </FormControl>
+                <FormLabel>Venue</FormLabel>
+                <Select
+                  onValueChange={(value) => field.onChange(parseInt(value))}
+                  defaultValue={field.value?.toString()}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a venue" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {venues.map((venue) => (
+                      <SelectItem key={venue.id} value={venue.id.toString()}>
+                        {venue.name} ({venue.rows * venue.seatsPerRow} seats)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
+
+        {selectedVenue && (
+          <div className="p-4 rounded-md bg-secondary/50">
+            <p className="text-sm font-medium">Selected Venue Details:</p>
+            <p className="text-sm text-muted-foreground">
+              {selectedVenue.rows} rows × {selectedVenue.seatsPerRow} seats per row
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Total capacity: {selectedVenue.rows * selectedVenue.seatsPerRow} seats
+            </p>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           <FormField
@@ -695,7 +1064,7 @@ function UserList() {
         description: "Admin status updated successfully",
       });
     },
-    onError: (error: Error) => {
+    onError:(error: Error) => {
       toast({
         title: "Failed to update admin status",
         description: error.message,
@@ -867,7 +1236,6 @@ function UserList() {
 function AdminPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
 
   if (user && !user.isAdmin) {
     setLocation("/");
@@ -893,11 +1261,26 @@ function AdminPage() {
           <Card className="border-2">
             <CardHeader>
               <div className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-primary" />
+                <CardTitle>Manage Venues</CardTitle>
+              </div>
+              <CardDescription>
+                Create and manage venue layouts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <VenueForm />
+            </CardContent>
+          </Card>
+
+          <Card className="border-2">
+            <CardHeader>
+              <div className="flex items-center gap-2">
                 <CalendarPlus className="h-5 w-5 text-primary" />
                 <CardTitle>Add New Show</CardTitle>
               </div>
               <CardDescription>
-                Schedule a new show in the auditorium
+                Schedule a new show in a venue
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -917,7 +1300,7 @@ function AdminPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-2 lg:col-span-2">
+          <Card className="border-2">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />

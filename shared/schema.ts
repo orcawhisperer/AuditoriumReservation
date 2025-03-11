@@ -3,6 +3,15 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { sql } from "drizzle-orm";
 
+export const venues = sqliteTable("venues", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  image: text("image"),
+  rows: integer("rows").notNull(),
+  seatsPerRow: integer("seats_per_row").notNull(),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
 export const users = sqliteTable("users", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   username: text("username").notNull().unique(),
@@ -20,7 +29,7 @@ export const shows = sqliteTable("shows", {
   title: text("title").notNull(),
   date: text("date").notNull(),
   poster: text("poster"),
-  totalSeats: integer("total_seats").notNull().default(100),
+  venueId: integer("venue_id").references(() => venues.id),
   description: text("description"),
   themeColor: text("theme_color").default("#4B5320"),
   emoji: text("emoji"),
@@ -34,7 +43,15 @@ export const reservations = sqliteTable("reservations", {
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-// Extended user schema for registration
+// Venue schema
+export const insertVenueSchema = createInsertSchema(venues).extend({
+  name: z.string().min(1, "Venue name is required"),
+  rows: z.number().min(1, "Must have at least one row").max(50, "Maximum 50 rows allowed"),
+  seatsPerRow: z.number().min(1, "Must have at least one seat per row").max(50, "Maximum 50 seats per row allowed"),
+  image: z.string().optional(),
+});
+
+// User schema
 export const insertUserSchema = createInsertSchema(users, {
   isAdmin: z.literal(false).optional(),
   isEnabled: z.literal(true).optional(),
@@ -54,7 +71,7 @@ export const insertUserSchema = createInsertSchema(users, {
   ),
 });
 
-// Customize the show schema with new fields
+// Show schema
 export const insertShowSchema = createInsertSchema(shows).extend({
   date: z.string().refine(
     (str) => new Date(str) > new Date(),
@@ -63,7 +80,7 @@ export const insertShowSchema = createInsertSchema(shows).extend({
     }
   ).transform(str => new Date(str).toISOString()),
   poster: z.string().optional(),
-  totalSeats: z.number().min(1, "Must have at least one seat").max(500, "Maximum 500 seats allowed"),
+  venueId: z.number().min(1, "Please select a venue"),
   description: z.string().optional(),
   themeColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color").optional(),
   emoji: z.string().optional(),
@@ -85,7 +102,9 @@ export const loginSchema = z.object({
 export type LoginData = z.infer<typeof loginSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertShow = z.infer<typeof insertShowSchema>;
+export type InsertVenue = z.infer<typeof insertVenueSchema>;
 export type InsertReservation = z.infer<typeof insertReservationSchema>;
 export type User = typeof users.$inferSelect;
 export type Show = typeof shows.$inferSelect;
+export type Venue = typeof venues.$inferSelect;
 export type Reservation = typeof reservations.$inferSelect;
