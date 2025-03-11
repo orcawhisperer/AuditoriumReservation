@@ -7,15 +7,6 @@ const sqlite = new Database("sqlite.db");
 export const db = drizzle(sqlite, { schema });
 
 // Ensure tables are created
-sqlite.exec(`CREATE TABLE IF NOT EXISTS venues (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  image TEXT,
-  rows INTEGER NOT NULL,
-  seats_per_row INTEGER NOT NULL,
-  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-)`);
-
 sqlite.exec(`CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT NOT NULL UNIQUE,
@@ -33,11 +24,10 @@ sqlite.exec(`CREATE TABLE IF NOT EXISTS shows (
   title TEXT NOT NULL,
   date TEXT NOT NULL,
   poster TEXT,
-  venue_id INTEGER,
+  total_seats INTEGER NOT NULL DEFAULT 100,
   description TEXT,
   theme_color TEXT DEFAULT '#4B5320',
-  emoji TEXT,
-  FOREIGN KEY(venue_id) REFERENCES venues(id)
+  emoji TEXT
 )`);
 
 sqlite.exec(`CREATE TABLE IF NOT EXISTS reservations (

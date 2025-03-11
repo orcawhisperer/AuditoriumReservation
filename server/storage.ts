@@ -1,9 +1,9 @@
-import { InsertUser, InsertShow, InsertReservation, InsertVenue, User, Show, Reservation, Venue } from "@shared/schema";
+import { InsertUser, InsertShow, InsertReservation, User, Show, Reservation } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
-import { users, shows, reservations, venues } from '@shared/schema';
+import { users, shows, reservations } from '@shared/schema';
 import { hashPassword } from "./auth";
 
 const MemoryStore = createMemoryStore(session);
@@ -19,22 +19,12 @@ export interface IStorage {
   toggleUserAdmin(userId: number, isAdmin: boolean): Promise<void>;
   deleteAdmin(): Promise<void>;
   initializeAdmin(): Promise<void>;
-  updateUser(userId: number, data: Partial<InsertUser>): Promise<User>;
-  deleteUser(userId: number): Promise<void>;
-
-  // Venue operations
-  createVenue(venue: InsertVenue): Promise<Venue>;
-  getVenue(id: number): Promise<Venue | undefined>;
-  getVenues(): Promise<Venue[]>;
-  updateVenue(id: number, venue: Partial<InsertVenue>): Promise<Venue>;
-  deleteVenue(id: number): Promise<void>;
 
   // Show operations
   createShow(show: InsertShow): Promise<Show>;
   getShow(id: number): Promise<Show | undefined>;
   getShows(): Promise<Show[]>;
   deleteShow(id: number): Promise<void>;
-  updateShow(id: number, show: Partial<InsertShow>): Promise<Show>;
 
   // Reservation operations
   createReservation(userId: number, reservation: InsertReservation): Promise<Reservation>;
@@ -53,6 +43,7 @@ export class SQLiteStorage implements IStorage {
       checkPeriod: 86400000,
     });
 
+    // Check for required environment variables
     if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
       console.warn('Warning: ADMIN_USERNAME and/or ADMIN_PASSWORD not set. Using defaults: admin/admin');
     }
@@ -179,52 +170,6 @@ export class SQLiteStorage implements IStorage {
 
   async deleteReservation(id: number): Promise<void> {
     await db.delete(reservations).where(eq(reservations.id, id));
-  }
-
-  async createVenue(insertVenue: InsertVenue): Promise<Venue> {
-    const result = await db.insert(venues).values(insertVenue).returning();
-    return result[0];
-  }
-
-  async getVenue(id: number): Promise<Venue | undefined> {
-    const result = await db.select().from(venues).where(eq(venues.id, id));
-    return result[0];
-  }
-
-  async getVenues(): Promise<Venue[]> {
-    return await db.select().from(venues);
-  }
-
-  async updateVenue(id: number, venueData: Partial<InsertVenue>): Promise<Venue> {
-    const result = await db.update(venues)
-      .set(venueData)
-      .where(eq(venues.id, id))
-      .returning();
-    return result[0];
-  }
-
-  async deleteVenue(id: number): Promise<void> {
-    await db.delete(venues).where(eq(venues.id, id));
-  }
-
-  async updateUser(userId: number, userData: Partial<InsertUser>): Promise<User> {
-    const result = await db.update(users)
-      .set(userData)
-      .where(eq(users.id, userId))
-      .returning();
-    return result[0];
-  }
-
-  async deleteUser(userId: number): Promise<void> {
-    await db.delete(users).where(eq(users.id, userId));
-  }
-
-  async updateShow(id: number, showData: Partial<InsertShow>): Promise<Show> {
-    const result = await db.update(shows)
-      .set(showData)
-      .where(eq(shows.id, id))
-      .returning();
-    return result[0];
   }
 }
 

@@ -2,75 +2,16 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, hashPassword } from "./auth";
-import { insertShowSchema, insertReservationSchema, insertVenueSchema } from "@shared/schema";
+import { insertShowSchema, insertReservationSchema } from "@shared/schema";
 import { randomBytes } from "crypto";
 import { eq } from 'drizzle-orm';
 import { db } from './db';
-import { users, shows, reservations, venues } from '@shared/schema';
-import { insertUserSchema } from "@shared/schema";
+import { users, shows, reservations } from '@shared/schema';
+import { insertUserSchema } from "@shared/schema"; // Import missing schema
+
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
-
-  // Venue management routes
-  app.get("/api/venues", async (_req, res) => {
-    const venues = await storage.getVenues();
-    res.json(venues);
-  });
-
-  app.post("/api/venues", async (req, res) => {
-    if (!req.user?.isAdmin) {
-      return res.status(403).send("Admin access required");
-    }
-
-    const parsed = insertVenueSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json(parsed.error);
-    }
-
-    const venue = await storage.createVenue(parsed.data);
-    res.status(201).json(venue);
-  });
-
-  app.put("/api/venues/:id", async (req, res) => {
-    if (!req.user?.isAdmin) {
-      return res.status(403).send("Admin access required");
-    }
-
-    const parsed = insertVenueSchema.partial().safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json(parsed.error);
-    }
-
-    const venue = await storage.getVenue(parseInt(req.params.id));
-    if (!venue) {
-      return res.status(404).send("Venue not found");
-    }
-
-    const updatedVenue = await storage.updateVenue(venue.id, parsed.data);
-    res.json(updatedVenue);
-  });
-
-  app.delete("/api/venues/:id", async (req, res) => {
-    if (!req.user?.isAdmin) {
-      return res.status(403).send("Admin access required");
-    }
-
-    const venue = await storage.getVenue(parseInt(req.params.id));
-    if (!venue) {
-      return res.status(404).send("Venue not found");
-    }
-
-    // Check if venue has any shows
-    const shows = await storage.getShows();
-    const hasShows = shows.some(show => show.venueId === venue.id);
-    if (hasShows) {
-      return res.status(400).send("Cannot delete venue with existing shows");
-    }
-
-    await storage.deleteVenue(venue.id);
-    res.sendStatus(200);
-  });
 
   // User management routes
   app.get("/api/users", async (req, res) => {
@@ -81,7 +22,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(users);
   });
 
-  app.post("/api/users", async (req, res) => {
+  app.post("/api/users", async (req, res) => { // New user creation route
     if (!req.user?.isAdmin) {
       return res.status(403).send("Admin access required");
     }
@@ -105,32 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(201).json(user);
   });
 
-  app.put("/api/users/:id", async (req, res) => {
-    if (!req.user?.isAdmin) {
-      return res.status(403).send("Admin access required");
-    }
-
-    const userId = parseInt(req.params.id);
-    const user = await storage.getUser(userId);
-
-    if (!user) {
-      return res.status(404).send("User not found");
-    }
-
-    const parsed = insertUserSchema.partial().safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json(parsed.error);
-    }
-
-    if (parsed.data.password) {
-      parsed.data.password = await hashPassword(parsed.data.password);
-    }
-
-    const updatedUser = await storage.updateUser(userId, parsed.data);
-    res.json(updatedUser);
-  });
-
-  app.delete("/api/users/:id", async (req, res) => {
+  app.post("/api/users/:id/reset-password", async (req, res) => {
     if (!req.user?.isAdmin) {
       return res.status(403).send("Admin access required");
     }
@@ -143,14 +59,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     if (user.isAdmin) {
-      return res.status(403).send("Cannot delete admin user");
+      return res.status(403).send("Cannot reset admin password");
     }
 
-    await storage.deleteUser(userId);
-    res.sendStatus(200);
+    // Generate a temporary password
+    const temporaryPassword = randomBytes(4).toString("hex");
+    const hashedPassword = await hashPassword(temporaryPassword);
+    await storage.resetUserPassword(userId, hashedPassword);
+
+    res.json({ temporaryPassword });
   });
 
-  // Show routes with venue validation
+  app.post("/api/users/:id/toggle-admin", async (req, res) => {
+    if (!req.user?.isAdmin) {
+      return res.status(403).send("Admin access required");
+    }
+
+    const users = await storage.getUsers();
+    const primaryAdmin = users.find(u => u.isAdmin);
+
+    // Only the primary admin (first admin) can modify admin status
+    if (req.user.id !== primaryAdmin?.id) {
+      return res.status(403).send("Only the primary admin can modify admin status");
+    }
+
+    const userId = parseInt(req.params.id);
+    const user = await storage.getUser(userId);
+
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    // Prevent primary admin from removing their own admin status
+    if (user.id === primaryAdmin?.id) {
+      return res.status(403).send("Cannot modify primary admin status");
+    }
+
+    const { isAdmin } = req.body;
+    if (typeof isAdmin !== "boolean") {
+      return res.status(400).send("Invalid admin status");
+    }
+
+    await storage.toggleUserAdmin(userId, isAdmin);
+    // Return the updated user data
+    const updatedUser = await storage.getUser(userId);
+    res.json(updatedUser);
+  });
+
+  app.post("/api/users/:id/toggle-status", async (req, res) => {
+    if (!req.user?.isAdmin) {
+      return res.status(403).send("Admin access required");
+    }
+
+    const userId = parseInt(req.params.id);
+    const user = await storage.getUser(userId);
+
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    if (user.isAdmin) {
+      return res.status(403).send("Cannot modify admin status");
+    }
+
+    const { isEnabled } = req.body;
+    if (typeof isEnabled !== "boolean") {
+      return res.status(400).send("Invalid status");
+    }
+
+    await storage.toggleUserStatus(userId, isEnabled);
+    // Return the updated user data instead of just OK
+    const updatedUser = await storage.getUser(userId);
+    res.json(updatedUser);
+  });
+
+  // Show routes
+  app.get("/api/shows", async (_req, res) => {
+    const shows = await storage.getShows();
+    res.json(shows);
+  });
+
+  app.get("/api/shows/:id", async (req, res) => {
+    const show = await storage.getShow(parseInt(req.params.id));
+    if (!show) {
+      return res.status(404).send("Show not found");
+    }
+    res.json(show);
+  });
+
   app.post("/api/shows", async (req, res) => {
     if (!req.user?.isAdmin) {
       return res.status(403).send("Admin access required");
@@ -161,42 +157,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json(parsed.error);
     }
 
-    // Verify venue exists
-    const venue = await storage.getVenue(parsed.data.venueId);
-    if (!venue) {
-      return res.status(400).send("Invalid venue selected");
-    }
-
     const show = await storage.createShow(parsed.data);
     res.status(201).json(show);
-  });
-
-  app.put("/api/shows/:id", async (req, res) => {
-    if (!req.user?.isAdmin) {
-      return res.status(403).send("Admin access required");
-    }
-
-    const showId = parseInt(req.params.id);
-    const show = await storage.getShow(showId);
-
-    if (!show) {
-      return res.status(404).send("Show not found");
-    }
-
-    const parsed = insertShowSchema.partial().safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json(parsed.error);
-    }
-
-    if (parsed.data.venueId) {
-      const venue = await storage.getVenue(parsed.data.venueId);
-      if (!venue) {
-        return res.status(400).send("Invalid venue selected");
-      }
-    }
-
-    const updatedShow = await storage.updateShow(showId, parsed.data);
-    res.json(updatedShow);
   });
 
   app.delete("/api/shows/:id", async (req, res) => {
