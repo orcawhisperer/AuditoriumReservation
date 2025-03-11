@@ -7,6 +7,8 @@ import { randomBytes } from "crypto";
 import { eq } from 'drizzle-orm';
 import { db } from './db';
 import { users, shows, reservations } from '@shared/schema';
+import { insertUserSchema } from "@shared/schema"; // Import missing schema
+
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -18,6 +20,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     const users = await storage.getUsers();
     res.json(users);
+  });
+
+  app.post("/api/users", async (req, res) => { // New user creation route
+    if (!req.user?.isAdmin) {
+      return res.status(403).send("Admin access required");
+    }
+
+    const parsed = insertUserSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json(parsed.error);
+    }
+
+    const existingUser = await storage.getUserByUsername(parsed.data.username);
+    if (existingUser) {
+      return res.status(400).send("Username already exists");
+    }
+
+    const hashedPassword = await hashPassword(parsed.data.password);
+    const user = await storage.createUser({
+      ...parsed.data,
+      password: hashedPassword,
+    });
+
+    res.status(201).json(user);
   });
 
   app.post("/api/users/:id/reset-password", async (req, res) => {

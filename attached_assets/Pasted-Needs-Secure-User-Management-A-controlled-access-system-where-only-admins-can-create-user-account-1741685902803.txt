@@ -1,0 +1,74 @@
+Needs
+● Secure User Management: A controlled access system where only
+admins can create user accounts with unique IDs.
+● Event Creation & Booking System: Admins can create multiple events
+with unique event IDs, set seat availability, and provide event details.
+● Visual Seat Representation: Users can view available (green) and booked
+(red) seats for easy selection
+● Admin Controls: Only admins can insert, update, and delete event data,
+with a hierarchical admin structure allowing only the first admin to
+remove other admins.
+Goals
+● Immediate Goals: Develop a functional and easy-to-use interface with
+core event management capabilities.
+● Short-Term Goals: Optimize user experience with enhanced event
+customization (e.g., colors, emojis) and streamlined seat booking.
+● Long-Term Goals: Ensure scalability and security while integrating
+advanced features as needed in future updates.
+User Roles
+USERS:
+● Access to view and book events.
+● Ability to view personal profile information.
+ADMIN:
+● Full access to create, edit, and delete events.
+● Manage user accounts, including creation and deletion.
+● Assign and revoke admin privileges (primary admin only).
+User Authentication & Profiles
+● Login/Logout: Users will log in using credentials created and distributed
+by the admin.
+● Profile Information: Each user profile will include:
+○ Name
+○ Gender
+○ Date of Birth (DOB)
+○ System-generated User ID
+○ Password
+○ Booking History
+Admin Panel
+● Admin Login: Accessible via a "Login Admin" button on the main screen.
+● Data Management: Admins can insert, update, and delete data related to
+events and users.
+● Admin Management: The primary admin can appoint additional admins
+and retains the exclusive right to remove them.
+Event Management
+● Event Creation: Admins can create multiple events, each assigned a
+unique Event ID.
+● Seat Management: Define available seats for each event, with real-time
+status updates:
+○ Available Seats: Displayed in green.
+○ Booked Seats: Displayed in red.
+● Event Customization: Incorporate colors and emojis to enhance event
+descriptions and user engagement.
+Additional Features
+● Security: Ensure data protection through encrypted communications
+and secure authentication protocols.
+● Scalability: Design the app architecture to accommodate future feature
+expansions and increased user load.
+Database Design
+Data Storage
+User Data:
+● Tables: Users, Admins
+● Fields: User ID, Name, Gender, DOB, Password (hashed), Booking History
+Event Data:
+● Tables: Events, Seats
+● Fields: Event ID, Event Name, Description, Date, Time, Total Seats,
+Booked Seats, Seat Status (available/booked), Customization (colors)
+Authentication Flow
+
+User Login:
+○ Users enter credentials provided by the admin.
+○ Upon successful authentication, users gain access to event listings
+and booking functionalities.
+
+Admin Login:
+○ Admins access the admin panel via the "Login Admin" button.
+○ After authentication, admins can manage events and user

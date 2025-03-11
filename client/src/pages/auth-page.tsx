@@ -15,9 +15,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
-import { insertUserSchema, loginSchema } from "@shared/schema";
+import { loginSchema } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useLocation } from "wouter";
@@ -77,22 +76,11 @@ export default function AuthPage() {
               <CardTitle>Secure Access</CardTitle>
             </div>
             <CardDescription>
-              Login or create a new account to continue
+              Please contact an administrator to create an account
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="login" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Register</TabsTrigger>
-              </TabsList>
-              <TabsContent value="login">
-                <LoginForm />
-              </TabsContent>
-              <TabsContent value="register">
-                <RegisterForm />
-              </TabsContent>
-            </Tabs>
+            <LoginForm />
           </CardContent>
         </Card>
       </div>
@@ -103,7 +91,7 @@ export default function AuthPage() {
 function LoginForm() {
   const { loginMutation } = useAuth();
   const form = useForm<z.infer<typeof loginSchema>>({
-    resolver: zodResolver(loginSchema), // Use loginSchema instead of insertUserSchema
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       username: "",
       password: "",
@@ -148,106 +136,6 @@ function LoginForm() {
           disabled={loginMutation.isPending}
         >
           Login
-        </Button>
-      </form>
-    </Form>
-  );
-}
-
-function RegisterForm() {
-  const { registerMutation } = useAuth();
-  const form = useForm<z.infer<typeof insertUserSchema>>({
-    resolver: zodResolver(insertUserSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-      name: "",
-      gender: "male",
-      dateOfBirth: "",
-    },
-  });
-
-  return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit((data) => registerMutation.mutate(data))}
-        className="space-y-4"
-      >
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input placeholder="Choose a username" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="Choose a password" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Full Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter your full name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="gender"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Gender</FormLabel>
-              <FormControl>
-                <select className="w-full px-3 py-2 border rounded-md" {...field}>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="dateOfBirth"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Date of Birth</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={registerMutation.isPending}
-        >
-          Register
         </Button>
       </form>
     </Form>
