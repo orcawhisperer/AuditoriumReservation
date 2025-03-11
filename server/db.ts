@@ -23,7 +23,11 @@ sqlite.exec(`CREATE TABLE IF NOT EXISTS shows (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
   date TEXT NOT NULL,
-  poster TEXT
+  poster TEXT,
+  total_seats INTEGER NOT NULL DEFAULT 100,
+  description TEXT,
+  theme_color TEXT DEFAULT '#4B5320',
+  emoji TEXT
 )`);
 
 sqlite.exec(`CREATE TABLE IF NOT EXISTS reservations (
