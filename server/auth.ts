@@ -99,13 +99,10 @@ export async function setupAuth(app: Express) {
     res.json(req.user);
   });
 
-  //Admin user handling - Assumes storage.deleteAdmin and storage.createAdmin exist
   try {
-    await storage.deleteAdmin();
-    const adminUser = await storage.createAdmin({username: 'admin', password: await hashPassword('adminpassword')});
-    console.log(`Admin user recreated with ID: ${adminUser.id}`);
+    await storage.initializeAdmin(); //This line replaces the duplicate admin creation
   } catch (error) {
-    console.error("Error recreating admin user:", error);
+    console.error("Error initializing admin user:", error);
   }
 }
 

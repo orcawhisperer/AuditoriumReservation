@@ -16,6 +16,8 @@ export interface IStorage {
   getUsers(): Promise<User[]>;
   resetUserPassword(userId: number, newPassword: string): Promise<void>;
   toggleUserStatus(userId: number, isEnabled: boolean): Promise<void>;
+  toggleUserAdmin(userId: number, isAdmin: boolean): Promise<void>;
+  deleteAdmin(): Promise<void>;
 
   // Show operations
   createShow(show: InsertShow): Promise<Show>;
@@ -112,6 +114,17 @@ export class SQLiteStorage implements IStorage {
     await db.update(users)
       .set({ isEnabled })
       .where(eq(users.id, userId));
+  }
+
+  async toggleUserAdmin(userId: number, isAdmin: boolean): Promise<void> {
+    await db.update(users)
+      .set({ isAdmin })
+      .where(eq(users.id, userId));
+  }
+
+  async deleteAdmin(): Promise<void> {
+    const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+    await db.delete(users).where(eq(users.username, adminUsername));
   }
 
   async createShow(insertShow: InsertShow): Promise<Show> {

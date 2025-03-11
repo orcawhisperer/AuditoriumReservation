@@ -23,7 +23,7 @@ import { useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
-import { Loader2, Trash2, Shield, CalendarPlus, Users, Search } from "lucide-react";
+import { Loader2, Trash2, Shield, CalendarPlus, Users, Search, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import {
@@ -347,6 +347,7 @@ function ShowList() {
 }
 
 function UserList() {
+  const { user: currentUser } = useAuth(); // Get current user to check if they're the primary admin
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -356,7 +357,7 @@ function UserList() {
     queryKey: ["/api/users"],
   });
 
-  const filteredUsers = users.filter(user =>
+  const filteredUsers = users.filter((user) =>
     user.username.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -365,6 +366,9 @@ function UserList() {
     (page - 1) * itemsPerPage,
     page * itemsPerPage
   );
+
+  // Check if current user is the primary admin (first admin in the system)
+  const isPrimaryAdmin = currentUser?.id === users.find((u) => u.isAdmin)?.id;
 
   const resetPasswordMutation = useMutation({
     mutationFn: async (userId: number) => {
@@ -403,7 +407,7 @@ function UserList() {
       // Optimistically update the user in the cache
       queryClient.setQueryData<User[]>(["/api/users"], (oldUsers) => {
         if (!oldUsers) return [data];
-        return oldUsers.map(user => user.id === data.id ? data : user);
+        return oldUsers.map((user) => (user.id === data.id ? data : user));
       });
 
       toast({
@@ -418,6 +422,39 @@ function UserList() {
         variant: "destructive",
       });
       // Invalidate the query to ensure we have the correct data
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+    },
+  });
+
+  // Add mutation for toggling admin status
+  const toggleAdminStatusMutation = useMutation({
+    mutationFn: async ({ userId, isAdmin }: { userId: number; isAdmin: boolean }) => {
+      const res = await fetch(`/api/users/${userId}/toggle-admin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isAdmin }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: (data) => {
+      // Optimistically update the user in the cache
+      queryClient.setQueryData<User[]>(["/api/users"], (oldUsers) => {
+        if (!oldUsers) return [data];
+        return oldUsers.map((user) => (user.id === data.id ? data : user));
+      });
+
+      toast({
+        title: "Success",
+        description: "Admin status updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to update admin status",
+        description: error.message,
+        variant: "destructive",
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
     },
   });
@@ -463,17 +500,43 @@ function UserList() {
             <div className="flex items-center gap-2">
               <p className="font-medium">{user.username}</p>
               {user.isAdmin && (
-                <span className="px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary">
+                <span className="px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary flex items-center gap-1">
+                  {user.id === users.find((u) => u.isAdmin)?.id && (
+                    <Star className="h-3 w-3" />
+                  )}
                   Admin
                 </span>
               )}
             </div>
+            <p className="text-sm text-muted-foreground">
+              Name: {user.name || "Not set"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Gender: {user.gender || "Not set"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Date of Birth: {user.dateOfBirth ? format(new Date(user.dateOfBirth), "PPP") : "Not set"}
+            </p>
             <p className="text-sm text-muted-foreground">
               Account status: {user.isEnabled ? "Active" : "Disabled"}
             </p>
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Only show admin toggle for primary admin */}
+            {isPrimaryAdmin && user.id !== currentUser?.id && (
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={user.isAdmin}
+                  onCheckedChange={(checked) =>
+                    toggleAdminStatusMutation.mutate({ userId: user.id, isAdmin: checked })
+                  }
+                  disabled={toggleAdminStatusMutation.isPending}
+                />
+                <span className="text-sm">Admin</span>
+              </div>
+            )}
+
             <div className="flex items-center gap-2">
               <Switch
                 checked={user.isEnabled}
@@ -525,7 +588,7 @@ function UserList() {
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
                 />
               </PaginationItem>
@@ -541,7 +604,7 @@ function UserList() {
               ))}
               <PaginationItem>
                 <PaginationNext
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
                 />
               </PaginationItem>

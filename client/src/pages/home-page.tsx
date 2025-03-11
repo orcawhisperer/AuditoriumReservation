@@ -16,10 +16,16 @@ import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-function ShowCard({ show, reservations }: { show: Show; reservations: Reservation[] }) {
+function ShowCard({
+  show,
+  reservations,
+}: {
+  show: Show;
+  reservations: Reservation[];
+}) {
   const [, setLocation] = useLocation();
   const isPastShow = new Date(show.date) < new Date();
-  const hasReservation = reservations.some(r => r.showId === show.id);
+  const hasReservation = reservations.some((r) => r.showId === show.id);
 
   return (
     <Card>
@@ -40,7 +46,8 @@ function ShowCard({ show, reservations }: { show: Show; reservations: Reservatio
             <div>
               <h3 className="font-semibold">{show.title}</h3>
               <p className="text-sm text-muted-foreground">
-                {format(new Date(show.date), "PPP")}
+                {format(new Date(show.date), "PPP")} at{" "}
+                {format(new Date(show.date), "p")}
               </p>
               {isPastShow && (
                 <p className="text-sm text-destructive mt-1">
@@ -59,11 +66,7 @@ function ShowCard({ show, reservations }: { show: Show; reservations: Reservatio
             disabled={isPastShow || hasReservation}
             variant={isPastShow || hasReservation ? "outline" : "default"}
           >
-            {isPastShow
-              ? "Past Show"
-              : hasReservation
-                ? "Reserved"
-                : "Reserve"}
+            {isPastShow ? "Past Show" : hasReservation ? "Reserved" : "Reserve"}
           </Button>
         </div>
       </CardContent>
@@ -129,7 +132,11 @@ export default function HomePage() {
               ) : (
                 <div className="space-y-4">
                   {shows.map((show) => (
-                    <ShowCard key={show.id} show={show} reservations={reservations} />
+                    <ShowCard
+                      key={show.id}
+                      show={show}
+                      reservations={reservations}
+                    />
                   ))}
                 </div>
               )}
@@ -165,7 +172,13 @@ export default function HomePage() {
   );
 }
 
-function ReservationCard({ reservation, show }: { reservation: Reservation; show?: Show }) {
+function ReservationCard({
+  reservation,
+  show,
+}: {
+  reservation: Reservation;
+  show?: Show;
+}) {
   const { toast } = useToast();
   const isPastShow = show && new Date(show.date) < new Date();
   const cancelMutation = useMutation({
@@ -178,7 +191,9 @@ function ReservationCard({ reservation, show }: { reservation: Reservation; show
     onSuccess: () => {
       // Invalidate both user's reservations and show's reservations
       queryClient.invalidateQueries({ queryKey: ["/api/reservations/user"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/reservations/show/${reservation.showId}`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/reservations/show/${reservation.showId}`],
+      });
       toast({
         title: "Success",
         description: "Reservation cancelled successfully",
@@ -202,7 +217,8 @@ function ReservationCard({ reservation, show }: { reservation: Reservation; show
           <div>
             <h3 className="font-semibold">{show.title}</h3>
             <p className="text-sm text-muted-foreground">
-              {format(new Date(show.date), "PPP")} at {format(new Date(show.date), "p")}
+              {format(new Date(show.date), "PPP")} at{" "}
+              {format(new Date(show.date), "p")}
             </p>
             <p className="text-sm text-muted-foreground">
               Seats: {JSON.parse(reservation.seatNumbers).join(", ")}

@@ -12,7 +12,11 @@ sqlite.exec(`CREATE TABLE IF NOT EXISTS users (
   username TEXT NOT NULL UNIQUE,
   password TEXT NOT NULL,
   is_admin INTEGER NOT NULL DEFAULT 0,
-  is_enabled INTEGER NOT NULL DEFAULT 1
+  is_enabled INTEGER NOT NULL DEFAULT 1,
+  name TEXT,
+  gender TEXT,
+  date_of_birth TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 )`);
 
 sqlite.exec(`CREATE TABLE IF NOT EXISTS shows (

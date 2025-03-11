@@ -44,6 +44,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ temporaryPassword });
   });
 
+  app.post("/api/users/:id/toggle-admin", async (req, res) => {
+    if (!req.user?.isAdmin) {
+      return res.status(403).send("Admin access required");
+    }
+
+    const users = await storage.getUsers();
+    const primaryAdmin = users.find(u => u.isAdmin);
+
+    // Only the primary admin (first admin) can modify admin status
+    if (req.user.id !== primaryAdmin?.id) {
+      return res.status(403).send("Only the primary admin can modify admin status");
+    }
+
+    const userId = parseInt(req.params.id);
+    const user = await storage.getUser(userId);
+
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    // Prevent primary admin from removing their own admin status
+    if (user.id === primaryAdmin?.id) {
+      return res.status(403).send("Cannot modify primary admin status");
+    }
+
+    const { isAdmin } = req.body;
+    if (typeof isAdmin !== "boolean") {
+      return res.status(400).send("Invalid admin status");
+    }
+
+    await storage.toggleUserAdmin(userId, isAdmin);
+    // Return the updated user data
+    const updatedUser = await storage.getUser(userId);
+    res.json(updatedUser);
+  });
+
   app.post("/api/users/:id/toggle-status", async (req, res) => {
     if (!req.user?.isAdmin) {
       return res.status(403).send("Admin access required");
@@ -201,7 +237,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error(`[Transaction ${retryCount}] Failed:`, error);
 
           if (error instanceof Error && (
-            error.message.includes("SQLITE_BUSY") || 
+            error.message.includes("SQLITE_BUSY") ||
             error.message.includes("database is locked")
           )) {
             // Only retry on concurrent access errors

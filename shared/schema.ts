@@ -9,6 +9,10 @@ export const users = sqliteTable("users", {
   password: text("password").notNull(),
   isAdmin: integer("is_admin", { mode: "boolean" }).notNull().default(false),
   isEnabled: integer("is_enabled", { mode: "boolean" }).notNull().default(true),
+  name: text("name"),
+  gender: text("gender"),
+  dateOfBirth: text("date_of_birth"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const shows = sqliteTable("shows", {
@@ -26,9 +30,24 @@ export const reservations = sqliteTable("reservations", {
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+// Extended user schema for registration
+export const insertUserSchema = createInsertSchema(users, {
+  isAdmin: z.literal(false).optional(),
+  isEnabled: z.literal(true).optional(),
+}).extend({
+  name: z.string().min(1, "Name is required"),
+  gender: z.enum(["male", "female", "other"], {
+    required_error: "Please select a gender",
+  }),
+  dateOfBirth: z.string().refine(
+    (date) => {
+      const dob = new Date(date);
+      const now = new Date();
+      const age = now.getFullYear() - dob.getFullYear();
+      return age >= 13; // Basic age validation
+    },
+    { message: "Must be at least 13 years old" }
+  ),
 });
 
 // Customize the show schema to validate the date
