@@ -499,10 +499,6 @@ function ShowForm() {
     );
   }
 
-  const selectedVenue = venues.find(
-    (venue) => venue.id === form.watch("venueId")
-  );
-
   return (
     <Form {...form}>
       <form
@@ -602,14 +598,19 @@ function ShowForm() {
           />
         </div>
 
-        {selectedVenue && (
+        {venues.find((venue) => venue.id === form.watch("venueId")) && (
           <div className="p-4 rounded-md bg-secondary/50">
             <p className="text-sm font-medium">Selected Venue Details:</p>
             <p className="text-sm text-muted-foreground">
-              {selectedVenue.rows} rows × {selectedVenue.seatsPerRow} seats per row
+              {venues.find((venue) => venue.id === form.watch("venueId"))?.rows} rows ×{" "}
+              {venues.find((venue) => venue.id === form.watch("venueId"))?.seatsPerRow}{" "}
+              seats per row
             </p>
             <p className="text-sm text-muted-foreground">
-              Total capacity: {selectedVenue.rows * selectedVenue.seatsPerRow} seats
+              Total capacity:{" "}
+              {venues.find((venue) => venue.id === form.watch("venueId"))?.rows *
+                venues.find((venue) => venue.id === form.watch("venueId"))?.seatsPerRow}{" "}
+              seats
             </p>
           </div>
         )}
@@ -701,7 +702,7 @@ function ShowList() {
   });
 
   const { data: reservations = [] } = useQuery<Reservation[]>({
-    queryKey: ["/api/reservations"],
+    queryKey: ["/api/reservations/show"],
   });
 
   const deleteShowMutation = useMutation({
@@ -709,7 +710,7 @@ function ShowList() {
       const res = await fetch(`/api/shows/${showId}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error("Failed to delete show");
+      if (!res.ok) throw new Error(await res.text());
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/shows"] });
@@ -1061,7 +1062,7 @@ function UserList() {
 
       toast({
         title: "Success",
-        description: "User status updated successfully",
+        description: "User status updated successfully"
       });
     },
     onError: (error: Error) => {
@@ -1070,7 +1071,7 @@ function UserList() {
         description: error.message,
         variant: "destructive",
       });
-      queryClient.invalidateQueries({ queryKey: ["/apiusers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
     },
   });
 
@@ -1084,17 +1085,18 @@ function UserList() {
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
-    onSuccess: (data) => {      queryClient.setQueryData<User[]>(["/api/users"], (oldUsers) => {
+    onSuccess: (data) => {
+      queryClient.setQueryData<User[]>(["/api/users"], (oldUsers) => {
         if (!oldUsers) return [data];
         return oldUsers.map((user) => (user.id === data.id ? data : user));
       });
 
       toast({
         title: "Success",
-        description: "Admin status updated successfully",
+        description: "Admin status updated successfully"
       });
     },
-    onError:(error: Error) => {
+    onError: (error: Error) => {
       toast({
         title: "Failed to update admin status",
         description: error.message,
