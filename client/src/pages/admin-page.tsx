@@ -456,6 +456,7 @@ function ShowForm() {
 
   const createShowMutation = useMutation({
     mutationFn: async (data: any) => {
+      console.log("Creating show with data:", data); 
       const res = await fetch("/api/shows", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -474,6 +475,7 @@ function ShowForm() {
       });
     },
     onError: (error: Error) => {
+      console.error("Failed to create show:", error); 
       toast({
         title: "Failed to create show",
         description: error.message,
@@ -502,7 +504,10 @@ function ShowForm() {
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit((data) => createShowMutation.mutate(data))}
+        onSubmit={form.handleSubmit((data) => {
+          console.log("Form submission data:", data); 
+          createShowMutation.mutate(data);
+        })}
         className="space-y-4"
       >
         <FormField
@@ -1055,7 +1060,7 @@ function UserList() {
       return res.json();
     },
     onSuccess: (data) => {
-      queryClient.setQueryData<User[]>(["/api/users"], (oldUsers) => {
+      queryClient.setQueryData<User[]>(["/api/users"], (oldUsers)=> {
         if (!oldUsers) return [data];
         return oldUsers.map((user) => (user.id === data.id ? data : user));
       });
