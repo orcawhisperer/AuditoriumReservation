@@ -18,15 +18,19 @@ export const users = sqliteTable("users", {
 export const shows = sqliteTable("shows", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   title: text("title").notNull(),
-  date: text("date").notNull(), // SQLite doesn't have a native timestamp type
+  date: text("date").notNull(),
   poster: text("poster"),
+  totalSeats: integer("total_seats").notNull().default(100),
+  description: text("description"),
+  themeColor: text("theme_color").default("#4B5320"),
+  emoji: text("emoji"),
 });
 
 export const reservations = sqliteTable("reservations", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id").references(() => users.id),
   showId: integer("show_id").references(() => shows.id),
-  seatNumbers: text("seat_numbers").notNull(), // We'll store as JSON string
+  seatNumbers: text("seat_numbers").notNull(), 
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
@@ -44,13 +48,13 @@ export const insertUserSchema = createInsertSchema(users, {
       const dob = new Date(date);
       const now = new Date();
       const age = now.getFullYear() - dob.getFullYear();
-      return age >= 13; // Basic age validation
+      return age >= 13;
     },
     { message: "Must be at least 13 years old" }
   ),
 });
 
-// Customize the show schema to validate the date
+// Customize the show schema with new fields
 export const insertShowSchema = createInsertSchema(shows).extend({
   date: z.string().refine(
     (str) => new Date(str) > new Date(),
@@ -59,6 +63,10 @@ export const insertShowSchema = createInsertSchema(shows).extend({
     }
   ).transform(str => new Date(str).toISOString()),
   poster: z.string().optional(),
+  totalSeats: z.number().min(1, "Must have at least one seat").max(500, "Maximum 500 seats allowed"),
+  description: z.string().optional(),
+  themeColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color").optional(),
+  emoji: z.string().optional(),
 });
 
 export const insertReservationSchema = createInsertSchema(reservations).pick({
@@ -66,21 +74,18 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
   seatNumbers: true,
 }).extend({
   seatNumbers: z.array(z.string()).max(4, "Maximum 4 seats per reservation")
-    .transform(seats => JSON.stringify(seats)), // Convert array to JSON string for storage
+    .transform(seats => JSON.stringify(seats)),
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type InsertShow = z.infer<typeof insertShowSchema>;
-export type InsertReservation = z.infer<typeof insertReservationSchema>;
-
-export type User = typeof users.$inferSelect;
-export type Show = typeof shows.$inferSelect;
-export type Reservation = typeof reservations.$inferSelect;
-
-// Add this alongside other schemas
 export const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
 });
 
 export type LoginData = z.infer<typeof loginSchema>;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertShow = z.infer<typeof insertShowSchema>;
+export type InsertReservation = z.infer<typeof insertReservationSchema>;
+export type User = typeof users.$inferSelect;
+export type Show = typeof shows.$inferSelect;
+export type Reservation = typeof reservations.$inferSelect;

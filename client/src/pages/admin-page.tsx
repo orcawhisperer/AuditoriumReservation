@@ -16,14 +16,25 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
-import { Show, insertShowSchema, User } from "@shared/schema";
+import { Show, insertShowSchema, User, insertUserSchema } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
-import { Loader2, Trash2, Shield, CalendarPlus, Users, Search, Star } from "lucide-react";
+import {
+  Loader2,
+  Trash2,
+  Shield,
+  CalendarPlus,
+  Users,
+  Search,
+  Star,
+  UserPlus,
+  Palette,
+  Smile,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import {
@@ -37,7 +48,22 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Pagination,
   PaginationContent,
@@ -47,90 +73,28 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
-export default function AdminPage() {
-  const { user } = useAuth();
-  const [, setLocation] = useLocation();
-  const { toast } = useToast();
-
-  // Redirect if not admin
-  if (user && !user.isAdmin) {
-    setLocation("/");
-    return null;
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-[#4B5320]/10 to-[#4B5320]/5">
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
-            <Shield className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">Admin Control</h1>
-          </div>
-          <Button variant="outline" onClick={() => setLocation("/")}>
-            Back to Home
-          </Button>
-        </div>
-      </header>
-
-      <main className="container mx-auto py-8 space-y-8">
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card className="border-2">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <CalendarPlus className="h-5 w-5 text-primary" />
-                <CardTitle>Add New Show</CardTitle>
-              </div>
-              <CardDescription>
-                Schedule a new show in the auditorium
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ShowForm />
-            </CardContent>
-          </Card>
-
-          <Card className="border-2">
-            <CardHeader>
-              <CardTitle>Manage Shows</CardTitle>
-              <CardDescription>
-                View and manage scheduled shows
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ShowList />
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 lg:col-span-2">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                <CardTitle>Manage Users</CardTitle>
-              </div>
-              <CardDescription>
-                View and manage user accounts
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <UserList />
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-    </div>
-  );
+interface Reservation {
+  id: number;
+  showId: number;
+  seatNumbers: string;
 }
+
 
 function ShowForm() {
   const { toast } = useToast();
   const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(insertShowSchema),
     defaultValues: {
       title: "",
-      date: new Date().toISOString().slice(0, 16), // Format: YYYY-MM-DDTHH:mm
+      date: new Date().toISOString().slice(0, 16),
       poster: "",
+      totalSeats: 100,
+      description: "",
+      themeColor: "#4B5320",
+      emoji: "🎭",
     },
   });
 
@@ -188,7 +152,29 @@ function ShowForm() {
             <FormItem>
               <FormLabel>Title</FormLabel>
               <FormControl>
-                <Input placeholder="Enter show title" {...field} />
+                <div className="flex gap-2">
+                  <Input placeholder="Enter show title" {...field} />
+                  <FormField
+                    control={form.control}
+                    name="emoji"
+                    render={({ field }) => (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-12"
+                        onClick={() => {
+                          // Simple emoji picker - in production use a proper emoji picker
+                          const emojis = ["🎭", "🎪", "🎫", "🎬", "🎸", "🎹", "🎺", "🎻"];
+                          const currentIndex = emojis.indexOf(field.value || "🎭");
+                          const nextEmoji = emojis[(currentIndex + 1) % emojis.length];
+                          field.onChange(nextEmoji);
+                        }}
+                      >
+                        {field.value || "🎭"}
+                      </Button>
+                    )}
+                  />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -197,17 +183,83 @@ function ShowForm() {
 
         <FormField
           control={form.control}
-          name="date"
+          name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Date and Time</FormLabel>
+              <FormLabel>Description</FormLabel>
               <FormControl>
-                <Input type="datetime-local" {...field} />
+                <Input placeholder="Enter show description" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date and Time</FormLabel>
+                <FormControl>
+                  <Input type="datetime-local" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="totalSeats"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Total Seats</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={500}
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="themeColor"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center gap-2">
+                  Theme Color
+                  <Palette className="h-4 w-4" />
+                </FormLabel>
+                <FormControl>
+                  <div className="flex gap-2">
+                    <Input
+                      type="color"
+                      {...field}
+                      className="h-10 w-20 p-1"
+                    />
+                    <Input
+                      {...field}
+                      placeholder="#4B5320"
+                      className="font-mono"
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}
@@ -261,6 +313,10 @@ function ShowList() {
     queryKey: ["/api/shows"],
   });
 
+  const { data: reservations = [] } = useQuery<Reservation[]>({
+    queryKey: ["/api/reservations"],
+  });
+
   const deleteShowMutation = useMutation({
     mutationFn: async (showId: number) => {
       const res = await fetch(`/api/shows/${showId}`, {
@@ -284,6 +340,15 @@ function ShowList() {
     },
   });
 
+  const getShowReservations = (showId: number) => {
+    return reservations.filter(r => r.showId === showId);
+  };
+
+  const getBookedSeats = (showId: number) => {
+    const showReservations = getShowReservations(showId);
+    return showReservations.flatMap(r => JSON.parse(r.seatNumbers));
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -303,51 +368,237 @@ function ShowList() {
 
   return (
     <div className="space-y-4">
-      {shows.map((show) => (
-        <div
-          key={show.id}
-          className="flex items-center justify-between p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors"
-        >
-          <div className="flex gap-4">
-            {show.poster && (
-              <div className="relative w-16 sm:w-24 overflow-hidden rounded-lg border">
-                <div className="relative aspect-video">
-                  <img
-                    src={show.poster}
-                    alt={`Poster for ${show.title}`}
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
+      {shows.map((show) => {
+        const bookedSeats = getBookedSeats(show.id);
+        const availableSeats = show.totalSeats - bookedSeats.length;
+
+        return (
+          <div
+            key={show.id}
+            className="flex items-center justify-between p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors"
+            style={{
+              borderColor: show.themeColor || '#4B5320',
+              backgroundColor: `${show.themeColor}10` || '#4B532010'
+            }}
+          >
+            <div className="flex gap-4">
+              {show.poster && (
+                <div className="relative w-16 sm:w-24 overflow-hidden rounded-lg border">
+                  <div className="relative aspect-video">
+                    <img
+                      src={show.poster}
+                      alt={`Poster for ${show.title}`}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium">{show.emoji} {show.title}</p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {format(new Date(show.date), "PPP p")}
+                </p>
+                {show.description && (
+                  <p className="text-sm text-muted-foreground">
+                    {show.description}
+                  </p>
+                )}
+                <div className="flex gap-2 mt-1">
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-500/10 text-green-500">
+                    {availableSeats} Available
+                  </span>
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-500/10 text-red-500">
+                    {bookedSeats.length} Booked
+                  </span>
                 </div>
               </div>
-            )}
-            <div>
-              <p className="font-medium">{show.title}</p>
-              <p className="text-sm text-muted-foreground">
-                {format(new Date(show.date), "PPP p")}
-              </p>
             </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => deleteShowMutation.mutate(show.id)}
+              disabled={deleteShowMutation.isPending}
+            >
+              {deleteShowMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Trash2 className="h-4 w-4 mr-2" />
+              )}
+              Delete
+            </Button>
           </div>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => deleteShowMutation.mutate(show.id)}
-            disabled={deleteShowMutation.isPending}
-          >
-            {deleteShowMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <Trash2 className="h-4 w-4 mr-2" />
-            )}
-            Delete
-          </Button>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
 
+function CreateUserDialog() {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+
+  const form = useForm({
+    resolver: zodResolver(insertUserSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+      name: "",
+      gender: "male",
+      dateOfBirth: "",
+      isAdmin: false,
+      isEnabled: true,
+    },
+  });
+
+  const createUserMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      form.reset();
+      setOpen(false);
+      toast({
+        title: "Success",
+        description: "User created successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to create user",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="mb-4">
+          <UserPlus className="h-4 w-4 mr-2" />
+          Create User
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create New User</DialogTitle>
+          <DialogDescription>Create a new user account with all required information.</DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit((data) => createUserMutation.mutate(data))}
+            className="space-y-4"
+          >
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter username" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="Enter password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter full name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="gender"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Gender</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="dateOfBirth"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date of Birth</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="pt-4 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={createUserMutation.isPending}
+              >
+                {createUserMutation.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                )}
+                Create User
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function UserList() {
-  const { user: currentUser } = useAuth(); // Get current user to check if they're the primary admin
+  const { user: currentUser } = useAuth();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -367,7 +618,6 @@ function UserList() {
     page * itemsPerPage
   );
 
-  // Check if current user is the primary admin (first admin in the system)
   const isPrimaryAdmin = currentUser?.id === users.find((u) => u.isAdmin)?.id;
 
   const resetPasswordMutation = useMutation({
@@ -404,7 +654,6 @@ function UserList() {
       return res.json();
     },
     onSuccess: (data) => {
-      // Optimistically update the user in the cache
       queryClient.setQueryData<User[]>(["/api/users"], (oldUsers) => {
         if (!oldUsers) return [data];
         return oldUsers.map((user) => (user.id === data.id ? data : user));
@@ -421,12 +670,10 @@ function UserList() {
         description: error.message,
         variant: "destructive",
       });
-      // Invalidate the query to ensure we have the correct data
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
     },
   });
 
-  // Add mutation for toggling admin status
   const toggleAdminStatusMutation = useMutation({
     mutationFn: async ({ userId, isAdmin }: { userId: number; isAdmin: boolean }) => {
       const res = await fetch(`/api/users/${userId}/toggle-admin`, {
@@ -438,7 +685,6 @@ function UserList() {
       return res.json();
     },
     onSuccess: (data) => {
-      // Optimistically update the user in the cache
       queryClient.setQueryData<User[]>(["/api/users"], (oldUsers) => {
         if (!oldUsers) return [data];
         return oldUsers.map((user) => (user.id === data.id ? data : user));
@@ -478,17 +724,20 @@ function UserList() {
 
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Input
-          placeholder="Search users..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1); // Reset to first page when searching
-          }}
-          className="pl-10"
-        />
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="flex justify-between items-center">
+        <div className="relative flex-1 max-w-sm">
+          <Input
+            placeholder="Search users..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="pl-10"
+          />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        </div>
+        <CreateUserDialog />
       </div>
 
       {paginatedUsers.map((user) => (
@@ -523,7 +772,6 @@ function UserList() {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Only show admin toggle for primary admin */}
             {isPrimaryAdmin && user.id !== currentUser?.id && (
               <div className="flex items-center gap-2">
                 <Switch
@@ -615,3 +863,78 @@ function UserList() {
     </div>
   );
 }
+
+function AdminPage() {
+  const { user } = useAuth();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+
+  if (user && !user.isAdmin) {
+    setLocation("/");
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#4B5320]/10 to-[#4B5320]/5">
+      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="container mx-auto flex items-center justify-between h-16">
+          <div className="flex items-center gap-2">
+            <Shield className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl font-bold">Admin Control</h1>
+          </div>
+          <Button variant="outline" onClick={() => setLocation("/")}>
+            Back to Home
+          </Button>
+        </div>
+      </header>
+
+      <main className="container mx-auto py-8 space-y-8">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card className="border-2">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <CalendarPlus className="h-5 w-5 text-primary" />
+                <CardTitle>Add New Show</CardTitle>
+              </div>
+              <CardDescription>
+                Schedule a new show in the auditorium
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ShowForm />
+            </CardContent>
+          </Card>
+
+          <Card className="border-2">
+            <CardHeader>
+              <CardTitle>Manage Shows</CardTitle>
+              <CardDescription>
+                View and manage scheduled shows
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ShowList />
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 lg:col-span-2">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                <CardTitle>Manage Users</CardTitle>
+              </div>
+              <CardDescription>
+                View and manage user accounts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <UserList />
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default AdminPage;
