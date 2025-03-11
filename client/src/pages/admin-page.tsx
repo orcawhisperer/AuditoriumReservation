@@ -696,6 +696,10 @@ function ShowList() {
     queryKey: ["/api/shows"],
   });
 
+  const { data: venues = [] } = useQuery<Venue[]>({
+    queryKey: ["/api/venues"],
+  });
+
   const { data: reservations = [] } = useQuery<Reservation[]>({
     queryKey: ["/api/reservations"],
   });
@@ -732,6 +736,12 @@ function ShowList() {
     return showReservations.flatMap(r => JSON.parse(r.seatNumbers));
   };
 
+  const getVenueCapacity = (venueId: number | null) => {
+    if (!venueId) return 0;
+    const venue = venues.find(v => v.id === venueId);
+    return venue ? venue.rows * venue.seatsPerRow : 0;
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -752,8 +762,10 @@ function ShowList() {
   return (
     <div className="space-y-4">
       {shows.map((show) => {
+        const venue = venues.find(v => v.id === show.venueId);
+        const totalSeats = getVenueCapacity(show.venueId);
         const bookedSeats = getBookedSeats(show.id);
-        const availableSeats = show.totalSeats - bookedSeats.length;
+        const availableSeats = totalSeats - bookedSeats.length;
 
         return (
           <div
@@ -786,6 +798,11 @@ function ShowList() {
                 {show.description && (
                   <p className="text-sm text-muted-foreground">
                     {show.description}
+                  </p>
+                )}
+                {venue && (
+                  <p className="text-sm text-muted-foreground">
+                    Venue: {venue.name}
                   </p>
                 )}
                 <div className="flex gap-2 mt-1">
@@ -1053,7 +1070,7 @@ function UserList() {
         description: error.message,
         variant: "destructive",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/apiusers"] });
     },
   });
 
