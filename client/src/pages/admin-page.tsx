@@ -58,8 +58,22 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
+interface Reservation {
+  id: number;
+  showId: number;
+  seatNumbers: string;
+}
 
 // Add VenueForm component
 function VenueForm() {
@@ -1053,8 +1067,7 @@ function UserList() {
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData<User[]>(["/api/users"], (oldUsers) => {
+    onSuccess: (data) => {      queryClient.setQueryData<User[]>(["/api/users"], (oldUsers) => {
         if (!oldUsers) return [data];
         return oldUsers.map((user) => (user.id === data.id ? data : user));
       });
