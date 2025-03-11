@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
-import { insertUserSchema } from "@shared/schema";
+import { insertUserSchema, loginSchema } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useLocation } from "wouter";
@@ -26,7 +26,7 @@ import { z } from "zod";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function AuthPage() {
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
 
   // Redirect if already logged in
@@ -102,8 +102,8 @@ export default function AuthPage() {
 
 function LoginForm() {
   const { loginMutation } = useAuth();
-  const form = useForm<z.infer<typeof insertUserSchema>>({
-    resolver: zodResolver(insertUserSchema),
+  const form = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema), // Use loginSchema instead of insertUserSchema
     defaultValues: {
       username: "",
       password: "",
@@ -161,6 +161,9 @@ function RegisterForm() {
     defaultValues: {
       username: "",
       password: "",
+      name: "",
+      gender: "male",
+      dateOfBirth: "",
     },
   });
 
@@ -191,6 +194,49 @@ function RegisterForm() {
               <FormLabel>Password</FormLabel>
               <FormControl>
                 <Input type="password" placeholder="Choose a password" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Full Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter your full name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="gender"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Gender</FormLabel>
+              <FormControl>
+                <select className="w-full px-3 py-2 border rounded-md" {...field}>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="dateOfBirth"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Date of Birth</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

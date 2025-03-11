@@ -4,7 +4,7 @@ import {
   useMutation,
   UseMutationResult,
 } from "@tanstack/react-query";
-import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
+import { insertUserSchema, User as SelectUser, InsertUser, LoginData, loginSchema } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,8 +16,6 @@ type AuthContextType = {
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
 };
-
-type LoginData = Pick<InsertUser, "username" | "password">;
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -70,11 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
-      // Clear user data
       queryClient.setQueryData(["/api/user"], null);
-      // Clear all reservation-related queries
-      queryClient.removeQueries({ queryKey: ["/api/reservations"] });
-      queryClient.removeQueries({ queryKey: ["/api/shows"] });
     },
     onError: (error: Error) => {
       toast({

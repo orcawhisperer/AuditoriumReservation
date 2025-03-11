@@ -76,3 +76,11 @@ export type InsertReservation = z.infer<typeof insertReservationSchema>;
 export type User = typeof users.$inferSelect;
 export type Show = typeof shows.$inferSelect;
 export type Reservation = typeof reservations.$inferSelect;
+
+// Add this alongside other schemas
+export const loginSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
+export type LoginData = z.infer<typeof loginSchema>;
