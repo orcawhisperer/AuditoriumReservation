@@ -4,53 +4,16 @@ import { storage } from "./storage";
 import { setupAuth, hashPassword } from "./auth";
 import { insertShowSchema, insertReservationSchema } from "@shared/schema";
 import { randomBytes } from "crypto";
-import { eq, and, or, gt, lt, not } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from './db';
 import { users, shows, reservations } from '@shared/schema';
-import { insertUserSchema } from "@shared/schema";
-import { format } from 'date-fns';
+import { insertUserSchema } from "@shared/schema"; // Import missing schema
 
-// Helper function to check for show time conflicts
-async function checkShowTimeConflict(showDate: Date, duration: number, showId?: number) {
-  const showStartTime = showDate.getTime();
-  const showEndTime = showStartTime + (duration * 60 * 1000); // Convert duration to milliseconds
-  const bufferTime = 30 * 60 * 1000; // 30 minutes buffer
-
-  // Add buffer before and after the show
-  const startTimeWithBuffer = new Date(showStartTime - bufferTime);
-  const endTimeWithBuffer = new Date(showEndTime + bufferTime);
-
-  // Get all shows that might conflict
-  const existingShows = await db.select()
-    .from(shows)
-    .where(
-      showId ? not(eq(shows.id, showId)) : undefined // Exclude current show when updating
-    );
-
-  // Check for conflicts
-  for (const existingShow of existingShows) {
-    const existingStartTime = new Date(existingShow.date).getTime();
-    const existingEndTime = existingStartTime + (existingShow.duration * 60 * 1000);
-
-    // Check if shows overlap
-    if (
-      (showStartTime <= existingEndTime + bufferTime && showEndTime + bufferTime >= existingStartTime) ||
-      (existingStartTime <= showEndTime + bufferTime && existingEndTime + bufferTime >= showStartTime)
-    ) {
-      return {
-        hasConflict: true,
-        message: `Cannot schedule show at this time. Conflicts with "${existingShow.title}" (${format(new Date(existingShow.date), 'PPp')} - ${format(new Date(existingEndTime), 'pp')}, duration: ${existingShow.duration} minutes)`
-      };
-    }
-  }
-
-  return { hasConflict: false };
-}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
-  // User management routes stay the same...
+  // User management routes
   app.get("/api/users", async (req, res) => {
     if (!req.user?.isAdmin) {
       return res.status(403).send("Admin access required");
@@ -201,7 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(updatedUser);
   });
 
-  // Show routes with enhanced conflict validation
+  // Show routes
   app.get("/api/shows", async (_req, res) => {
     const shows = await storage.getShows();
     res.json(shows);
@@ -223,14 +186,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const parsed = insertShowSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json(parsed.error);
-    }
-
-    // Check for time conflicts
-    const showDate = new Date(parsed.data.date);
-    const conflict = await checkShowTimeConflict(showDate, parsed.data.duration);
-
-    if (conflict.hasConflict) {
-      return res.status(400).send(conflict.message);
     }
 
     const show = await storage.createShow(parsed.data);
@@ -256,21 +211,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json(parsed.error);
     }
 
-    const showId = parseInt(req.params.id);
-    const existingShow = await storage.getShow(showId);
-    if (!existingShow) {
+    const show = await storage.getShow(parseInt(req.params.id));
+    if (!show) {
       return res.status(404).send("Show not found");
     }
 
-    // Check for time conflicts
-    const showDate = new Date(parsed.data.date);
-    const conflict = await checkShowTimeConflict(showDate, parsed.data.duration, showId);
-
-    if (conflict.hasConflict) {
-      return res.status(400).send(conflict.message);
-    }
-
-    const updatedShow = await storage.updateShow(showId, parsed.data);
+    const updatedShow = await storage.updateShow(parseInt(req.params.id), parsed.data);
     res.json(updatedShow);
   });
 

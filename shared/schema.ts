@@ -1,25 +1,24 @@
-import { pgTable, text, integer, boolean } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { sql } from "drizzle-orm";
 
-export const users = pgTable("users", {
+export const users = sqliteTable("users", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  isAdmin: boolean("is_admin").notNull().default(false),
-  isEnabled: boolean("is_enabled").notNull().default(true),
+  isAdmin: integer("is_admin", { mode: "boolean" }).notNull().default(false),
+  isEnabled: integer("is_enabled", { mode: "boolean" }).notNull().default(true),
   name: text("name"),
   gender: text("gender"),
   dateOfBirth: text("date_of_birth"),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const shows = pgTable("shows", {
+export const shows = sqliteTable("shows", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   title: text("title").notNull(),
   date: text("date").notNull(),
-  duration: integer("duration").notNull(), // Duration in minutes
   poster: text("poster"),
   description: text("description"),
   themeColor: text("theme_color").default("#4B5320"),
@@ -55,11 +54,11 @@ export const shows = pgTable("shows", {
   ])),
 });
 
-export const reservations = pgTable("reservations", {
+export const reservations = sqliteTable("reservations", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id").references(() => users.id),
   showId: integer("show_id").references(() => shows.id),
-  seatNumbers: text("seat_numbers").notNull(),
+  seatNumbers: text("seat_numbers").notNull(), 
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
@@ -89,7 +88,6 @@ export const insertShowSchema = createInsertSchema(shows).extend({
       message: "Shows cannot be scheduled in the past. Please select a future date."
     }
   ).transform(str => new Date(str).toISOString()),
-  duration: z.number().min(30, "Show must be at least 30 minutes").max(300, "Show cannot exceed 5 hours"),
   poster: z.string().optional(),
   description: z.string().optional(),
   themeColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color").optional(),

@@ -16,13 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
-import {
-  Show,
-  insertShowSchema,
-  User,
-  insertUserSchema,
-  insertReservationSchema,
-} from "@shared/schema";
+import { Show, insertShowSchema, User, insertUserSchema, insertReservationSchema } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useLocation } from "wouter";
@@ -101,7 +95,6 @@ function ShowForm() {
       themeColor: "#4B5320",
       emoji: "🎭",
       blockedSeats: "",
-      duration: 90, // Default duration
     },
   });
 
@@ -199,46 +192,6 @@ function ShowForm() {
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="date"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date and Time</FormLabel>
-                <FormControl>
-                  <Input type="datetime-local" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="duration"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Duration (minutes)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min="30"
-                    max="300"
-                    placeholder="Enter show duration"
-                    {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
-                  />
-                </FormControl>
-                <FormMessage />
-                <p className="text-xs text-muted-foreground">
-                  Show duration must be between 30 minutes and 5 hours
-                </p>
-              </FormItem>
-            )}
-          />
-        </div>
-
         <FormField
           control={form.control}
           name="blockedSeats"
@@ -273,6 +226,21 @@ function ShowForm() {
           )}
         />
 
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date and Time</FormLabel>
+                <FormControl>
+                  <Input type="datetime-local" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <div className="grid grid-cols-2 gap-4">
           <FormField
@@ -361,7 +329,6 @@ function EditShowDialog({
     defaultValues: {
       title: show.title,
       date: new Date(show.date).toISOString().slice(0, 16),
-      duration: show.duration,
       poster: show.poster || "",
       description: show.description || "",
       themeColor: show.themeColor || "#4B5320",
@@ -466,46 +433,6 @@ function EditShowDialog({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date and Time</FormLabel>
-                    <FormControl>
-                      <Input type="datetime-local" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="duration"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Duration (minutes)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="30"
-                        max="300"
-                        placeholder="Enter show duration"
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                    <p className="text-xs text-muted-foreground">
-                      Show duration must be between 30 minutes and 5 hours
-                    </p>
-                  </FormItem>
-                )}
-              />
-            </div>
-
             <FormField
               control={form.control}
               name="blockedSeats"
@@ -544,32 +471,46 @@ function EditShowDialog({
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="themeColor"
+                name="date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      Theme Color
-                      <Palette className="h-4 w-4" />
-                    </FormLabel>
+                    <FormLabel>Date and Time</FormLabel>
                     <FormControl>
-                      <div className="flex gap-2">
-                        <Input
-                          type="color"
-                          {...field}
-                          className="h-10 w-20 p-1"
-                        />
-                        <Input
-                          {...field}
-                          placeholder="#4B5320"
-                          className="font-mono"
-                        />
-                      </div>
+                      <Input type="datetime-local" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="themeColor"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    Theme Color
+                    <Palette className="h-4 w-4" />
+                  </FormLabel>
+                  <FormControl>
+                    <div className="flex gap-2">
+                      <Input
+                        type="color"
+                        {...field}
+                        className="h-10 w-20 p-1"
+                      />
+                      <Input
+                        {...field}
+                        placeholder="#4B5320"
+                        className="font-mono"
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="pt-4 flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={handleClose}>
@@ -720,6 +661,22 @@ function ShowList() {
                     {blockedSeats.length} Blocked
                   </span>
                 </div>
+                {showReservations.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm font-medium mb-1">Reservations:</p>
+                    <div className="space-y-1">
+                      {showReservations.map((reservation) => (
+                        <div
+                          key={reservation.id}
+                          className="text-sm text-muted-foreground"
+                        >
+                          • {getUserName(reservation.userId)}: Seats{" "}
+                          {JSON.parse(reservation.seatNumbers).join(", ")}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -1432,17 +1389,14 @@ function UserList() {
 function ReservationManagement() {
   const { toast } = useToast();
   const [selectedShowId, setSelectedShowId] = useState<string>("all");
-  const [editingReservation, setEditingReservation] =
-    useState<Reservation | null>(null);
+  const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
 
   const { data: shows = [], isLoading: showsLoading } = useQuery<Show[]>({
     queryKey: ["/api/shows"],
     staleTime: 1000,
   });
 
-  const { data: reservations = [], isLoading: reservationsLoading } = useQuery<
-    Reservation[]
-  >({
+  const { data: reservations = [], isLoading: reservationsLoading } = useQuery<Reservation[]>({
     queryKey: ["/api/reservations"],
     staleTime: 1000,
   });
@@ -1476,19 +1430,19 @@ function ReservationManagement() {
   });
 
   const getShowTitle = (showId: number) => {
-    const show = shows.find((s) => s.id === showId);
-    return show ? show.title : "Unknown Show";
+    const show = shows.find(s => s.id === showId);
+    return show ? show.title : 'Unknown Show';
   };
 
   const getUserName = (userId: number) => {
-    const user = users.find((u) => u.id === userId);
-    return user ? user.name || user.username : "Unknown User";
+    const user = users.find(u => u.id === userId);
+    return user ? user.name || user.username : 'Unknown User';
   };
 
   const filteredReservations = useMemo(() => {
     if (selectedShowId === "all") return reservations;
     const showId = parseInt(selectedShowId, 10);
-    return reservations.filter((r) => r.showId === showId);
+    return reservations.filter(r => r.showId === showId);
   }, [selectedShowId, reservations]);
 
   if (showsLoading || reservationsLoading || usersLoading) {
@@ -1516,7 +1470,10 @@ function ReservationManagement() {
       <CardContent>
         <div className="space-y-4">
           <div className="flex gap-4">
-            <Select value={selectedShowId} onValueChange={setSelectedShowId}>
+            <Select
+              value={selectedShowId}
+              onValueChange={setSelectedShowId}
+            >
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Filter by show" />
               </SelectTrigger>
@@ -1538,9 +1495,7 @@ function ReservationManagement() {
                 className="flex items-center justify-between p-4 border rounded-lg"
               >
                 <div>
-                  <p className="font-medium">
-                    {getShowTitle(reservation.showId)}
-                  </p>
+                  <p className="font-medium">{getShowTitle(reservation.showId)}</p>
                   <p className="text-sm text-muted-foreground">
                     Reserved by: {getUserName(reservation.userId)}
                   </p>
@@ -1570,16 +1525,13 @@ function ReservationManagement() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete Reservation</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to delete this reservation? This
-                          action cannot be undone.
+                          Are you sure you want to delete this reservation? This action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={() =>
-                            deleteReservationMutation.mutate(reservation.id)
-                          }
+                          onClick={() => deleteReservationMutation.mutate(reservation.id)}
                         >
                           Delete
                         </AlertDialogAction>
@@ -1591,9 +1543,7 @@ function ReservationManagement() {
             ))}
             {filteredReservations.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
-                {selectedShowId === "all"
-                  ? "No reservations found"
-                  : "No reservations found for this show"}
+                {selectedShowId === "all" ? "No reservations found" : "No reservations found for this show"}
               </div>
             )}
           </div>
@@ -1622,7 +1572,7 @@ function EditReservationDialog({
   const { toast } = useToast();
   const [open, setOpen] = useState(true);
   const [selectedSeats, setSelectedSeats] = useState<string[]>(
-    JSON.parse(reservation.seatNumbers),
+    JSON.parse(reservation.seatNumbers)
   );
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -1631,7 +1581,7 @@ function EditReservationDialog({
     staleTime: 0,
   });
 
-  const currentShow = shows.find((s) => s.id === reservation.showId);
+  const currentShow = shows.find(s => s.id === reservation.showId);
 
   const form = useForm({
     resolver: zodResolver(insertReservationSchema),
@@ -1644,8 +1594,8 @@ function EditReservationDialog({
   const reservedSeats = useMemo(() => {
     return new Set(
       showReservations
-        .filter((r) => r.id !== reservation.id)
-        .flatMap((r) => JSON.parse(r.seatNumbers)),
+        .filter(r => r.id !== reservation.id)
+        .flatMap(r => JSON.parse(r.seatNumbers))
     );
   }, [showReservations, reservation.id]);
 
@@ -1670,7 +1620,7 @@ function EditReservationDialog({
     mutationFn: async (data: any) => {
       const payload = {
         ...data,
-        seatNumbers: selectedSeats,
+        seatNumbers: selectedSeats
       };
 
       const res = await fetch(`/api/reservations/${reservation.id}`, {
@@ -1683,9 +1633,7 @@ function EditReservationDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/reservations"] });
-      queryClient.invalidateQueries({
-        queryKey: [`/api/reservations/show/${reservation.showId}`],
-      });
+      queryClient.invalidateQueries({ queryKey: [`/api/reservations/show/${reservation.showId}`] });
       setOpen(false);
       onClose();
       toast({
@@ -1718,8 +1666,7 @@ function EditReservationDialog({
         <DialogHeader>
           <DialogTitle>Edit Reservation</DialogTitle>
           <DialogDescription>
-            Update reservation details and seat assignments for{" "}
-            {currentShow.title}
+            Update reservation details and seat assignments for {currentShow.title}
           </DialogDescription>
         </DialogHeader>
 
@@ -1730,45 +1677,39 @@ function EditReservationDialog({
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                   {section.section}
                   <span className="text-sm text-muted-foreground font-normal">
-                    {section.section === "Balcony"
-                      ? "(Prefix: B)"
-                      : "(Prefix: D)"}
+                    {section.section === "Balcony" ? "(Prefix: B)" : "(Prefix: D)"}
                   </span>
                 </h3>
                 <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
                   <div className="space-y-3 min-w-fit">
                     {section.rows.map((rowData: any) => (
-                      <div
-                        key={rowData.row}
-                        className="flex gap-3 justify-center"
-                      >
+                      <div key={rowData.row} className="flex gap-3 justify-center">
                         <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                           {rowData.row}
                         </span>
                         <div className="flex gap-3">
-                          {Array.from({
-                            length: Math.max(...rowData.seats),
-                          }).map((_, seatIndex) => {
-                            const seatNumber = seatIndex + 1;
-                            const prefix =
-                              section.section === "Balcony" ? "B" : "D";
-                            const seatId = `${prefix}${rowData.row}${seatNumber}`;
+                          {Array.from({ length: Math.max(...rowData.seats) }).map(
+                            (_, seatIndex) => {
+                              const seatNumber = seatIndex + 1;
+                              const prefix = section.section === "Balcony" ? "B" : "D";
+                              const seatId = `${prefix}${rowData.row}${seatNumber}`;
 
-                            if (!rowData.seats.includes(seatNumber)) {
-                              return <div key={seatId} className="w-8" />;
+                              if (!rowData.seats.includes(seatNumber)) {
+                                return <div key={seatId} className="w-8" />;
+                              }
+
+                              return (
+                                <Seat
+                                  key={seatId}
+                                  seatId={seatId}
+                                  isReserved={reservedSeats.has(seatId)}
+                                  isBlocked={blockedSeats.has(seatId)}
+                                  isSelected={selectedSeats.includes(seatId)}
+                                  onSelect={handleSeatSelect}
+                                />
+                              );
                             }
-
-                            return (
-                              <Seat
-                                key={seatId}
-                                seatId={seatId}
-                                isReserved={reservedSeats.has(seatId)}
-                                isBlocked={blockedSeats.has(seatId)}
-                                isSelected={selectedSeats.includes(seatId)}
-                                onSelect={handleSeatSelect}
-                              />
-                            );
-                          })}
+                          )}
                         </div>
                         <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                           {rowData.row}
@@ -1812,13 +1753,10 @@ function EditReservationDialog({
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button
+              <Button 
                 variant="default"
                 onClick={() => setShowConfirm(true)}
-                disabled={
-                  editReservationMutation.isPending ||
-                  selectedSeats.length === 0
-                }
+                disabled={editReservationMutation.isPending || selectedSeats.length === 0}
               >
                 Update Reservation
               </Button>
@@ -1832,8 +1770,7 @@ function EditReservationDialog({
           <AlertDialogHeader>
             <AlertDialogTitle>Update Reservation</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to update this reservation? The following
-              seats will be assigned:
+              Are you sure you want to update this reservation? The following seats will be assigned:
               <br />
               <span className="font-medium">{selectedSeats.join(", ")}</span>
             </AlertDialogDescription>
@@ -1858,112 +1795,6 @@ function EditReservationDialog({
         </AlertDialogContent>
       </AlertDialog>
     </Dialog>
-  );
-}
-
-function AdminPage() {
-  const { user } = useAuth();
-  const [, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState<
-    "shows" | "users" | "reservations"
-  >("shows");
-
-  if (user && !user.isAdmin) {
-    setLocation("/");
-    return null;
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-[#4B5320]/10 to-[#4B5320]/5">
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
-            <Shield className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">Admin Control</h1>
-          </div>
-          <Button variant="outline" onClick={() => setLocation("/")}>
-            Back to Home
-          </Button>
-        </div>
-      </header>
-
-      <main className="container mx-auto py-8 space-y-8">
-        <div className="flex gap-4 border-b mb-6">
-          <Button
-            variant={activeTab === "shows" ? "default" : "ghost"}
-            onClick={() => setActiveTab("shows")}
-          >
-            <CalendarPlus className="h-4 w-4 mr-2" />
-            Shows
-          </Button>
-          <Button
-            variant={activeTab === "users" ? "default" : "ghost"}
-            onClick={() => setActiveTab("users")}
-          >
-            <Users className="h-4 w-4 mr-2" />
-            Users
-          </Button>
-          <Button
-            variant={activeTab === "reservations" ? "default" : "ghost"}
-            onClick={() => setActiveTab("reservations")}
-          >
-            <Star className="h-4 w-4 mr-2" />
-            Reservations
-          </Button>
-        </div>
-
-        {activeTab === "shows" && (
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card className="border-2">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <CalendarPlus className="h-5 w-5 text-primary" />
-                  <CardTitle>Add New Show</CardTitle>
-                </div>
-                <CardDescription>
-                  Schedule a new show in the auditorium
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ShowForm />
-              </CardContent>
-            </Card>
-
-            <Card className="border-2">
-              <CardHeader>
-                <CardTitle>Manage Shows</CardTitle>
-                <CardDescription>
-                  View and manage scheduled shows
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ShowList />
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {activeTab === "users" && (
-          <Card className="border-2">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                <CardTitle>Manage Users</CardTitle>
-              </div>
-              <CardDescription>View and manage user accounts</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <CreateUserDialog />
-                <UserList />
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {activeTab === "reservations" && <ReservationManagement />}
-      </main>
-    </div>
   );
 }
 
