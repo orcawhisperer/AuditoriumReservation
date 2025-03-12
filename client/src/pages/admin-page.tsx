@@ -64,6 +64,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 interface Reservation {
   id: number;
@@ -693,145 +694,6 @@ function ShowList() {
     );
 }
 
-function ReservationManagement() {
-  const { toast } = useToast();
-  const [selectedShow, setSelectedShow] = useState<number | null>(null);
-
-  const { data: shows = [] } = useQuery<Show[]>({
-    queryKey: ["/api/shows"],
-    staleTime: 0,
-  });
-
-  const { data: reservations = [] } = useQuery<Reservation[]>({
-    queryKey: ["/api/reservations"],
-    staleTime: 0,
-  });
-
-  const { data: users = [] } = useQuery<User[]>({
-    queryKey: ["/api/users"],
-    staleTime: 0,
-  });
-
-  const deleteReservationMutation = useMutation({
-    mutationFn: async (reservationId: number) => {
-      const res = await fetch(`/api/reservations/${reservationId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Failed to delete reservation");
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/reservations"] });
-      toast({
-        title: "Success",
-        description: "Reservation deleted successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to delete reservation",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const getShowTitle = (showId: number) => {
-    const show = shows.find(s => s.id === showId);
-    return show ? show.title : 'Unknown Show';
-  };
-
-  const getUserName = (userId: number) => {
-    const user = users.find(u => u.id === userId);
-    return user ? user.name || user.username : 'Unknown User';
-  };
-
-  const filteredReservations = selectedShow
-    ? reservations.filter(r => r.showId === selectedShow)
-    : reservations;
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Manage Reservations</CardTitle>
-        <CardDescription>View and manage all show reservations</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex gap-4">
-            <Select
-              value={selectedShow?.toString() || "all"}
-              onValueChange={(value) => setSelectedShow(value === "all" ? null : parseInt(value))}
-            >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Filter by show" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Shows</SelectItem>
-                {shows.map((show) => (
-                  <SelectItem key={show.id} value={show.id.toString()}>
-                    {show.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            {filteredReservations.map((reservation) => (
-              <div
-                key={reservation.id}
-                className="flex items-center justify-between p-4 border rounded-lg"
-              >
-                <div>
-                  <p className="font-medium">{getShowTitle(reservation.showId)}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Reserved by: {getUserName(reservation.userId)}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Seats: {JSON.parse(reservation.seatNumbers).join(", ")}
-                  </p>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      disabled={deleteReservationMutation.isPending}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Reservation</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete this reservation? This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => deleteReservationMutation.mutate(reservation.id)}
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            ))}
-            {filteredReservations.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                No reservations found
-              </div>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 function CreateUserDialog() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -1433,6 +1295,147 @@ function UserList() {
         </div>
       )}
     </div>
+  );
+}
+
+function ReservationManagement() {
+  const { toast } = useToast();
+  const [selectedShow, setSelectedShow] = useState<number | null>(null);
+
+  const { data: shows = [] } = useQuery<Show[]>({
+    queryKey: ["/api/shows"],
+    staleTime: 1000, // Updated staleTime
+  });
+
+  const { data: reservations = [] } = useQuery<Reservation[]>({
+    queryKey: ["/api/reservations"],
+    staleTime: 1000, // Updated staleTime
+  });
+
+  const { data: users = [] } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+    staleTime: 1000, // Updated staleTime
+  });
+
+  const deleteReservationMutation = useMutation({
+    mutationFn: async (reservationId: number) => {
+      const res = await fetch(`/api/reservations/${reservationId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete reservation");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/reservations"] });
+      toast({
+        title: "Success",
+        description: "Reservation deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete reservation",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const getShowTitle = (showId: number) => {
+    const show = shows.find(s => s.id === showId);
+    return show ? show.title : 'Unknown Show';
+  };
+
+  const getUserName = (userId: number) => {
+    const user = users.find(u => u.id === userId);
+    return user ? user.name || user.username : 'Unknown User';
+  };
+
+  const filteredReservations = selectedShow
+    ? reservations.filter(r => r.showId === selectedShow)
+    : reservations;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Manage Reservations</CardTitle>
+        <CardDescription>View and manage all show reservations</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex gap-4">
+            <Select
+              value={selectedShow?.toString() || "all"}
+              onValueChange={(value) => {
+                const showId = value === "all" ? null : parseInt(value, 10); //Added type safety
+                setSelectedShow(showId);
+                console.log("Selected Show ID:", showId); // Added console logging
+              }}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filter by show" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Shows</SelectItem>
+                {shows.map((show) => (
+                  <SelectItem key={show.id} value={show.id.toString()}>
+                    {show.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            {filteredReservations.map((reservation) => (
+              <div
+                key={reservation.id}
+                className="flex items-center justify-between p-4 border rounded-lg"
+              >
+                <div>
+                  <p className="font-medium">{getShowTitle(reservation.showId)}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Reserved by: {getUserName(reservation.userId)}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Seats: {JSON.parse(reservation.seatNumbers).join(", ")}</p>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={deleteReservationMutation.isPending}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Reservation</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this reservation? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteReservationMutation.mutate(reservation.id)}
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            ))}
+            {filteredReservations.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                No reservations found
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
