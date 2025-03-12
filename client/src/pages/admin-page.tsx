@@ -16,7 +16,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
-import { Show, insertShowSchema, User, insertUserSchema, insertReservationSchema } from "@shared/schema";
+import {
+  Show,
+  insertShowSchema,
+  User,
+  insertUserSchema,
+  insertReservationSchema,
+} from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useLocation } from "wouter";
@@ -661,22 +667,6 @@ function ShowList() {
                     {blockedSeats.length} Blocked
                   </span>
                 </div>
-                {showReservations.length > 0 && (
-                  <div className="mt-2">
-                    <p className="text-sm font-medium mb-1">Reservations:</p>
-                    <div className="space-y-1">
-                      {showReservations.map((reservation) => (
-                        <div
-                          key={reservation.id}
-                          className="text-sm text-muted-foreground"
-                        >
-                          • {getUserName(reservation.userId)}: Seats{" "}
-                          {JSON.parse(reservation.seatNumbers).join(", ")}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -1389,14 +1379,17 @@ function UserList() {
 function ReservationManagement() {
   const { toast } = useToast();
   const [selectedShowId, setSelectedShowId] = useState<string>("all");
-  const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
+  const [editingReservation, setEditingReservation] =
+    useState<Reservation | null>(null);
 
   const { data: shows = [], isLoading: showsLoading } = useQuery<Show[]>({
     queryKey: ["/api/shows"],
     staleTime: 1000,
   });
 
-  const { data: reservations = [], isLoading: reservationsLoading } = useQuery<Reservation[]>({
+  const { data: reservations = [], isLoading: reservationsLoading } = useQuery<
+    Reservation[]
+  >({
     queryKey: ["/api/reservations"],
     staleTime: 1000,
   });
@@ -1430,19 +1423,19 @@ function ReservationManagement() {
   });
 
   const getShowTitle = (showId: number) => {
-    const show = shows.find(s => s.id === showId);
-    return show ? show.title : 'Unknown Show';
+    const show = shows.find((s) => s.id === showId);
+    return show ? show.title : "Unknown Show";
   };
 
   const getUserName = (userId: number) => {
-    const user = users.find(u => u.id === userId);
-    return user ? user.name || user.username : 'Unknown User';
+    const user = users.find((u) => u.id === userId);
+    return user ? user.name || user.username : "Unknown User";
   };
 
   const filteredReservations = useMemo(() => {
     if (selectedShowId === "all") return reservations;
     const showId = parseInt(selectedShowId, 10);
-    return reservations.filter(r => r.showId === showId);
+    return reservations.filter((r) => r.showId === showId);
   }, [selectedShowId, reservations]);
 
   if (showsLoading || reservationsLoading || usersLoading) {
@@ -1470,10 +1463,7 @@ function ReservationManagement() {
       <CardContent>
         <div className="space-y-4">
           <div className="flex gap-4">
-            <Select
-              value={selectedShowId}
-              onValueChange={setSelectedShowId}
-            >
+            <Select value={selectedShowId} onValueChange={setSelectedShowId}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Filter by show" />
               </SelectTrigger>
@@ -1495,7 +1485,9 @@ function ReservationManagement() {
                 className="flex items-center justify-between p-4 border rounded-lg"
               >
                 <div>
-                  <p className="font-medium">{getShowTitle(reservation.showId)}</p>
+                  <p className="font-medium">
+                    {getShowTitle(reservation.showId)}
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     Reserved by: {getUserName(reservation.userId)}
                   </p>
@@ -1525,13 +1517,16 @@ function ReservationManagement() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete Reservation</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to delete this reservation? This action cannot be undone.
+                          Are you sure you want to delete this reservation? This
+                          action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={() => deleteReservationMutation.mutate(reservation.id)}
+                          onClick={() =>
+                            deleteReservationMutation.mutate(reservation.id)
+                          }
                         >
                           Delete
                         </AlertDialogAction>
@@ -1543,7 +1538,9 @@ function ReservationManagement() {
             ))}
             {filteredReservations.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
-                {selectedShowId === "all" ? "No reservations found" : "No reservations found for this show"}
+                {selectedShowId === "all"
+                  ? "No reservations found"
+                  : "No reservations found for this show"}
               </div>
             )}
           </div>
@@ -1572,7 +1569,7 @@ function EditReservationDialog({
   const { toast } = useToast();
   const [open, setOpen] = useState(true);
   const [selectedSeats, setSelectedSeats] = useState<string[]>(
-    JSON.parse(reservation.seatNumbers)
+    JSON.parse(reservation.seatNumbers),
   );
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -1581,7 +1578,7 @@ function EditReservationDialog({
     staleTime: 0,
   });
 
-  const currentShow = shows.find(s => s.id === reservation.showId);
+  const currentShow = shows.find((s) => s.id === reservation.showId);
 
   const form = useForm({
     resolver: zodResolver(insertReservationSchema),
@@ -1594,8 +1591,8 @@ function EditReservationDialog({
   const reservedSeats = useMemo(() => {
     return new Set(
       showReservations
-        .filter(r => r.id !== reservation.id)
-        .flatMap(r => JSON.parse(r.seatNumbers))
+        .filter((r) => r.id !== reservation.id)
+        .flatMap((r) => JSON.parse(r.seatNumbers)),
     );
   }, [showReservations, reservation.id]);
 
@@ -1620,7 +1617,7 @@ function EditReservationDialog({
     mutationFn: async (data: any) => {
       const payload = {
         ...data,
-        seatNumbers: selectedSeats
+        seatNumbers: selectedSeats,
       };
 
       const res = await fetch(`/api/reservations/${reservation.id}`, {
@@ -1633,7 +1630,9 @@ function EditReservationDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/reservations"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/reservations/show/${reservation.showId}`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/reservations/show/${reservation.showId}`],
+      });
       setOpen(false);
       onClose();
       toast({
@@ -1666,7 +1665,8 @@ function EditReservationDialog({
         <DialogHeader>
           <DialogTitle>Edit Reservation</DialogTitle>
           <DialogDescription>
-            Update reservation details and seat assignments for {currentShow.title}
+            Update reservation details and seat assignments for{" "}
+            {currentShow.title}
           </DialogDescription>
         </DialogHeader>
 
@@ -1677,39 +1677,45 @@ function EditReservationDialog({
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                   {section.section}
                   <span className="text-sm text-muted-foreground font-normal">
-                    {section.section === "Balcony" ? "(Prefix: B)" : "(Prefix: D)"}
+                    {section.section === "Balcony"
+                      ? "(Prefix: B)"
+                      : "(Prefix: D)"}
                   </span>
                 </h3>
                 <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
                   <div className="space-y-3 min-w-fit">
                     {section.rows.map((rowData: any) => (
-                      <div key={rowData.row} className="flex gap-3 justify-center">
+                      <div
+                        key={rowData.row}
+                        className="flex gap-3 justify-center"
+                      >
                         <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                           {rowData.row}
                         </span>
                         <div className="flex gap-3">
-                          {Array.from({ length: Math.max(...rowData.seats) }).map(
-                            (_, seatIndex) => {
-                              const seatNumber = seatIndex + 1;
-                              const prefix = section.section === "Balcony" ? "B" : "D";
-                              const seatId = `${prefix}${rowData.row}${seatNumber}`;
+                          {Array.from({
+                            length: Math.max(...rowData.seats),
+                          }).map((_, seatIndex) => {
+                            const seatNumber = seatIndex + 1;
+                            const prefix =
+                              section.section === "Balcony" ? "B" : "D";
+                            const seatId = `${prefix}${rowData.row}${seatNumber}`;
 
-                              if (!rowData.seats.includes(seatNumber)) {
-                                return <div key={seatId} className="w-8" />;
-                              }
-
-                              return (
-                                <Seat
-                                  key={seatId}
-                                  seatId={seatId}
-                                  isReserved={reservedSeats.has(seatId)}
-                                  isBlocked={blockedSeats.has(seatId)}
-                                  isSelected={selectedSeats.includes(seatId)}
-                                  onSelect={handleSeatSelect}
-                                />
-                              );
+                            if (!rowData.seats.includes(seatNumber)) {
+                              return <div key={seatId} className="w-8" />;
                             }
-                          )}
+
+                            return (
+                              <Seat
+                                key={seatId}
+                                seatId={seatId}
+                                isReserved={reservedSeats.has(seatId)}
+                                isBlocked={blockedSeats.has(seatId)}
+                                isSelected={selectedSeats.includes(seatId)}
+                                onSelect={handleSeatSelect}
+                              />
+                            );
+                          })}
                         </div>
                         <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                           {rowData.row}
@@ -1753,10 +1759,13 @@ function EditReservationDialog({
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button 
+              <Button
                 variant="default"
                 onClick={() => setShowConfirm(true)}
-                disabled={editReservationMutation.isPending || selectedSeats.length === 0}
+                disabled={
+                  editReservationMutation.isPending ||
+                  selectedSeats.length === 0
+                }
               >
                 Update Reservation
               </Button>
@@ -1770,7 +1779,8 @@ function EditReservationDialog({
           <AlertDialogHeader>
             <AlertDialogTitle>Update Reservation</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to update this reservation? The following seats will be assigned:
+              Are you sure you want to update this reservation? The following
+              seats will be assigned:
               <br />
               <span className="font-medium">{selectedSeats.join(", ")}</span>
             </AlertDialogDescription>

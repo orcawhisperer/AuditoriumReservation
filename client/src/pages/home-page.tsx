@@ -30,10 +30,10 @@ function ShowCard({
   return (
     <Card>
       <CardContent className="pt-6">
-        <div className="flex justify-between items-start">
-          <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             {show.poster && (
-              <div className="relative w-24 sm:w-32 overflow-hidden rounded-lg border">
+              <div className="relative w-full sm:w-24 md:w-32 overflow-hidden rounded-lg border">
                 <div className="relative aspect-video">
                   <img
                     src={show.poster}
@@ -65,6 +65,7 @@ function ShowCard({
             onClick={() => setLocation(`/show/${show.id}`)}
             disabled={isPastShow || hasReservation}
             variant={isPastShow || hasReservation ? "outline" : "default"}
+            className="w-full sm:w-auto"
           >
             {isPastShow ? "Past Show" : hasReservation ? "Reserved" : "Reserve"}
           </Button>
@@ -97,8 +98,8 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
-        <div className="container mx-auto flex items-center justify-between h-16">
-          <h1 className="text-2xl font-bold">Auditorium</h1>
+        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between h-auto sm:h-16 py-4 sm:py-0 px-4 sm:px-8">
+          <h1 className="text-2xl font-bold mb-4 sm:mb-0">Auditorium</h1>
           <div className="flex items-center gap-4">
             <ThemeToggle />
             {user?.isAdmin && (
@@ -117,8 +118,8 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="container mx-auto py-8 space-y-8">
-        <div className="grid gap-6 md:grid-cols-2">
+      <main className="container mx-auto py-8 px-4 sm:px-8 space-y-8">
+        <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>Upcoming Shows</CardTitle>
@@ -189,7 +190,6 @@ function ReservationCard({
       if (!res.ok) throw new Error("Failed to cancel reservation");
     },
     onSuccess: () => {
-      // Invalidate both user's reservations and show's reservations
       queryClient.invalidateQueries({ queryKey: ["/api/reservations/user"] });
       queryClient.invalidateQueries({
         queryKey: [`/api/reservations/show/${reservation.showId}`],
@@ -213,7 +213,7 @@ function ReservationCard({
   return (
     <Card>
       <CardContent className="pt-6">
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
           <div>
             <h3 className="font-semibold">{show.title}</h3>
             <p className="text-sm text-muted-foreground">
@@ -233,6 +233,7 @@ function ReservationCard({
             variant="destructive"
             onClick={() => cancelMutation.mutate()}
             disabled={cancelMutation.isPending || isPastShow}
+            className="w-full sm:w-auto"
           >
             {cancelMutation.isPending && (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
