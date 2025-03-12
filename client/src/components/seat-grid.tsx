@@ -30,7 +30,7 @@ function Seat({ seatId, isReserved, isBlocked, isSelected, onSelect }: SeatProps
       disabled={isReserved || isBlocked}
       onClick={() => onSelect(seatId)}
     >
-      {seatId.slice(1)} {/* Remove section prefix for display */}
+      {parseInt(seatId.slice(2))} {/* Only show the seat number */}
     </button>
   );
 }
@@ -45,7 +45,6 @@ export function SeatGrid() {
     queryKey: [`/api/shows/${showId}`],
   });
 
-  // Add staleTime: 0 to ensure fresh data on each query
   const { data: showReservations = [], isLoading: reservationsLoading } = useQuery<Reservation[]>({
     queryKey: [`/api/reservations/show/${showId}`],
     enabled: !!showId,
@@ -160,7 +159,12 @@ export function SeatGrid() {
       <div className="space-y-6">
         {layout.map((section: any) => (
           <div key={section.section} className="space-y-4">
-            <h3 className="text-lg font-semibold">{section.section}</h3>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              {section.section}
+              <span className="text-sm text-muted-foreground font-normal">
+                (Prefix: {section.prefix})
+              </span>
+            </h3>
             <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
               <div className="space-y-3 min-w-fit">
                 {section.rows.map((rowData: any) => (
