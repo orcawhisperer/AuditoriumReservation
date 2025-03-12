@@ -24,10 +24,10 @@ sqlite.exec(`CREATE TABLE IF NOT EXISTS shows (
   title TEXT NOT NULL,
   date TEXT NOT NULL,
   poster TEXT,
-  total_seats INTEGER NOT NULL DEFAULT 100,
   description TEXT,
   theme_color TEXT DEFAULT '#4B5320',
-  emoji TEXT
+  emoji TEXT,
+  seat_layout TEXT NOT NULL DEFAULT '{"balcony":{"rows":["A","B","C"],"seatsPerRow":12},"middle":{"rows":["N","M","L","K","J","I","H","G"],"seatsPerRow":16},"lower":{"rows":["F","E","D","C","B","A"],"seatsPerRow":17}}'
 )`);
 
 sqlite.exec(`CREATE TABLE IF NOT EXISTS reservations (

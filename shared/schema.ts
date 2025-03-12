@@ -20,10 +20,24 @@ export const shows = sqliteTable("shows", {
   title: text("title").notNull(),
   date: text("date").notNull(),
   poster: text("poster"),
-  totalSeats: integer("total_seats").notNull().default(100),
   description: text("description"),
   themeColor: text("theme_color").default("#4B5320"),
   emoji: text("emoji"),
+  // Remove totalSeats as we now have a fixed layout
+  seatLayout: text("seat_layout").notNull().default(JSON.stringify({
+    balcony: {
+      rows: ["A", "B", "C"],
+      seatsPerRow: 12
+    },
+    middle: {
+      rows: ["N", "M", "L", "K", "J", "I", "H", "G"],
+      seatsPerRow: 16
+    },
+    lower: {
+      rows: ["F", "E", "D", "C", "B", "A"],
+      seatsPerRow: 17
+    }
+  })),
 });
 
 export const reservations = sqliteTable("reservations", {
@@ -63,17 +77,27 @@ export const insertShowSchema = createInsertSchema(shows).extend({
     }
   ).transform(str => new Date(str).toISOString()),
   poster: z.string().optional(),
-  totalSeats: z.number().min(1, "Must have at least one seat").max(500, "Maximum 500 seats allowed"),
   description: z.string().optional(),
   themeColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color").optional(),
   emoji: z.string().optional(),
+  seatLayout: z.string().optional(),
 });
 
 export const insertReservationSchema = createInsertSchema(reservations).pick({
   showId: true,
   seatNumbers: true,
 }).extend({
-  seatNumbers: z.array(z.string()).max(4, "Maximum 4 seats per reservation")
+  seatNumbers: z.array(z.string().regex(/^[A-N][0-9]{1,2}$/, "Invalid seat format")).max(4, "Maximum 4 seats per reservation")
+    .refine(
+      (seats) => seats.every(seat => {
+        const [row, number] = [seat[0], parseInt(seat.slice(1))];
+        if (row >= 'A' && row <= 'C') return number >= 1 && number <= 12; // Balcony
+        if (row >= 'G' && row <= 'N') return number >= 1 && number <= 16; // Middle
+        if (row >= 'A' && row <= 'F') return number >= 1 && number <= 17; // Lower
+        return false;
+      }),
+      { message: "Invalid seat selection" }
+    )
     .transform(seats => JSON.stringify(seats)),
 });
 
