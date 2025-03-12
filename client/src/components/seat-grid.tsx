@@ -9,29 +9,25 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 
-const ROWS = 10;
-const SEATS_PER_ROW = 25;
-
 type SeatProps = {
-  row: number;
-  seat: number;
+  seatId: string;
   isReserved: boolean;
+  isBlocked: boolean;
   isSelected: boolean;
   onSelect: (seatId: string) => void;
 };
 
-function Seat({ row, seat, isReserved, isSelected, onSelect }: SeatProps) {
-  const seatId = `${String.fromCharCode(65 + row)}${seat + 1}`;
-
+function Seat({ seatId, isReserved, isBlocked, isSelected, onSelect }: SeatProps) {
   return (
     <button
       className={cn(
         "w-8 h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm",
-        isReserved && "bg-muted border-muted-foreground/20 text-muted-foreground cursor-not-allowed",
+        isReserved && "bg-red-100 border-red-200 text-red-500 cursor-not-allowed",
+        isBlocked && "bg-yellow-100 border-yellow-200 text-yellow-500 cursor-not-allowed",
         isSelected && "bg-primary border-primary text-primary-foreground",
-        !isReserved && !isSelected && "hover:bg-accent hover:border-accent hover:text-accent-foreground active:scale-95"
+        !isReserved && !isBlocked && !isSelected && "hover:bg-accent hover:border-accent hover:text-accent-foreground active:scale-95"
       )}
-      disabled={isReserved}
+      disabled={isReserved || isBlocked}
       onClick={() => onSelect(seatId)}
     >
       {seatId}
@@ -58,7 +54,6 @@ export function SeatGrid() {
     queryKey: ["/api/reservations/user"],
   });
 
-  // Check if user already has a reservation for this show
   const hasExistingReservation = userReservations.some(
     reservation => reservation.showId === parseInt(showId)
   );
@@ -89,7 +84,6 @@ export function SeatGrid() {
       return res.json();
     },
     onSuccess: () => {
-      // Invalidate both show's reservations and user's reservations
       queryClient.invalidateQueries({ queryKey: [`/api/reservations/show/${showId}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/reservations/user"] });
       toast({
@@ -119,9 +113,9 @@ export function SeatGrid() {
     return <div>Show not found</div>;
   }
 
-  const reservedSeats = new Set(
-    showReservations.flatMap((r) => r.seatNumbers)
-  );
+  const layout = JSON.parse(show.seatLayout);
+  const reservedSeats = new Set(showReservations.flatMap((r) => JSON.parse(r.seatNumbers)));
+  const blockedSeats = new Set(JSON.parse(show.blockedSeats || '[]'));
 
   const handleSeatSelect = (seatId: string) => {
     setSelectedSeats((current) => {
@@ -161,33 +155,45 @@ export function SeatGrid() {
       </div>
 
       <div className="space-y-6">
-        <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
-          <div className="space-y-3 min-w-fit">
-            {Array.from({ length: ROWS }).map((_, row) => (
-              <div key={row} className="flex gap-3 justify-center">
-                <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
-                  {String.fromCharCode(65 + row)}
-                </span>
-                {Array.from({ length: SEATS_PER_ROW }).map((_, seat) => {
-                  const seatId = `${String.fromCharCode(65 + row)}${seat + 1}`;
-                  return (
-                    <Seat
-                      key={seat}
-                      row={row}
-                      seat={seat}
-                      isReserved={reservedSeats.has(seatId)}
-                      isSelected={selectedSeats.includes(seatId)}
-                      onSelect={handleSeatSelect}
-                    />
-                  );
-                })}
-                <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
-                  {String.fromCharCode(65 + row)}
-                </span>
+        {layout.map((section: any) => (
+          <div key={section.section} className="space-y-4">
+            <h3 className="text-lg font-semibold">{section.section}</h3>
+            <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
+              <div className="space-y-3 min-w-fit">
+                {section.rows.map((rowData: any) => (
+                  <div key={rowData.row} className="flex gap-3 justify-center">
+                    <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
+                      {rowData.row}
+                    </span>
+                    <div className="flex gap-3">
+                      {Array.from({ length: Math.max(...rowData.seats) }).map((_, seatIndex) => {
+                        const seatNumber = seatIndex + 1;
+                        const seatId = `${rowData.row}${seatNumber}`;
+                        // Only render seats that exist in this row
+                        if (!rowData.seats.includes(seatNumber)) {
+                          return <div key={seatId} className="w-8" />;
+                        }
+                        return (
+                          <Seat
+                            key={seatId}
+                            seatId={seatId}
+                            isReserved={reservedSeats.has(seatId)}
+                            isBlocked={blockedSeats.has(seatId)}
+                            isSelected={selectedSeats.includes(seatId)}
+                            onSelect={handleSeatSelect}
+                          />
+                        );
+                      })}
+                    </div>
+                    <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
+                      {rowData.row}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
-        </div>
+        ))}
 
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex gap-6 items-center text-sm">
@@ -200,8 +206,12 @@ export function SeatGrid() {
               <span>Selected</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-muted border-2 border-muted-foreground/20" />
+              <div className="w-4 h-4 rounded bg-red-100 border-2 border-red-200" />
               <span>Reserved</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-yellow-100 border-2 border-yellow-200" />
+              <span>Blocked</span>
             </div>
           </div>
 
