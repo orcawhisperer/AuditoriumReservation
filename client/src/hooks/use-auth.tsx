@@ -36,6 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      // Refetch queries after login
+      queryClient.refetchQueries();
     },
     onError: (error: Error) => {
       toast({
@@ -53,6 +55,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      // Refetch queries after registration
+      queryClient.refetchQueries();
     },
     onError: (error: Error) => {
       toast({
@@ -68,7 +72,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
+      // Clear all queries from the cache
+      queryClient.clear();
+      // Reset user data
       queryClient.setQueryData(["/api/user"], null);
+      // Invalidate all queries to ensure fresh data on next login
+      queryClient.invalidateQueries();
     },
     onError: (error: Error) => {
       toast({
