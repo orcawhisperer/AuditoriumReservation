@@ -85,7 +85,7 @@ function ShowForm() {
       description: "",
       themeColor: "#4B5320",
       emoji: "🎭",
-      blockedSeats: "", 
+      blockedSeats: "",
     },
   });
 
@@ -310,7 +310,7 @@ function EditShowDialog({ show, onClose }: { show: Show; onClose: () => void }) 
       description: show.description || "",
       themeColor: show.themeColor || "#4B5320",
       emoji: show.emoji || "🎭",
-      blockedSeats: JSON.parse(show.blockedSeats || "[]").join(","), 
+      blockedSeats: JSON.parse(show.blockedSeats || "[]").join(","),
     },
   });
 
@@ -504,17 +504,14 @@ function ShowList() {
       queryKey: ["/api/shows"],
       staleTime: 0, 
     });
-
     const { data: reservations = [], isLoading: reservationsLoading } = useQuery<Reservation[]>({
       queryKey: ["/api/reservations"],
       staleTime: 0, 
     });
-
     const { data: users = [] } = useQuery<User[]>({
       queryKey: ["/api/users"],
       staleTime: 0,
     });
-
     const deleteShowMutation = useMutation({
       mutationFn: async (showId: number) => {
         const res = await fetch(`/api/shows/${showId}`, {
@@ -537,16 +534,13 @@ function ShowList() {
         });
       },
     });
-
     const getShowReservations = (showId: number) => {
       return reservations.filter((r) => r.showId === showId);
     };
-
     const getBookedSeats = (showId: number) => {
       const showReservations = getShowReservations(showId);
       return showReservations.flatMap((r) => JSON.parse(r.seatNumbers));
     };
-
     const calculateTotalSeats = (show: Show) => {
       const layout = JSON.parse(show.seatLayout);
       return layout.reduce((total: number, section: any) => {
@@ -555,12 +549,10 @@ function ShowList() {
         }, 0);
       }, 0);
     };
-
     const getUserName = (userId: number) => {
       const user = users.find(u => u.id === userId);
       return user ? user.name || user.username : 'Unknown User';
     };
-
     if (isLoading || reservationsLoading) {
       return (
         <div className="flex items-center justify-center h-32">
@@ -568,7 +560,6 @@ function ShowList() {
         </div>
       );
     }
-
     if (shows.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
@@ -577,7 +568,6 @@ function ShowList() {
         </div>
       );
     }
-
     return (
       <div className="space-y-4">
         {shows.map((show) => {
@@ -586,7 +576,6 @@ function ShowList() {
           const blockedSeats = JSON.parse(show.blockedSeats || "[]");
           const totalSeats = calculateTotalSeats(show);
           const availableSeats = totalSeats - bookedSeats.length - blockedSeats.length;
-
           return (
             <div
               key={show.id}
@@ -770,14 +759,14 @@ function ReservationManagement() {
         <div className="space-y-4">
           <div className="flex gap-4">
             <Select
-              value={selectedShow?.toString() || ""}
-              onValueChange={(value) => setSelectedShow(value ? parseInt(value) : null)}
+              value={selectedShow?.toString() || "all"}
+              onValueChange={(value) => setSelectedShow(value === "all" ? null : parseInt(value))}
             >
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Filter by show" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Shows</SelectItem>
+                <SelectItem value="all">All Shows</SelectItem>
                 {shows.map((show) => (
                   <SelectItem key={show.id} value={show.id.toString()}>
                     {show.title}
@@ -1070,7 +1059,8 @@ function EditUserDialog({ user, onClose }: { user: User; onClose: () => void }) 
               control={form.control}
               name="username"
               render={({ field }) => (
-                <FormItem><FormLabel>Username</FormLabel>
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
                   <FormControl>
                     <Input {...field} disabled />
                   </FormControl>
