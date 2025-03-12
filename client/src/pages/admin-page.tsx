@@ -513,7 +513,7 @@ function ShowList() {
       staleTime: 0, // Add staleTime: 0 to ensure real-time updates
     });
 
-    const { data: reservations = [] } = useQuery<Reservation[]>({
+    const { data: reservations = [], isLoading: reservationsLoading } = useQuery<Reservation[]>({
       queryKey: ["/api/reservations"],
       staleTime: 0, // Add staleTime: 0 to ensure real-time updates
     });
@@ -559,7 +559,7 @@ function ShowList() {
       }, 0);
     };
 
-    if (isLoading) {
+    if (isLoading || reservationsLoading) {
       return (
         <div className="flex items-center justify-center h-32">
           <Loader2 className="h-8 w-8 animate-spin text-border" />
@@ -579,6 +579,7 @@ function ShowList() {
     return (
       <div className="space-y-4">
         {shows.map((show) => {
+          const showReservations = getShowReservations(show.id);
           const bookedSeats = getBookedSeats(show.id);
           const blockedSeats = JSON.parse(show.blockedSeats || "[]");
           const totalSeats = calculateTotalSeats(show);
@@ -628,6 +629,18 @@ function ShowList() {
                       {blockedSeats.length} Blocked
                     </span>
                   </div>
+                  {showReservations.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-sm font-medium mb-1">Reservations:</p>
+                      <div className="space-y-1">
+                        {showReservations.map((reservation) => (
+                          <div key={reservation.id} className="text-sm text-muted-foreground">
+                            • Seats {JSON.parse(reservation.seatNumbers).join(", ")}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -638,19 +651,43 @@ function ShowList() {
                 >
                   Edit
                 </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => deleteShowMutation.mutate(show.id)}
-                  disabled={deleteShowMutation.isPending}
-                >
-                  {deleteShowMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : (
-                    <Trash2 className="h-4 w-4 mr-2" />
-                  )}
-                  Delete
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={deleteShowMutation.isPending}
+                    >
+                      {deleteShowMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Trash2 className="h-4 w-4 mr-2" />
+                      )}
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Show</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this show? This action cannot be undone.
+                        {showReservations.length > 0 && (
+                          <p className="mt-2 text-red-500">
+                            Warning: This show has {showReservations.length} active reservations.
+                          </p>
+                        )}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteShowMutation.mutate(show.id)}
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           );
@@ -1073,7 +1110,7 @@ function UserList() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isAdmin }),
       });
-      if (!res.ok) throw newError(await res.text());
+      if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
     onSuccess: (data) => {
@@ -1107,7 +1144,7 @@ function UserList() {
 
   if (users.length === 0) {
     return (
-      <div className="flex flex-col itemscenterjustify-center h-32 text-muted-foreground">
+      <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
         <Users className="h-8 w-8 mb-2" />
         <p>No users found</p>
       </div>
