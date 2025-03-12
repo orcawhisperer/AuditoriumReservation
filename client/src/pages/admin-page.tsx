@@ -1388,22 +1388,21 @@ function UserList() {
 function ReservationManagement() {
   const { toast } = useToast();
   const [selectedShowId, setSelectedShowId] = useState<string>("all");
+  const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
 
   const { data: shows = [], isLoading: showsLoading } = useQuery<Show[]>({
     queryKey: ["/api/shows"],
-    staleTime: 0,
+    staleTime: 1000,
   });
 
-  const { data: reservations = [], isLoading: reservationsLoading } = useQuery<
-    Reservation[]
-  >({
+  const { data: reservations = [], isLoading: reservationsLoading } = useQuery<Reservation[]>({
     queryKey: ["/api/reservations"],
-    staleTime: 0,
+    staleTime: 1000,
   });
 
   const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],
-    staleTime: 0,
+    staleTime: 1000,
   });
 
   const deleteReservationMutation = useMutation({
@@ -1430,19 +1429,19 @@ function ReservationManagement() {
   });
 
   const getShowTitle = (showId: number) => {
-    const show = shows.find((s) => s.id === showId);
-    return show ? show.title : "Unknown Show";
+    const show = shows.find(s => s.id === showId);
+    return show ? show.title : 'Unknown Show';
   };
 
   const getUserName = (userId: number) => {
-    const user = users.find((u) => u.id === userId);
-    return user ? user.name || user.username : "Unknown User";
+    const user = users.find(u => u.id === userId);
+    return user ? user.name || user.username : 'Unknown User';
   };
 
   const filteredReservations = useMemo(() => {
     if (selectedShowId === "all") return reservations;
     const showId = parseInt(selectedShowId, 10);
-    return reservations.filter((r) => r.showId === showId);
+    return reservations.filter(r => r.showId === showId);
   }, [selectedShowId, reservations]);
 
   if (showsLoading || reservationsLoading || usersLoading) {
@@ -1470,7 +1469,10 @@ function ReservationManagement() {
       <CardContent>
         <div className="space-y-4">
           <div className="flex gap-4">
-            <Select value={selectedShowId} onValueChange={setSelectedShowId}>
+            <Select
+              value={selectedShowId}
+              onValueChange={setSelectedShowId}
+            >
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Filter by show" />
               </SelectTrigger>
@@ -1492,9 +1494,7 @@ function ReservationManagement() {
                 className="flex items-center justify-between p-4 border rounded-lg"
               >
                 <div>
-                  <p className="font-medium">
-                    {getShowTitle(reservation.showId)}
-                  </p>
+                  <p className="font-medium">{getShowTitle(reservation.showId)}</p>
                   <p className="text-sm text-muted-foreground">
                     Reserved by: {getUserName(reservation.userId)}
                   </p>
@@ -1502,49 +1502,201 @@ function ReservationManagement() {
                     Seats: {JSON.parse(reservation.seatNumbers).join(", ")}
                   </p>
                 </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      disabled={deleteReservationMutation.isPending}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Reservation</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete this reservation? This
-                        action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() =>
-                          deleteReservationMutation.mutate(reservation.id)
-                        }
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditingReservation(reservation)}
+                  >
+                    Edit
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={deleteReservationMutation.isPending}
                       >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Reservation</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this reservation? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteReservationMutation.mutate(reservation.id)}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </div>
             ))}
             {filteredReservations.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
-                {selectedShowId === "all"
-                  ? "No reservations found"
-                  : "No reservations found for this show"}
+                {selectedShowId === "all" ? "No reservations found" : "No reservations found for this show"}
               </div>
             )}
           </div>
         </div>
       </CardContent>
+      {editingReservation && (
+        <EditReservationDialog
+          reservation={editingReservation}
+          shows={shows}
+          onClose={() => setEditingReservation(null)}
+        />
+      )}
     </Card>
+  );
+}
+
+function EditReservationDialog({
+  reservation,
+  onClose,
+  shows,
+}: {
+  reservation: Reservation;
+  onClose: () => void;
+  shows: Show[];
+}) {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(true);
+
+  const form = useForm({
+    resolver: zodResolver(insertReservationSchema),
+    defaultValues: {
+      showId: reservation.showId,
+      seatNumbers: JSON.parse(reservation.seatNumbers),
+    },
+  });
+
+  const editReservationMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await fetch(`/api/reservations/${reservation.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/reservations"] });
+      setOpen(false);
+      onClose();
+      toast({
+        title: "Success",
+        description: "Reservation updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to update reservation",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleClose = () => {
+    setOpen(false);
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit Reservation</DialogTitle>
+          <DialogDescription>
+            Update reservation details and seat assignments.
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit((data) => editReservationMutation.mutate(data))}
+            className="space-y-4"
+          >
+            <FormField
+              control={form.control}
+              name="showId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Show</FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(parseInt(value))}
+                    defaultValue={field.value.toString()}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select show" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {shows.map((show) => (
+                        <SelectItem key={show.id} value={show.id.toString()}>
+                          {show.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="seatNumbers"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Seat Numbers</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter seats (e.g., BA1,BB2,BC3)"
+                      value={field.value.join(",")}
+                      onChange={(e) => {
+                        const seats = e.target.value.split(",").map(s => s.trim());
+                        field.onChange(seats);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  <p className="text-sm text-muted-foreground">
+                    Enter comma-separated seat numbers (max 4 seats)
+                  </p>
+                </FormItem>
+              )}
+            />
+
+            <div className="pt-4 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={editReservationMutation.isPending}>
+                {editReservationMutation.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                )}
+                Update Reservation
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 }
 

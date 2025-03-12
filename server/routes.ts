@@ -382,6 +382,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendStatus(200);
   });
 
+  // Add the PATCH endpoint for updating reservations
+  app.patch("/api/reservations/:id", async (req, res) => {
+    if (!req.user?.isAdmin) {
+      return res.status(403).send("Admin access required");
+    }
+
+    const reservationId = parseInt(req.params.id);
+    const parsed = insertReservationSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json(parsed.error);
+    }
+
+    try {
+      // Start transaction
+      await db.transaction(async (tx) => {
+        // Check if reservation exists
+        const existingReservation = await tx.query.reservations.findFirst({
+          where: eq(reservations.id, reservationId)
+        });
+
+        if (!existingReservation) {
+          throw new Error("Reservation not found");
+        }
+
+        // Check if show exists and is not in the past
+        const show = await tx.query.shows.findFirst({
+          where: eq(shows.id, parsed.data.showId)
+        });
+
+        if (!show) {
+          throw new Error("Show not found");
+        }
+
+        if (new Date(show.date) < new Date()) {
+          throw new Error("Cannot modify reservations for past shows");
+        }
+
+        // Get all reservations for this show except the current one
+        const existingReservations = await tx.query.reservations.findMany({
+          where: eq(reservations.showId, show.id)
+        });
+
+        const otherReservations = existingReservations.filter(
+          (r) => r.id !== reservationId
+        );
+
+        const reservedSeats = otherReservations.flatMap((r) =>
+          JSON.parse(r.seatNumbers)
+        );
+
+        // Check for seat conflicts
+        const seatNumbers = JSON.parse(parsed.data.seatNumbers) as string[];
+        const hasConflict = seatNumbers.some((seat) =>
+          reservedSeats.includes(seat)
+        );
+
+        if (hasConflict) {
+          throw new Error("Some seats are already reserved");
+        }
+
+        // Update the reservation
+        const [updatedReservation] = await tx
+          .update(reservations)
+          .set({
+            showId: parsed.data.showId,
+            seatNumbers: parsed.data.seatNumbers,
+          })
+          .where(eq(reservations.id, reservationId))
+          .returning();
+
+        res.json(updatedReservation);
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(400).send(error.message);
+      } else {
+        res.status(500).send("An unexpected error occurred");
+      }
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
