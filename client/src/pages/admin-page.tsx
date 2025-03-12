@@ -1107,7 +1107,7 @@ function UserList() {
 
   const resetPasswordMutation = useMutation({
     mutationFn: async (userId: number) => {
-      const res = awaitfetch(`/api/users/${userId}/reset-password`, {
+      const res = await fetch(`/api/users/${userId}/reset-password`, {
         method: "POST",
       });
       if (!res.ok) throw new Error(await res.text());
@@ -1574,6 +1574,7 @@ function EditReservationDialog({
   const [selectedSeats, setSelectedSeats] = useState<string[]>(
     JSON.parse(reservation.seatNumbers)
   );
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const { data: showReservations = [] } = useQuery<Reservation[]>({
     queryKey: [`/api/reservations/show/${reservation.showId}`],
@@ -1613,7 +1614,6 @@ function EditReservationDialog({
       }
       return [...current, seatId].sort();
     });
-    form.setValue("seatNumbers", selectedSeats);
   };
 
   const editReservationMutation = useMutation({
@@ -1662,113 +1662,138 @@ function EditReservationDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Edit Reservation</DialogTitle>
           <DialogDescription>
             Update reservation details and seat assignments for {currentShow.title}
           </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit((data) => editReservationMutation.mutate(data))}
-            className="space-y-4"
-          >
-            <div className="grid gap-4">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  {layout.map((section: any) => (
-                    <div key={section.section} className="space-y-4">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        {section.section}
-                        <span className="text-sm text-muted-foreground font-normal">
-                          {section.section === "Balcony" ? "(Prefix: B)" : "(Prefix: D)"}
+
+        <div className="flex-1 overflow-y-auto py-4">
+          <div className="space-y-2">
+            {layout.map((section: any) => (
+              <div key={section.section} className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  {section.section}
+                  <span className="text-sm text-muted-foreground font-normal">
+                    {section.section === "Balcony" ? "(Prefix: B)" : "(Prefix: D)"}
+                  </span>
+                </h3>
+                <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
+                  <div className="space-y-3 min-w-fit">
+                    {section.rows.map((rowData: any) => (
+                      <div key={rowData.row} className="flex gap-3 justify-center">
+                        <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
+                          {rowData.row}
                         </span>
-                      </h3>
-                      <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
-                        <div className="space-y-3 min-w-fit">
-                          {section.rows.map((rowData: any) => (
-                            <div key={rowData.row} className="flex gap-3 justify-center">
-                              <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
-                                {rowData.row}
-                              </span>
-                              <div className="flex gap-3">
-                                {Array.from({ length: Math.max(...rowData.seats) }).map(
-                                  (_, seatIndex) => {
-                                    const seatNumber = seatIndex + 1;
-                                    const prefix = section.section === "Balcony" ? "B" : "D";
-                                    const seatId = `${prefix}${rowData.row}${seatNumber}`;
+                        <div className="flex gap-3">
+                          {Array.from({ length: Math.max(...rowData.seats) }).map(
+                            (_, seatIndex) => {
+                              const seatNumber = seatIndex + 1;
+                              const prefix = section.section === "Balcony" ? "B" : "D";
+                              const seatId = `${prefix}${rowData.row}${seatNumber}`;
 
-                                    if (!rowData.seats.includes(seatNumber)) {
-                                      return <div key={seatId} className="w-8" />;
-                                    }
+                              if (!rowData.seats.includes(seatNumber)) {
+                                return <div key={seatId} className="w-8" />;
+                              }
 
-                                    return (
-                                      <Seat
-                                        key={seatId}
-                                        seatId={seatId}
-                                        isReserved={reservedSeats.has(seatId)}
-                                        isBlocked={blockedSeats.has(seatId)}
-                                        isSelected={selectedSeats.includes(seatId)}
-                                        onSelect={handleSeatSelect}
-                                      />
-                                    );
-                                  }
-                                )}
-                              </div>
-                              <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
-                                {rowData.row}
-                              </span>
-                            </div>
-                          ))}
+                              return (
+                                <Seat
+                                  key={seatId}
+                                  seatId={seatId}
+                                  isReserved={reservedSeats.has(seatId)}
+                                  isBlocked={blockedSeats.has(seatId)}
+                                  isSelected={selectedSeats.includes(seatId)}
+                                  onSelect={handleSeatSelect}
+                                />
+                              );
+                            }
+                          )}
                         </div>
+                        <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
+                          {rowData.row}
+                        </span>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
-                <div className="flex items-center gap-4">
-                  <p className="text-sm text-muted-foreground">
-                    Selected: {selectedSeats.join(", ")}
-                  </p>
-                </div>
+        <div className="border-t pt-4 mt-4">
+          <div className="flex items-center justify-between">
+            <div className="flex gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded border-2" />
+                <span>Available</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-primary border-2 border-primary" />
+                <span>Selected</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-red-100 border-2 border-red-200" />
+                <span>Reserved</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-yellow-100 border-2 border-yellow-200" />
+                <span>Blocked</span>
               </div>
             </div>
+          </div>
 
-            <div className="flex items-center justify-between pt-4 border-t">
-              <div className="flex gap-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="w-4 h-4 rounded border-2" />
-                  <span>Available</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="w-4 h-4 rounded bg-primary border-2 border-primary" />
-                  <span>Selected</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="w-4 h-4 rounded bg-red-100 border-2 border-red-200" />
-                  <span>Reserved</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="w-4 h-4 rounded bg-yellow-100 border-2 border-yellow-200" />
-                  <span>Blocked</span>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={handleClose}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={editReservationMutation.isPending}>
-                  {editReservationMutation.isPending && (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  )}
-                  Update Reservation
-                </Button>
-              </div>
+          <div className="flex items-center justify-between mt-4">
+            <p className="text-sm text-muted-foreground">
+              Selected: {selectedSeats.join(", ")}
+            </p>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={handleClose}>
+                Cancel
+              </Button>
+              <Button 
+                variant="default"
+                onClick={() => setShowConfirm(true)}
+                disabled={editReservationMutation.isPending || selectedSeats.length === 0}
+              >
+                Update Reservation
+              </Button>
             </div>
-          </form>
-        </Form>
+          </div>
+        </div>
       </DialogContent>
+
+      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Update Reservation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to update this reservation? The following seats will be assigned:
+              <br />
+              <span className="font-medium">{selectedSeats.join(", ")}</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                editReservationMutation.mutate({
+                  showId: currentShow.id,
+                  seatNumbers: selectedSeats,
+                });
+                setShowConfirm(false);
+              }}
+            >
+              {editReservationMutation.isPending && (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              )}
+              Confirm Update
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
