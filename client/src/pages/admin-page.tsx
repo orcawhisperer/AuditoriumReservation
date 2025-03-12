@@ -95,6 +95,7 @@ function ShowForm() {
       description: "",
       themeColor: "#4B5320",
       emoji: "🎭",
+      seatLayout: JSON.stringify([{row:'A', seats:10}, {row:'B', seats: 10}])
     },
   });
 
@@ -290,6 +291,19 @@ function ShowForm() {
             </FormItem>
           )}
         />
+        <FormField
+          control={form.control}
+          name="seatLayout"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Seat Layout (JSON)</FormLabel>
+              <FormControl>
+                <Input placeholder='[{ "row": "A", "seats": 10 }, { "row": "B", "seats": 10 }]' {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <Button
           type="submit"
@@ -307,148 +321,162 @@ function ShowForm() {
 }
 
 function ShowList() {
-  const { toast } = useToast();
-  const [editingShow, setEditingShow] = useState<Show | null>(null);
-  const { data: shows = [], isLoading } = useQuery<Show[]>({
-    queryKey: ["/api/shows"],
-  });
+    const { toast } = useToast();
+    const [editingShow, setEditingShow] = useState<Show | null>(null);
+    const { data: shows = [], isLoading } = useQuery<Show[]>({
+      queryKey: ["/api/shows"],
+    });
 
-  const { data: reservations = [] } = useQuery<Reservation[]>({
-    queryKey: ["/api/reservations"],
-  });
+    const { data: reservations = [] } = useQuery<Reservation[]>({
+      queryKey: ["/api/reservations"],
+    });
 
-  const deleteShowMutation = useMutation({
-    mutationFn: async (showId: number) => {
-      const res = await fetch(`/api/shows/${showId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Failed to delete show");
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/shows"] });
-      toast({
-        title: "Success",
-        description: "Show deleted successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to delete show",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+    const deleteShowMutation = useMutation({
+      mutationFn: async (showId: number) => {
+        const res = await fetch(`/api/shows/${showId}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) throw new Error("Failed to delete show");
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["/api/shows"] });
+        toast({
+          title: "Success",
+          description: "Show deleted successfully",
+        });
+      },
+      onError: (error: Error) => {
+        toast({
+          title: "Failed to delete show",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    });
 
-  const getShowReservations = (showId: number) => {
-    return reservations.filter((r) => r.showId === showId);
-  };
+    const getShowReservations = (showId: number) => {
+      return reservations.filter((r) => r.showId === showId);
+    };
 
-  const getBookedSeats = (showId: number) => {
-    const showReservations = getShowReservations(showId);
-    return showReservations.flatMap((r) => JSON.parse(r.seatNumbers));
-  };
+    const getBookedSeats = (showId: number) => {
+      const showReservations = getShowReservations(showId);
+      return showReservations.flatMap((r) => JSON.parse(r.seatNumbers));
+    };
 
-  if (isLoading) {
+    const calculateTotalSeats = (show: Show) => {
+      const layout = JSON.parse(show.seatLayout);
+      return layout.reduce((total: number, section: any) => {
+        return total + section.seats;
+      }, 0);
+    };
+
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center h-32">
+          <Loader2 className="h-8 w-8 animate-spin text-border" />
+        </div>
+      );
+    }
+
+    if (shows.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+          <CalendarPlus className="h-8 w-8 mb-2" />
+          <p>No shows scheduled</p>
+        </div>
+      );
+    }
+
     return (
-      <div className="flex items-center justify-center h-32">
-        <Loader2 className="h-8 w-8 animate-spin text-border" />
-      </div>
-    );
-  }
+      <div className="space-y-4">
+        {shows.map((show) => {
+          const bookedSeats = getBookedSeats(show.id);
+          const totalSeats = calculateTotalSeats(show);
+          const availableSeats = totalSeats - bookedSeats.length;
 
-  if (shows.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-        <CalendarPlus className="h-8 w-8 mb-2" />
-        <p>No shows scheduled</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {shows.map((show) => {
-        const bookedSeats = getBookedSeats(show.id);
-        const availableSeats = show.totalSeats - bookedSeats.length;
-
-        return (
-          <div
-            key={show.id}
-            className="flex items-center justify-between p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors"
-            style={{
-              borderColor: show.themeColor || "#4B5320",
-              backgroundColor: `${show.themeColor}10` || "#4B532010",
-            }}
-          >
-            <div className="flex gap-4">
-              {show.poster && (
-                <div className="relative w-16 sm:w-24 overflow-hidden rounded-lg border">
-                  <div className="relative aspect-video">
-                    <img
-                      src={show.poster}
-                      alt={`Poster for ${show.title}`}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
+          return (
+            <div
+              key={show.id}
+              className="flex items-center justify-between p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors"
+              style={{
+                borderColor: show.themeColor || "#4B5320",
+                backgroundColor: `${show.themeColor}10` || "#4B532010",
+              }}
+            >
+              <div className="flex gap-4">
+                {show.poster && (
+                  <div className="relative w-16 sm:w-24 overflow-hidden rounded-lg border">
+                    <div className="relative aspect-video">
+                      <img
+                        src={show.poster}
+                        alt={`Poster for ${show.title}`}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">{show.emoji} {show.title}</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {format(new Date(show.date), "PPP p")}
+                  </p>
+                  {show.description && (
+                    <p className="text-sm text-muted-foreground">
+                      {show.description}
+                    </p>
+                  )}
+                  <div className="flex gap-2 mt-1">
+                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-500/10 text-green-500">
+                      {availableSeats} Available
+                    </span>
+                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-500/10 text-red-500">
+                      {bookedSeats.length} Booked
+                    </span>
+                  </div>
+                  {/* Add seat layout summary */}
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    {show.seatLayout && (
+                      <pre>{JSON.stringify(JSON.parse(show.seatLayout), null, 2)}</pre>
+                    )}
                   </div>
                 </div>
-              )}
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="font-medium">{show.emoji} {show.title}</p>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {format(new Date(show.date), "PPP p")}
-                </p>
-                {show.description && (
-                  <p className="text-sm text-muted-foreground">
-                    {show.description}
-                  </p>
-                )}
-                <div className="flex gap-2 mt-1">
-                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-500/10 text-green-500">
-                    {availableSeats} Available
-                  </span>
-                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-500/10 text-red-500">
-                    {bookedSeats.length} Booked
-                  </span>
-                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingShow(show)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => deleteShowMutation.mutate(show.id)}
+                  disabled={deleteShowMutation.isPending}
+                >
+                  {deleteShowMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 mr-2" />
+                  )}
+                  Delete
+                </Button>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setEditingShow(show)}
-              >
-                Edit
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => deleteShowMutation.mutate(show.id)}
-                disabled={deleteShowMutation.isPending}
-              >
-                {deleteShowMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Trash2 className="h-4 w-4 mr-2" />
-                )}
-                Delete
-              </Button>
-            </div>
-          </div>
-        );
-      })}
-      {editingShow && (
-        <EditShowDialog
-          show={editingShow}
-          onClose={() => setEditingShow(null)}
-        />
-      )}
-    </div>
-  );
-}
+          );
+        })}
+        {editingShow && (
+          <EditShowDialog
+            show={editingShow}
+            onClose={() => setEditingShow(null)}
+          />
+        )}
+      </div>
+    );
+  }
 
 function EditShowDialog({ show, onClose }: { show: Show; onClose: () => void }) {
   const { toast } = useToast();
@@ -464,6 +492,7 @@ function EditShowDialog({ show, onClose }: { show: Show; onClose: () => void }) 
       description: show.description || "",
       themeColor: show.themeColor || "#4B5320",
       emoji: show.emoji || "🎭",
+      seatLayout: show.seatLayout || JSON.stringify([{row:'A', seats:10}, {row:'B', seats: 10}])
     },
   });
 
@@ -624,7 +653,19 @@ function EditShowDialog({ show, onClose }: { show: Show; onClose: () => void }) 
                 </FormItem>
               )}
             />
-
+            <FormField
+              control={form.control}
+              name="seatLayout"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Seat Layout (JSON)</FormLabel>
+                  <FormControl>
+                    <Input placeholder='[{ "row": "A", "seats": 10 }, { "row": "B", "seats": 10 }]' {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <div className="pt-4 flex justify-end gap-2">
               <Button
                 type="button"
