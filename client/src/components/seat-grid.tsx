@@ -30,7 +30,7 @@ function Seat({ seatId, isReserved, isBlocked, isSelected, onSelect }: SeatProps
       disabled={isReserved || isBlocked}
       onClick={() => onSelect(seatId)}
     >
-      {seatId}
+      {seatId.slice(1)} {/* Remove section prefix for display */}
     </button>
   );
 }
