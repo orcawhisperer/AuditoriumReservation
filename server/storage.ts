@@ -19,6 +19,7 @@ export interface IStorage {
   toggleUserAdmin(userId: number, isAdmin: boolean): Promise<void>;
   deleteAdmin(): Promise<void>;
   initializeAdmin(): Promise<void>;
+  updateUser(id: number, user: Partial<InsertUser>): Promise<User>; // Add to IStorage interface
 
   // Show operations
   createShow(show: InsertShow): Promise<Show>;
@@ -179,6 +180,13 @@ export class SQLiteStorage implements IStorage {
 
   async deleteReservation(id: number): Promise<void> {
     await db.delete(reservations).where(eq(reservations.id, id));
+  }
+  async updateUser(id: number, updateData: Partial<InsertUser>): Promise<User> { // Add to SQLiteStorage class implementation
+    const result = await db.update(users)
+      .set(updateData)
+      .where(eq(users.id, id))
+      .returning();
+    return result[0];
   }
 }
 

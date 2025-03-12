@@ -133,6 +133,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(updatedUser);
   });
 
+  app.patch("/api/users/:id", async (req, res) => {
+    if (!req.user?.isAdmin) {
+      return res.status(403).send("Admin access required");
+    }
+
+    const userId = parseInt(req.params.id);
+    const user = await storage.getUser(userId);
+
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    // Don't allow editing the primary admin
+    const users = await storage.getUsers();
+    const primaryAdmin = users.find(u => u.isAdmin);
+    if (user.id === primaryAdmin?.id) {
+      return res.status(403).send("Cannot modify primary admin account");
+    }
+
+    // If password is empty, remove it from the update data
+    const updateData = { ...req.body };
+    if (!updateData.password) {
+      delete updateData.password;
+    } else {
+      updateData.password = await hashPassword(updateData.password);
+    }
+
+    const updatedUser = await storage.updateUser(userId, updateData);
+    res.json(updatedUser);
+  });
+
   // Show routes
   app.get("/api/shows", async (_req, res) => {
     const shows = await storage.getShows();
