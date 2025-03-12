@@ -318,7 +318,7 @@ function EditShowDialog({ show, onClose }: { show: Show; onClose: () => void }) 
       description: show.description || "",
       themeColor: show.themeColor || "#4B5320",
       emoji: show.emoji || "🎭",
-      blockedSeats: JSON.parse(show.blockedSeats)?.join(',') || "", //Added blockedSeats to defaultValues
+      blockedSeats: JSON.parse(show.blockedSeats || "[]").join(","), // Parse the JSON array back to comma-separated string
     },
   });
 
@@ -398,6 +398,26 @@ function EditShowDialog({ show, onClose }: { show: Show; onClose: () => void }) 
                     </div>
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="blockedSeats"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Blocked Seats</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter seats to block (e.g., BA1,BB2,DN1)"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  <p className="text-sm text-muted-foreground">
+                    Enter comma-separated seat numbers to block (e.g., BA1,BB2,DN1)
+                  </p>
                 </FormItem>
               )}
             />

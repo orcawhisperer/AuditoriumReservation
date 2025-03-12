@@ -17,20 +17,34 @@ type SeatProps = {
   onSelect: (seatId: string) => void;
 };
 
-function Seat({ seatId, isReserved, isBlocked, isSelected, onSelect }: SeatProps) {
+function Seat({
+  seatId,
+  isReserved,
+  isBlocked,
+  isSelected,
+  onSelect,
+}: SeatProps) {
+  // Extract just the number from the end of the seatId
+  const seatNumber = seatId.match(/\d+$/)?.[0] || seatId;
+
   return (
     <button
       className={cn(
         "w-8 h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm",
-        isReserved && "bg-red-100 border-red-200 text-red-500 cursor-not-allowed",
-        isBlocked && "bg-yellow-100 border-yellow-200 text-yellow-500 cursor-not-allowed",
+        isReserved &&
+          "bg-red-100 border-red-200 text-red-500 cursor-not-allowed",
+        isBlocked &&
+          "bg-yellow-100 border-yellow-200 text-yellow-500 cursor-not-allowed",
         isSelected && "bg-primary border-primary text-primary-foreground",
-        !isReserved && !isBlocked && !isSelected && "hover:bg-accent hover:border-accent hover:text-accent-foreground active:scale-95"
+        !isReserved &&
+          !isBlocked &&
+          !isSelected &&
+          "hover:bg-accent hover:border-accent hover:text-accent-foreground active:scale-95",
       )}
       disabled={isReserved || isBlocked}
       onClick={() => onSelect(seatId)}
     >
-      {parseInt(seatId.slice(2))} {/* Only show the seat number */}
+      {seatNumber}
     </button>
   );
 }
@@ -45,19 +59,23 @@ export function SeatGrid() {
     queryKey: [`/api/shows/${showId}`],
   });
 
-  const { data: showReservations = [], isLoading: reservationsLoading } = useQuery<Reservation[]>({
-    queryKey: [`/api/reservations/show/${showId}`],
-    enabled: !!showId,
-    staleTime: 0,
-  });
+  console.log(show);
 
-  const { data: userReservations = [], isLoading: userReservationsLoading } = useQuery<Reservation[]>({
-    queryKey: ["/api/reservations/user"],
-    staleTime: 0,
-  });
+  const { data: showReservations = [], isLoading: reservationsLoading } =
+    useQuery<Reservation[]>({
+      queryKey: [`/api/reservations/show/${showId}`],
+      enabled: !!showId,
+      staleTime: 0,
+    });
+
+  const { data: userReservations = [], isLoading: userReservationsLoading } =
+    useQuery<Reservation[]>({
+      queryKey: ["/api/reservations/user"],
+      staleTime: 0,
+    });
 
   const hasExistingReservation = userReservations.some(
-    reservation => reservation.showId === parseInt(showId)
+    (reservation) => reservation.showId === parseInt(showId),
   );
 
   const reserveMutation = useMutation({
@@ -86,7 +104,9 @@ export function SeatGrid() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/reservations/show/${showId}`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/reservations/show/${showId}`],
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/reservations/user"] });
       toast({
         title: "Success",
@@ -116,8 +136,10 @@ export function SeatGrid() {
   }
 
   const layout = JSON.parse(show.seatLayout);
-  const reservedSeats = new Set(showReservations.flatMap((r) => JSON.parse(r.seatNumbers)));
-  const blockedSeats = new Set(JSON.parse(show.blockedSeats || '[]'));
+  const reservedSeats = new Set(
+    showReservations.flatMap((r) => JSON.parse(r.seatNumbers)),
+  );
+  const blockedSeats = new Set(JSON.parse(show.blockedSeats || "[]"));
 
   const handleSeatSelect = (seatId: string) => {
     setSelectedSeats((current) => {
@@ -141,7 +163,8 @@ export function SeatGrid() {
       <div>
         <h2 className="text-2xl font-bold">{show.title}</h2>
         <p className="text-muted-foreground">
-          {format(new Date(show.date), "PPP")} at {format(new Date(show.date), "p")}
+          {format(new Date(show.date), "PPP")} at{" "}
+          {format(new Date(show.date), "p")}
         </p>
         {show.poster && (
           <div className="mt-4 relative w-full max-w-md mx-auto overflow-hidden rounded-lg border">
@@ -173,25 +196,27 @@ export function SeatGrid() {
                       {rowData.row}
                     </span>
                     <div className="flex gap-3">
-                      {Array.from({ length: Math.max(...rowData.seats) }).map((_, seatIndex) => {
-                        const seatNumber = seatIndex + 1;
-                        // Add section prefix to seat ID
-                        const seatId = `${section.prefix}${rowData.row}${seatNumber}`;
-                        // Only render seats that exist in this row
-                        if (!rowData.seats.includes(seatNumber)) {
-                          return <div key={seatId} className="w-8" />;
-                        }
-                        return (
-                          <Seat
-                            key={seatId}
-                            seatId={seatId}
-                            isReserved={reservedSeats.has(seatId)}
-                            isBlocked={blockedSeats.has(seatId)}
-                            isSelected={selectedSeats.includes(seatId)}
-                            onSelect={handleSeatSelect}
-                          />
-                        );
-                      })}
+                      {Array.from({ length: Math.max(...rowData.seats) }).map(
+                        (_, seatIndex) => {
+                          const seatNumber = seatIndex + 1;
+                          // Add section prefix to seat ID
+                          const seatId = `${section.prefix}${rowData.row}${seatNumber}`;
+                          // Only render seats that exist in this row
+                          if (!rowData.seats.includes(seatNumber)) {
+                            return <div key={seatId} className="w-8" />;
+                          }
+                          return (
+                            <Seat
+                              key={seatId}
+                              seatId={seatId}
+                              isReserved={reservedSeats.has(seatId)}
+                              isBlocked={blockedSeats.has(seatId)}
+                              isSelected={selectedSeats.includes(seatId)}
+                              onSelect={handleSeatSelect}
+                            />
+                          );
+                        },
+                      )}
                     </div>
                     <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                       {rowData.row}
