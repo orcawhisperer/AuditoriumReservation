@@ -29,11 +29,34 @@ sqlite.exec(`CREATE TABLE shows (
   description TEXT,
   theme_color TEXT DEFAULT '#4B5320',
   emoji TEXT,
-  seat_layout TEXT NOT NULL DEFAULT '{
-    "balcony": {"rows": ["A","B","C"], "seatsPerRow": 12},
-    "middle": {"rows": ["N","M","L","K","J","I","H","G"], "seatsPerRow": 16},
-    "lower": {"rows": ["F","E","D","C","B","A"], "seatsPerRow": 17}
-  }'
+  seat_layout TEXT NOT NULL DEFAULT '${JSON.stringify([
+    {
+      section: "Balcony",
+      rows: [
+        { row: "C", seats: Array.from({length: 12}, (_, i) => i + 1), total_seats: 12 },
+        { row: "B", seats: Array.from({length: 12}, (_, i) => i + 1), total_seats: 12 },
+        { row: "A", seats: [9, 10, 11, 12], total_seats: 4 }
+      ],
+      total_section_seats: 28
+    },
+    {
+      section: "Downstairs",
+      rows: [
+        { row: "N", seats: [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16], total_seats: 12 },
+        ...["M", "L", "K", "J", "I", "H", "G"].map(row => ({
+          row,
+          seats: Array.from({length: 16}, (_, i) => i + 1),
+          total_seats: 16
+        })),
+        ...["F", "E", "D", "C", "B", "A"].map(row => ({
+          row,
+          seats: Array.from({length: 18}, (_, i) => i + 1),
+          total_seats: 18
+        }))
+      ],
+      total_section_seats: 232
+    }
+  ])}'
 )`);
 
 sqlite.exec(`CREATE TABLE IF NOT EXISTS reservations (

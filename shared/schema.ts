@@ -23,21 +23,34 @@ export const shows = sqliteTable("shows", {
   description: text("description"),
   themeColor: text("theme_color").default("#4B5320"),
   emoji: text("emoji"),
-  // Remove totalSeats as we now have a fixed layout
-  seatLayout: text("seat_layout").notNull().default(JSON.stringify({
-    balcony: {
-      rows: ["A", "B", "C"],
-      seatsPerRow: 12
+  seatLayout: text("seat_layout").notNull().default(JSON.stringify([
+    {
+      section: "Balcony",
+      rows: [
+        { row: "C", seats: Array.from({length: 12}, (_, i) => i + 1), total_seats: 12 },
+        { row: "B", seats: Array.from({length: 12}, (_, i) => i + 1), total_seats: 12 },
+        { row: "A", seats: [9, 10, 11, 12], total_seats: 4 }
+      ],
+      total_section_seats: 28
     },
-    middle: {
-      rows: ["N", "M", "L", "K", "J", "I", "H", "G"],
-      seatsPerRow: 16
-    },
-    lower: {
-      rows: ["F", "E", "D", "C", "B", "A"],
-      seatsPerRow: 17
+    {
+      section: "Downstairs",
+      rows: [
+        { row: "N", seats: [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16], total_seats: 12 },
+        ...["M", "L", "K", "J", "I", "H", "G"].map(row => ({
+          row,
+          seats: Array.from({length: 16}, (_, i) => i + 1),
+          total_seats: 16
+        })),
+        ...["F", "E", "D", "C", "B", "A"].map(row => ({
+          row,
+          seats: Array.from({length: 18}, (_, i) => i + 1),
+          total_seats: 18
+        }))
+      ],
+      total_section_seats: 232
     }
-  })),
+  ])),
 });
 
 export const reservations = sqliteTable("reservations", {
@@ -68,7 +81,6 @@ export const insertUserSchema = createInsertSchema(users, {
   ),
 });
 
-// Customize the show schema with new fields
 export const insertShowSchema = createInsertSchema(shows).extend({
   date: z.string().refine(
     (str) => new Date(str) > new Date(),
@@ -91,9 +103,12 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
     .refine(
       (seats) => seats.every(seat => {
         const [row, number] = [seat[0], parseInt(seat.slice(1))];
-        if (row >= 'A' && row <= 'C') return number >= 1 && number <= 12; // Balcony
-        if (row >= 'G' && row <= 'N') return number >= 1 && number <= 16; // Middle
-        if (row >= 'A' && row <= 'F') return number >= 1 && number <= 17; // Lower
+        // Validate based on the exact layout
+        if (row === 'A' && row === 'B' && number >= 1 && number <= 12) return true; // Balcony B, C
+        if (row === 'A' && number >= 9 && number <= 12) return true; // Balcony A (only 9-12)
+        if (row === 'N' && ([1,2,3,4,9,10,11,12,13,14,15,16].includes(number))) return true; // Row N specific seats
+        if (row >= 'G' && row <= 'M' && number >= 1 && number <= 16) return true; // Middle rows
+        if (row >= 'A' && row <= 'F' && number >= 1 && number <= 18) return true; // Lower rows
         return false;
       }),
       { message: "Invalid seat selection" }
