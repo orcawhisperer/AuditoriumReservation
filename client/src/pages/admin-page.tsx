@@ -101,6 +101,7 @@ function ShowForm() {
       themeColor: "#4B5320",
       emoji: "🎭",
       blockedSeats: "",
+      duration: 90, // Default duration
     },
   });
 
@@ -198,6 +199,46 @@ function ShowForm() {
           )}
         />
 
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date and Time</FormLabel>
+                <FormControl>
+                  <Input type="datetime-local" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="duration"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Duration (minutes)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min="30"
+                    max="300"
+                    placeholder="Enter show duration"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                  />
+                </FormControl>
+                <FormMessage />
+                <p className="text-xs text-muted-foreground">
+                  Show duration must be between 30 minutes and 5 hours
+                </p>
+              </FormItem>
+            )}
+          />
+        </div>
+
         <FormField
           control={form.control}
           name="blockedSeats"
@@ -232,21 +273,6 @@ function ShowForm() {
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="date"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date and Time</FormLabel>
-                <FormControl>
-                  <Input type="datetime-local" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
 
         <div className="grid grid-cols-2 gap-4">
           <FormField
@@ -335,6 +361,7 @@ function EditShowDialog({
     defaultValues: {
       title: show.title,
       date: new Date(show.date).toISOString().slice(0, 16),
+      duration: show.duration,
       poster: show.poster || "",
       description: show.description || "",
       themeColor: show.themeColor || "#4B5320",
@@ -439,6 +466,46 @@ function EditShowDialog({
               )}
             />
 
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date and Time</FormLabel>
+                    <FormControl>
+                      <Input type="datetime-local" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="duration"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Duration (minutes)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="30"
+                        max="300"
+                        placeholder="Enter show duration"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <p className="text-xs text-muted-foreground">
+                      Show duration must be between 30 minutes and 5 hours
+                    </p>
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="blockedSeats"
@@ -477,46 +544,32 @@ function EditShowDialog({
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="date"
+                name="themeColor"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Date and Time</FormLabel>
+                    <FormLabel className="flex items-center gap-2">
+                      Theme Color
+                      <Palette className="h-4 w-4" />
+                    </FormLabel>
                     <FormControl>
-                      <Input type="datetime-local" {...field} />
+                      <div className="flex gap-2">
+                        <Input
+                          type="color"
+                          {...field}
+                          className="h-10 w-20 p-1"
+                        />
+                        <Input
+                          {...field}
+                          placeholder="#4B5320"
+                          className="font-mono"
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-
-            <FormField
-              control={form.control}
-              name="themeColor"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    Theme Color
-                    <Palette className="h-4 w-4" />
-                  </FormLabel>
-                  <FormControl>
-                    <div className="flex gap-2">
-                      <Input
-                        type="color"
-                        {...field}
-                        className="h-10 w-20 p-1"
-                      />
-                      <Input
-                        {...field}
-                        placeholder="#4B5320"
-                        className="font-mono"
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             <div className="pt-4 flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={handleClose}>
@@ -1805,6 +1858,112 @@ function EditReservationDialog({
         </AlertDialogContent>
       </AlertDialog>
     </Dialog>
+  );
+}
+
+function AdminPage() {
+  const { user } = useAuth();
+  const [, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState<
+    "shows" | "users" | "reservations"
+  >("shows");
+
+  if (user && !user.isAdmin) {
+    setLocation("/");
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#4B5320]/10 to-[#4B5320]/5">
+      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="container mx-auto flex items-center justify-between h-16">
+          <div className="flex items-center gap-2">
+            <Shield className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl font-bold">Admin Control</h1>
+          </div>
+          <Button variant="outline" onClick={() => setLocation("/")}>
+            Back to Home
+          </Button>
+        </div>
+      </header>
+
+      <main className="container mx-auto py-8 space-y-8">
+        <div className="flex gap-4 border-b mb-6">
+          <Button
+            variant={activeTab === "shows" ? "default" : "ghost"}
+            onClick={() => setActiveTab("shows")}
+          >
+            <CalendarPlus className="h-4 w-4 mr-2" />
+            Shows
+          </Button>
+          <Button
+            variant={activeTab === "users" ? "default" : "ghost"}
+            onClick={() => setActiveTab("users")}
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Users
+          </Button>
+          <Button
+            variant={activeTab === "reservations" ? "default" : "ghost"}
+            onClick={() => setActiveTab("reservations")}
+          >
+            <Star className="h-4 w-4 mr-2" />
+            Reservations
+          </Button>
+        </div>
+
+        {activeTab === "shows" && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card className="border-2">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <CalendarPlus className="h-5 w-5 text-primary" />
+                  <CardTitle>Add New Show</CardTitle>
+                </div>
+                <CardDescription>
+                  Schedule a new show in the auditorium
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ShowForm />
+              </CardContent>
+            </Card>
+
+            <Card className="border-2">
+              <CardHeader>
+                <CardTitle>Manage Shows</CardTitle>
+                <CardDescription>
+                  View and manage scheduled shows
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ShowList />
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {activeTab === "users" && (
+          <Card className="border-2">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                <CardTitle>Manage Users</CardTitle>
+              </div>
+              <CardDescription>View and manage user accounts</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <CreateUserDialog />
+                <UserList />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === "reservations" && <ReservationManagement />}
+      </main>
+    </div>
   );
 }
 

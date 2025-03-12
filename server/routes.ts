@@ -4,34 +4,47 @@ import { storage } from "./storage";
 import { setupAuth, hashPassword } from "./auth";
 import { insertShowSchema, insertReservationSchema } from "@shared/schema";
 import { randomBytes } from "crypto";
-import { eq, and, or, gt, lt } from 'drizzle-orm';
+import { eq, and, or, gt, lt, not } from 'drizzle-orm';
 import { db } from './db';
 import { users, shows, reservations } from '@shared/schema';
 import { insertUserSchema } from "@shared/schema";
+import { format } from 'date-fns';
 
 // Helper function to check for show time conflicts
-async function checkShowTimeConflict(showDate: Date, showId?: number) {
-  // Add 30 minutes buffer before and after each show
-  const bufferTime = 30 * 60 * 1000; // 30 minutes in milliseconds
-  const startTime = new Date(showDate.getTime() - bufferTime);
-  const endTime = new Date(showDate.getTime() + bufferTime);
+async function checkShowTimeConflict(showDate: Date, duration: number, showId?: number) {
+  const showStartTime = showDate.getTime();
+  const showEndTime = showStartTime + (duration * 60 * 1000); // Convert duration to milliseconds
+  const bufferTime = 30 * 60 * 1000; // 30 minutes buffer
 
+  // Add buffer before and after the show
+  const startTimeWithBuffer = new Date(showStartTime - bufferTime);
+  const endTimeWithBuffer = new Date(showEndTime + bufferTime);
+
+  // Get all shows that might conflict
   const existingShows = await db.select()
     .from(shows)
     .where(
-      and(
-        showId ? eq(shows.id, showId) : undefined,
-        or(
-          and(
-            gt(shows.date, startTime.toISOString()),
-            lt(shows.date, endTime.toISOString())
-          ),
-          eq(shows.date, showDate.toISOString())
-        )
-      )
+      showId ? not(eq(shows.id, showId)) : undefined // Exclude current show when updating
     );
 
-  return existingShows.length > 0;
+  // Check for conflicts
+  for (const existingShow of existingShows) {
+    const existingStartTime = new Date(existingShow.date).getTime();
+    const existingEndTime = existingStartTime + (existingShow.duration * 60 * 1000);
+
+    // Check if shows overlap
+    if (
+      (showStartTime <= existingEndTime + bufferTime && showEndTime + bufferTime >= existingStartTime) ||
+      (existingStartTime <= showEndTime + bufferTime && existingEndTime + bufferTime >= showStartTime)
+    ) {
+      return {
+        hasConflict: true,
+        message: `Cannot schedule show at this time. Conflicts with "${existingShow.title}" (${format(new Date(existingShow.date), 'PPp')} - ${format(new Date(existingEndTime), 'pp')}, duration: ${existingShow.duration} minutes)`
+      };
+    }
+  }
+
+  return { hasConflict: false };
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -188,7 +201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(updatedUser);
   });
 
-  // Show routes with conflict validation
+  // Show routes with enhanced conflict validation
   app.get("/api/shows", async (_req, res) => {
     const shows = await storage.getShows();
     res.json(shows);
@@ -214,12 +227,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     // Check for time conflicts
     const showDate = new Date(parsed.data.date);
-    const hasConflict = await checkShowTimeConflict(showDate);
+    const conflict = await checkShowTimeConflict(showDate, parsed.data.duration);
 
-    if (hasConflict) {
-      return res.status(400).send(
-        "Cannot schedule show at this time. There is another show scheduled within 30 minutes of this time."
-      );
+    if (conflict.hasConflict) {
+      return res.status(400).send(conflict.message);
     }
 
     const show = await storage.createShow(parsed.data);
@@ -251,14 +262,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).send("Show not found");
     }
 
-    // Check for time conflicts, excluding the current show
+    // Check for time conflicts
     const showDate = new Date(parsed.data.date);
-    const hasConflict = await checkShowTimeConflict(showDate, showId);
+    const conflict = await checkShowTimeConflict(showDate, parsed.data.duration, showId);
 
-    if (hasConflict) {
-      return res.status(400).send(
-        "Cannot schedule show at this time. There is another show scheduled within 30 minutes of this time."
-      );
+    if (conflict.hasConflict) {
+      return res.status(400).send(conflict.message);
     }
 
     const updatedShow = await storage.updateShow(showId, parsed.data);
