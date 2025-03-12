@@ -128,19 +128,21 @@ export default function HomePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {shows.length === 0 ? (
-                <p className="text-muted-foreground">No shows available</p>
-              ) : (
-                <div className="space-y-4">
-                  {shows.map((show) => (
-                    <ShowCard
-                      key={show.id}
-                      show={show}
-                      reservations={reservations}
-                    />
-                  ))}
-                </div>
-              )}
+              <div className="h-[400px] overflow-y-auto pr-2">
+                {shows.length === 0 ? (
+                  <p className="text-muted-foreground">No shows available</p>
+                ) : (
+                  <div className="space-y-4">
+                    {shows.map((show) => (
+                      <ShowCard
+                        key={show.id}
+                        show={show}
+                        reservations={reservations}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -152,19 +154,21 @@ export default function HomePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {reservations.length === 0 ? (
-                <p className="text-muted-foreground">No reservations yet</p>
-              ) : (
-                <div className="space-y-4">
-                  {reservations.map((reservation) => (
-                    <ReservationCard
-                      key={reservation.id}
-                      reservation={reservation}
-                      show={shows.find((s) => s.id === reservation.showId)}
-                    />
-                  ))}
-                </div>
-              )}
+              <div className="h-[400px] overflow-y-auto pr-2">
+                {reservations.length === 0 ? (
+                  <p className="text-muted-foreground">No reservations yet</p>
+                ) : (
+                  <div className="space-y-4">
+                    {reservations.map((reservation) => (
+                      <ReservationCard
+                        key={reservation.id}
+                        reservation={reservation}
+                        show={shows.find((s) => s.id === reservation.showId)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
