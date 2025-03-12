@@ -93,11 +93,23 @@ export const insertShowSchema = createInsertSchema(shows).extend({
   themeColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color").optional(),
   emoji: z.string().optional(),
   blockedSeats: z.string().transform(str => {
-    // Handle empty string
-    if (!str) return JSON.stringify([]);
+    // If the string is empty or undefined, return empty array
+    if (!str || str.trim() === '') {
+      return JSON.stringify([]);
+    }
+
+    try {
+      // Try parsing as JSON first (in case it's already JSON)
+      const parsed = JSON.parse(str);
+      if (Array.isArray(parsed)) {
+        return JSON.stringify(parsed);
+      }
+    } catch (e) {
+      // If not valid JSON, treat as comma-separated string
+    }
 
     // Split by comma and clean up each seat
-    const seats = str.split(',').map(s => s.trim().toUpperCase());
+    const seats = str.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
 
     // Validate each blocked seat
     seats.forEach(seat => {
