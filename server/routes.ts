@@ -170,6 +170,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendStatus(200);
   });
 
+  app.patch("/api/shows/:id", async (req, res) => {
+    if (!req.user?.isAdmin) {
+      return res.status(403).send("Admin access required");
+    }
+
+    const parsed = insertShowSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json(parsed.error);
+    }
+
+    const show = await storage.getShow(parseInt(req.params.id));
+    if (!show) {
+      return res.status(404).send("Show not found");
+    }
+
+    const updatedShow = await storage.updateShow(parseInt(req.params.id), parsed.data);
+    res.json(updatedShow);
+  });
+
   // Reservation routes with improved transaction handling and logging
   app.post("/api/reservations", async (req, res) => {
     if (!req.user) return res.sendStatus(401);

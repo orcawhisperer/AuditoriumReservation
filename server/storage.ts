@@ -25,6 +25,7 @@ export interface IStorage {
   getShow(id: number): Promise<Show | undefined>;
   getShows(): Promise<Show[]>;
   deleteShow(id: number): Promise<void>;
+  updateShow(id: number, show: InsertShow): Promise<Show>; // Added updateShow method
 
   // Reservation operations
   createReservation(userId: number, reservation: InsertReservation): Promise<Reservation>;
@@ -146,6 +147,14 @@ export class SQLiteStorage implements IStorage {
 
   async deleteShow(id: number): Promise<void> {
     await db.delete(shows).where(eq(shows.id, id));
+  }
+
+  async updateShow(id: number, show: InsertShow): Promise<Show> { // Added updateShow method implementation
+    const result = await db.update(shows)
+      .set(show)
+      .where(eq(shows.id, id))
+      .returning();
+    return result[0];
   }
 
   async createReservation(userId: number, insertReservation: InsertReservation): Promise<Reservation> {
