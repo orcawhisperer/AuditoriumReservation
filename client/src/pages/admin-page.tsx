@@ -510,10 +510,12 @@ function ShowList() {
     const [editingShow, setEditingShow] = useState<Show | null>(null);
     const { data: shows = [], isLoading } = useQuery<Show[]>({
       queryKey: ["/api/shows"],
+      staleTime: 0, // Add staleTime: 0 to ensure real-time updates
     });
 
     const { data: reservations = [] } = useQuery<Reservation[]>({
       queryKey: ["/api/reservations"],
+      staleTime: 0, // Add staleTime: 0 to ensure real-time updates
     });
 
     const deleteShowMutation = useMutation({
@@ -551,7 +553,9 @@ function ShowList() {
     const calculateTotalSeats = (show: Show) => {
       const layout = JSON.parse(show.seatLayout);
       return layout.reduce((total: number, section: any) => {
-        return total + section.total_section_seats;
+        return total + section.rows.reduce((sectionTotal: number, row: any) => {
+          return sectionTotal + row.seats.length;
+        }, 0);
       }, 0);
     };
 
@@ -576,8 +580,9 @@ function ShowList() {
       <div className="space-y-4">
         {shows.map((show) => {
           const bookedSeats = getBookedSeats(show.id);
+          const blockedSeats = JSON.parse(show.blockedSeats || "[]");
           const totalSeats = calculateTotalSeats(show);
-          const availableSeats = totalSeats - bookedSeats.length;
+          const availableSeats = totalSeats - bookedSeats.length - blockedSeats.length;
 
           return (
             <div
@@ -620,10 +625,9 @@ function ShowList() {
                       {bookedSeats.length} Booked
                     </span>
                     <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-500/10 text-yellow-500">
-                      {show.blockedSeats ? JSON.parse(show.blockedSeats).length : 0} Blocked
+                      {blockedSeats.length} Blocked
                     </span>
                   </div>
-                  {/* Remove seat layout summary section */}
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -986,7 +990,7 @@ function EditUserDialog({ user, onClose }: { user: User; onClose: () => void }) 
 
 function UserList() {
   const { user: currentUser } = useAuth();
-const { toast } = useToast();
+  const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -1069,7 +1073,7 @@ const { toast } = useToast();
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isAdmin }),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) throw newError(await res.text());
       return res.json();
     },
     onSuccess: (data) => {
