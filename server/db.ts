@@ -19,9 +19,8 @@ sqlite.exec(`CREATE TABLE IF NOT EXISTS users (
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 )`);
 
-// Recreate shows table with updated schema
-sqlite.exec(`DROP TABLE IF EXISTS shows`);
-sqlite.exec(`CREATE TABLE shows (
+// Create shows table with updated schema
+sqlite.exec(`CREATE TABLE IF NOT EXISTS shows (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
   date TEXT NOT NULL,
