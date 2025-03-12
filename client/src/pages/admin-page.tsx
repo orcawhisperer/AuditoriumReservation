@@ -81,6 +81,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Seat } from "@/components/seat-grid";
 
 interface Reservation {
   id: number;
