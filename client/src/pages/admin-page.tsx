@@ -531,7 +531,7 @@ function ShowList() {
     const calculateTotalSeats = (show: Show) => {
       const layout = JSON.parse(show.seatLayout);
       return layout.reduce((total: number, section: any) => {
-        return total + section.seats;
+        return total + section.total_section_seats;
       }, 0);
     };
 
@@ -603,12 +603,7 @@ function ShowList() {
                       {show.blockedSeats ? JSON.parse(show.blockedSeats).length : 0} Blocked
                     </span>
                   </div>
-                  {/* Add seat layout summary */}
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    {show.seatLayout && (
-                      <pre>{JSON.stringify(JSON.parse(show.seatLayout), null, 2)}</pre>
-                    )}
-                  </div>
+                  {/* Remove seat layout summary section */}
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -1088,7 +1083,7 @@ const { toast } = useToast();
 
   if (users.length === 0) {
     return (
-      <div className="flex flex-col items-centerjustify-center h-32 text-muted-foreground">
+      <div className="flex flex-col itemscenterjustify-center h-32 text-muted-foreground">
         <Users className="h-8 w-8 mb-2" />
         <p>No users found</p>
       </div>
