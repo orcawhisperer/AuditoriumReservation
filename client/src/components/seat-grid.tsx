@@ -24,7 +24,7 @@ function Seat({
   isSelected,
   onSelect,
 }: SeatProps) {
-  // Extract just the number from the end of the seatId
+  // Extract just the seat number from the end of the seatId (remove section prefix and row)
   const seatNumber = seatId.match(/\d+$/)?.[0] || seatId;
 
   return (
@@ -182,11 +182,9 @@ export function SeatGrid() {
           <div key={section.section} className="space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               {section.section}
-              {section.prefix && (
-                <span className="text-sm text-muted-foreground font-normal">
-                  (Prefix: {section.prefix})
-                </span>
-              )}
+              <span className="text-sm text-muted-foreground font-normal">
+                (Prefix: {section.prefix})
+              </span>
             </h3>
             <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
               <div className="space-y-3 min-w-fit">
@@ -199,12 +197,11 @@ export function SeatGrid() {
                       {Array.from({ length: Math.max(...rowData.seats) }).map(
                         (_, seatIndex) => {
                           const seatNumber = seatIndex + 1;
-                          // Add section prefix to seat ID
-                          const seatId = `${section.prefix}${rowData.row}${seatNumber}`;
                           // Only render seats that exist in this row
                           if (!rowData.seats.includes(seatNumber)) {
-                            return <div key={seatId} className="w-8" />;
+                            return <div key={`${section.prefix}${rowData.row}${seatNumber}`} className="w-8" />;
                           }
+                          const seatId = `${section.prefix}${rowData.row}${seatNumber}`;
                           return (
                             <Seat
                               key={seatId}
@@ -250,7 +247,7 @@ export function SeatGrid() {
 
           <div className="flex items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              Selected: {selectedSeats.map(seat => seat).join(", ")}
+              Selected: {selectedSeats.join(", ")}
             </p>
             <Button
               onClick={() => reserveMutation.mutate()}
