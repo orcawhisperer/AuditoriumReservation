@@ -32,6 +32,7 @@ sqlite.exec(`CREATE TABLE IF NOT EXISTS shows (
   seat_layout TEXT NOT NULL DEFAULT '${JSON.stringify([
     {
       section: "Balcony",
+      prefix: "B",
       rows: [
         { row: "C", seats: Array.from({length: 12}, (_, i) => i + 1), total_seats: 12 },
         { row: "B", seats: Array.from({length: 12}, (_, i) => i + 1), total_seats: 12 },
@@ -41,6 +42,7 @@ sqlite.exec(`CREATE TABLE IF NOT EXISTS shows (
     },
     {
       section: "Downstairs",
+      prefix: "D",
       rows: [
         { row: "N", seats: [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16], total_seats: 12 },
         ...["M", "L", "K", "J", "I", "H", "G"].map(row => ({

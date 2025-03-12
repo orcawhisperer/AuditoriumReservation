@@ -113,20 +113,25 @@ export const insertShowSchema = createInsertSchema(shows).extend({
 
     // Validate each blocked seat
     seats.forEach(seat => {
-      if (!/^[A-N][0-9]{1,2}$/.test(seat)) {
-        throw new Error(`Invalid seat format: ${seat}. Format should be like A1, B2, etc.`);
+      if (!/^[BD][A-N][0-9]{1,2}$/.test(seat)) {
+        throw new Error(`Invalid seat format: ${seat}. Format should be like BA1, DB2, etc.`);
       }
-      const [row, number] = [seat[0], parseInt(seat.slice(1))];
+      const [section, row, number] = [seat[0], seat[1], parseInt(seat.slice(2))];
       const isValid = (
         // Balcony
-        ((row === 'C' || row === 'B') && number >= 1 && number <= 12) || // Balcony B, C rows
-        (row === 'A' && number >= 9 && number <= 12) || // Balcony A row (only 9-12)
-        // Row N specific seats
-        (row === 'N' && [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)) ||
-        // Middle section (G-M)
-        (row >= 'G' && row <= 'M' && number >= 1 && number <= 16) ||
-        // Lower section (A-F)
-        (row >= 'A' && row <= 'F' && number >= 1 && number <= 18)
+        (section === 'B' && 
+          ((row === 'C' || row === 'B') && number >= 1 && number <= 12) || // Balcony B, C rows
+          (row === 'A' && number >= 9 && number <= 12) // Balcony A row (only 9-12)
+        ) ||
+        // Downstairs
+        (section === 'D' && (
+          // Row N specific seats
+          (row === 'N' && [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)) ||
+          // Middle section (G-M)
+          (row >= 'G' && row <= 'M' && number >= 1 && number <= 16) ||
+          // Lower section (A-F)
+          (row >= 'A' && row <= 'F' && number >= 1 && number <= 18)
+        ))
       );
       if (!isValid) {
         throw new Error(`Invalid seat number: ${seat}. This seat does not exist in the layout.`);
@@ -140,19 +145,25 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
   showId: true,
   seatNumbers: true,
 }).extend({
-  seatNumbers: z.array(z.string().regex(/^[A-N][0-9]{1,2}$/, "Invalid seat format")).max(4, "Maximum 4 seats per reservation")
+  seatNumbers: z.array(z.string().regex(/^[BD][A-N][0-9]{1,2}$/, "Invalid seat format")).max(4, "Maximum 4 seats per reservation")
     .refine(
       (seats) => seats.every(seat => {
-        const [row, number] = [seat[0], parseInt(seat.slice(1))];
+        const [section, row, number] = [seat[0], seat[1], parseInt(seat.slice(2))];
         // Check Balcony section
-        if (row === 'C' || row === 'B') return number >= 1 && number <= 12; // Balcony B, C rows
-        if (row === 'A' && number >= 9 && number <= 12) return true; // Balcony A row (only 9-12)
-        // Check Row N with specific seats
-        if (row === 'N' && [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)) return true;
-        // Check middle section (G-M)
-        if (row >= 'G' && row <= 'M' && number >= 1 && number <= 16) return true;
-        // Check lower section (A-F)
-        if (row >= 'A' && row <= 'F' && number >= 1 && number <= 18) return true;
+        if (section === 'B') {
+          if (row === 'C' || row === 'B') return number >= 1 && number <= 12; // Balcony B, C rows
+          if (row === 'A') return number >= 9 && number <= 12; // Balcony A row (only 9-12)
+          return false;
+        }
+        // Check Downstairs section
+        if (section === 'D') {
+          // Check Row N with specific seats
+          if (row === 'N') return [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number);
+          // Check middle section (G-M)
+          if (row >= 'G' && row <= 'M') return number >= 1 && number <= 16;
+          // Check lower section (A-F)
+          if (row >= 'A' && row <= 'F') return number >= 1 && number <= 18;
+        }
         return false;
       }),
       { message: "Invalid seat selection" }

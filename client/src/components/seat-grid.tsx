@@ -45,13 +45,16 @@ export function SeatGrid() {
     queryKey: [`/api/shows/${showId}`],
   });
 
+  // Add staleTime: 0 to ensure fresh data on each query
   const { data: showReservations = [], isLoading: reservationsLoading } = useQuery<Reservation[]>({
     queryKey: [`/api/reservations/show/${showId}`],
     enabled: !!showId,
+    staleTime: 0,
   });
 
   const { data: userReservations = [], isLoading: userReservationsLoading } = useQuery<Reservation[]>({
     queryKey: ["/api/reservations/user"],
+    staleTime: 0,
   });
 
   const hasExistingReservation = userReservations.some(
@@ -168,7 +171,8 @@ export function SeatGrid() {
                     <div className="flex gap-3">
                       {Array.from({ length: Math.max(...rowData.seats) }).map((_, seatIndex) => {
                         const seatNumber = seatIndex + 1;
-                        const seatId = `${rowData.row}${seatNumber}`;
+                        // Add section prefix to seat ID
+                        const seatId = `${section.prefix}${rowData.row}${seatNumber}`;
                         // Only render seats that exist in this row
                         if (!rowData.seats.includes(seatNumber)) {
                           return <div key={seatId} className="w-8" />;
