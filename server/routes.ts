@@ -4,16 +4,40 @@ import { storage } from "./storage";
 import { setupAuth, hashPassword } from "./auth";
 import { insertShowSchema, insertReservationSchema } from "@shared/schema";
 import { randomBytes } from "crypto";
-import { eq } from 'drizzle-orm';
+import { eq, and, or, gt, lt } from 'drizzle-orm';
 import { db } from './db';
 import { users, shows, reservations } from '@shared/schema';
-import { insertUserSchema } from "@shared/schema"; // Import missing schema
+import { insertUserSchema } from "@shared/schema";
 
+// Helper function to check for show time conflicts
+async function checkShowTimeConflict(showDate: Date, showId?: number) {
+  // Add 30 minutes buffer before and after each show
+  const bufferTime = 30 * 60 * 1000; // 30 minutes in milliseconds
+  const startTime = new Date(showDate.getTime() - bufferTime);
+  const endTime = new Date(showDate.getTime() + bufferTime);
+
+  const existingShows = await db.select()
+    .from(shows)
+    .where(
+      and(
+        showId ? eq(shows.id, showId) : undefined,
+        or(
+          and(
+            gt(shows.date, startTime.toISOString()),
+            lt(shows.date, endTime.toISOString())
+          ),
+          eq(shows.date, showDate.toISOString())
+        )
+      )
+    );
+
+  return existingShows.length > 0;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
-  // User management routes
+  // User management routes stay the same...
   app.get("/api/users", async (req, res) => {
     if (!req.user?.isAdmin) {
       return res.status(403).send("Admin access required");
@@ -164,7 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(updatedUser);
   });
 
-  // Show routes
+  // Show routes with conflict validation
   app.get("/api/shows", async (_req, res) => {
     const shows = await storage.getShows();
     res.json(shows);
@@ -186,6 +210,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const parsed = insertShowSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json(parsed.error);
+    }
+
+    // Check for time conflicts
+    const showDate = new Date(parsed.data.date);
+    const hasConflict = await checkShowTimeConflict(showDate);
+
+    if (hasConflict) {
+      return res.status(400).send(
+        "Cannot schedule show at this time. There is another show scheduled within 30 minutes of this time."
+      );
     }
 
     const show = await storage.createShow(parsed.data);
@@ -211,12 +245,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json(parsed.error);
     }
 
-    const show = await storage.getShow(parseInt(req.params.id));
-    if (!show) {
+    const showId = parseInt(req.params.id);
+    const existingShow = await storage.getShow(showId);
+    if (!existingShow) {
       return res.status(404).send("Show not found");
     }
 
-    const updatedShow = await storage.updateShow(parseInt(req.params.id), parsed.data);
+    // Check for time conflicts, excluding the current show
+    const showDate = new Date(parsed.data.date);
+    const hasConflict = await checkShowTimeConflict(showDate, showId);
+
+    if (hasConflict) {
+      return res.status(400).send(
+        "Cannot schedule show at this time. There is another show scheduled within 30 minutes of this time."
+      );
+    }
+
+    const updatedShow = await storage.updateShow(showId, parsed.data);
     res.json(updatedShow);
   });
 
