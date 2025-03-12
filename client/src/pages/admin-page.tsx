@@ -16,13 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
-import {
-  Show,
-  insertShowSchema,
-  User,
-  insertUserSchema,
-  insertReservationSchema,
-} from "@shared/schema";
+import { Show, insertShowSchema, User, insertUserSchema, insertReservationSchema } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useLocation } from "wouter";
@@ -70,14 +64,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { Seat } from "@/components/seat-grid";
 
 interface Reservation {
@@ -158,8 +144,8 @@ function ShowForm() {
             <FormItem>
               <FormLabel>Title</FormLabel>
               <FormControl>
-                <div className="flex gap-2">
-                  <Input placeholder="Enter show title" {...field} />
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Input placeholder="Enter show title" {...field} className="flex-1" />
                   <FormField
                     control={form.control}
                     name="emoji"
@@ -167,23 +153,11 @@ function ShowForm() {
                       <Button
                         type="button"
                         variant="outline"
-                        className="w-12"
+                        className="w-full sm:w-12"
                         onClick={() => {
-                          const emojis = [
-                            "🎭",
-                            "🎪",
-                            "🎫",
-                            "🎬",
-                            "🎸",
-                            "🎹",
-                            "🎺",
-                            "🎻",
-                          ];
-                          const currentIndex = emojis.indexOf(
-                            field.value || "🎭",
-                          );
-                          const nextEmoji =
-                            emojis[(currentIndex + 1) % emojis.length];
+                          const emojis = ["🎭", "🎪", "🎫", "🎬", "🎸", "🎹", "🎺", "🎻"];
+                          const currentIndex = emojis.indexOf(field.value || "🎭");
+                          const nextEmoji = emojis[(currentIndex + 1) % emojis.length];
                           field.onChange(nextEmoji);
                         }}
                       >
@@ -232,7 +206,7 @@ function ShowForm() {
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="date"
@@ -246,9 +220,7 @@ function ShowForm() {
               </FormItem>
             )}
           />
-        </div>
 
-        <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="themeColor"
@@ -261,11 +233,7 @@ function ShowForm() {
                 <FormControl>
                   <div className="flex gap-2">
                     <Input type="color" {...field} className="h-10 w-20 p-1" />
-                    <Input
-                      {...field}
-                      placeholder="#4B5320"
-                      className="font-mono"
-                    />
+                    <Input {...field} placeholder="#4B5320" className="font-mono flex-1" />
                   </div>
                 </FormControl>
                 <FormMessage />
@@ -286,6 +254,7 @@ function ShowForm() {
                     type="file"
                     accept="image/*"
                     onChange={handlePosterChange}
+                    className="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium"
                   />
                   {previewUrl && (
                     <div className="relative w-full max-w-lg overflow-hidden rounded-lg border">
@@ -1808,6 +1777,16 @@ function EditReservationDialog({
   );
 }
 
+function UserManagement() {
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  return (
+    <div className="space-y-4">
+      <CreateUserDialog />
+      <UserList />
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
@@ -1815,18 +1794,18 @@ export default function AdminPage() {
     "shows" | "users" | "reservations"
   >("shows");
 
-  if (user && !user.isAdmin) {
+  if (!user?.isAdmin) {
     setLocation("/");
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#4B5320]/10 to-[#4B5320]/5">
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
+    <div className="min-h-screen bg-background">
+      <header className="border-b">
+        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between h-auto sm:h-16 py-4 sm:py-0 px-4 sm:px-8">
+          <div className="flex items-center gap-2 mb-4 sm:mb-0">
             <Shield className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">Admin Control</h1>
+            <h1 className="text-2xl font-bold">Admin Panel</h1>
           </div>
           <Button variant="outline" onClick={() => setLocation("/")}>
             Back to Home
@@ -1834,41 +1813,14 @@ export default function AdminPage() {
         </div>
       </header>
 
-      <main className="container mx-auto py-8 space-y-8">
-        <div className="flex gap-4 border-b mb-6">
-          <Button
-            variant={activeTab === "shows" ? "default" : "ghost"}
-            onClick={() => setActiveTab("shows")}
-          >
-            <CalendarPlus className="h-4 w-4 mr-2" />
-            Shows
-          </Button>
-          <Button
-            variant={activeTab === "users" ? "default" : "ghost"}
-            onClick={() => setActiveTab("users")}
-          >
-            <Users className="h-4 w-4 mr-2" />
-            Users
-          </Button>
-          <Button
-            variant={activeTab === "reservations" ? "default" : "ghost"}
-            onClick={() => setActiveTab("reservations")}
-          >
-            <Star className="h-4 w-4 mr-2" />
-            Reservations
-          </Button>
-        </div>
-
-        {activeTab === "shows" && (
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card className="border-2">
+      <main className="container mx-auto py-8 px-4 sm:px-8">
+        <div className="grid gap-8 lg:grid-cols-2">
+          <div className="space-y-8">
+            <Card>
               <CardHeader>
-                <div className="flex items-center gap-2">
-                  <CalendarPlus className="h-5 w-5 text-primary" />
-                  <CardTitle>Add New Show</CardTitle>
-                </div>
+                <CardTitle>Create Show</CardTitle>
                 <CardDescription>
-                  Schedule a new show in the auditorium
+                  Add a new show to the system
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1876,11 +1828,11 @@ export default function AdminPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-2">
+            <Card>
               <CardHeader>
-                <CardTitle>Manage Shows</CardTitle>
+                <CardTitle>Show Management</CardTitle>
                 <CardDescription>
-                  View and manage scheduled shows
+                  Manage existing shows and their configurations
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1888,27 +1840,33 @@ export default function AdminPage() {
               </CardContent>
             </Card>
           </div>
-        )}
 
-        {activeTab === "users" && (
-          <Card className="border-2">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                <CardTitle>Manage Users</CardTitle>
-              </div>
-              <CardDescription>View and manage user accounts</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <CreateUserDialog />
-                <UserList />
-              </div>
-            </CardContent>
-          </Card>
-        )}
+          <div className="space-y-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>User Management</CardTitle>
+                <CardDescription>
+                  Manage user accounts and permissions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <UserManagement />
+              </CardContent>
+            </Card>
 
-        {activeTab === "reservations" && <ReservationManagement />}
+            <Card>
+              <CardHeader>
+                <CardTitle>Reservation Management</CardTitle>
+                <CardDescription>
+                  View and manage show reservations
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ReservationManagement />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </main>
     </div>
   );
