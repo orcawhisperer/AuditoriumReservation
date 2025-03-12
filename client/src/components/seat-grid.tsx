@@ -59,8 +59,6 @@ export function SeatGrid() {
     queryKey: [`/api/shows/${showId}`],
   });
 
-  console.log(show);
-
   const { data: showReservations = [], isLoading: reservationsLoading } =
     useQuery<Reservation[]>({
       queryKey: [`/api/reservations/show/${showId}`],
@@ -184,9 +182,11 @@ export function SeatGrid() {
           <div key={section.section} className="space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               {section.section}
-              <span className="text-sm text-muted-foreground font-normal">
-                (Prefix: {section.prefix})
-              </span>
+              {section.prefix && (
+                <span className="text-sm text-muted-foreground font-normal">
+                  (Prefix: {section.prefix})
+                </span>
+              )}
             </h3>
             <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
               <div className="space-y-3 min-w-fit">
@@ -250,7 +250,7 @@ export function SeatGrid() {
 
           <div className="flex items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              Selected: {selectedSeats.join(", ")}
+              Selected: {selectedSeats.map(seat => seat).join(", ")}
             </p>
             <Button
               onClick={() => reserveMutation.mutate()}
