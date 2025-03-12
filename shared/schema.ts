@@ -93,11 +93,16 @@ export const insertShowSchema = createInsertSchema(shows).extend({
   themeColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color").optional(),
   emoji: z.string().optional(),
   blockedSeats: z.string().transform(str => {
-    const seats = str ? str.split(',').map(s => s.trim().toUpperCase()) : [];
+    // Handle empty string
+    if (!str) return JSON.stringify([]);
+
+    // Split by comma and clean up each seat
+    const seats = str.split(',').map(s => s.trim().toUpperCase());
+
     // Validate each blocked seat
     seats.forEach(seat => {
       if (!/^[A-N][0-9]{1,2}$/.test(seat)) {
-        throw new Error(`Invalid seat format: ${seat}`);
+        throw new Error(`Invalid seat format: ${seat}. Format should be like A1, B2, etc.`);
       }
       const [row, number] = [seat[0], parseInt(seat.slice(1))];
       const isValid = (
@@ -112,7 +117,7 @@ export const insertShowSchema = createInsertSchema(shows).extend({
         (row >= 'A' && row <= 'F' && number >= 1 && number <= 18)
       );
       if (!isValid) {
-        throw new Error(`Invalid seat number: ${seat}`);
+        throw new Error(`Invalid seat number: ${seat}. This seat does not exist in the layout.`);
       }
     });
     return JSON.stringify(seats);
