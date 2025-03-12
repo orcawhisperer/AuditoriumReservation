@@ -183,7 +183,7 @@ export function SeatGrid() {
             <h3 className="text-lg font-semibold flex items-center gap-2">
               {section.section}
               <span className="text-sm text-muted-foreground font-normal">
-                (Prefix: {section.prefix})
+                {section.section === "Balcony" ? "(Prefix: B)" : "(Prefix: D)"}
               </span>
             </h3>
             <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
@@ -197,11 +197,14 @@ export function SeatGrid() {
                       {Array.from({ length: Math.max(...rowData.seats) }).map(
                         (_, seatIndex) => {
                           const seatNumber = seatIndex + 1;
+                          const prefix = section.section === "Balcony" ? "B" : "D";
+                          const seatId = `${prefix}${rowData.row}${seatNumber}`;
+
                           // Only render seats that exist in this row
                           if (!rowData.seats.includes(seatNumber)) {
-                            return <div key={`${section.prefix}${rowData.row}${seatNumber}`} className="w-8" />;
+                            return <div key={seatId} className="w-8" />;
                           }
-                          const seatId = `${section.prefix}${rowData.row}${seatNumber}`;
+
                           return (
                             <Seat
                               key={seatId}
