@@ -83,7 +83,6 @@ interface Reservation {
 function ShowForm() {
   const { toast } = useToast();
   const [previewUrl, setPreviewUrl] = useState<string>("");
-  const [showColorPicker, setShowColorPicker] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(insertShowSchema),
@@ -91,11 +90,10 @@ function ShowForm() {
       title: "",
       date: new Date().toISOString().slice(0, 16),
       poster: "",
-      totalSeats: 100,
       description: "",
       themeColor: "#4B5320",
       emoji: "🎭",
-      seatLayout: JSON.stringify([{row:'A', seats:10}, {row:'B', seats: 10}])
+      blockedSeats: "", // Added blockedSeats to defaultValues
     },
   });
 
@@ -183,6 +181,26 @@ function ShowForm() {
 
         <FormField
           control={form.control}
+          name="blockedSeats"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Blocked Seats</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Enter seats to block (e.g., A1,B2,N1)"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+              <p className="text-sm text-muted-foreground">
+                Enter comma-separated seat numbers to block (e.g., A1,B2,N1)
+              </p>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="description"
           render={({ field }) => (
             <FormItem>
@@ -204,26 +222,6 @@ function ShowForm() {
                 <FormLabel>Date and Time</FormLabel>
                 <FormControl>
                   <Input type="datetime-local" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="totalSeats"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Total Seats</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={500}
-                    {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value))}
-                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -291,19 +289,6 @@ function ShowForm() {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="seatLayout"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Seat Layout (JSON)</FormLabel>
-              <FormControl>
-                <Input placeholder='[{ "row": "A", "seats": 10 }, { "row": "B", "seats": 10 }]' {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
         <Button
           type="submit"
@@ -317,6 +302,186 @@ function ShowForm() {
         </Button>
       </form>
     </Form>
+  );
+}
+
+function EditShowDialog({ show, onClose }: { show: Show; onClose: () => void }) {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(true);
+
+  const form = useForm({
+    resolver: zodResolver(insertShowSchema),
+    defaultValues: {
+      title: show.title,
+      date: new Date(show.date).toISOString().slice(0, 16),
+      poster: show.poster || "",
+      description: show.description || "",
+      themeColor: show.themeColor || "#4B5320",
+      emoji: show.emoji || "🎭",
+      blockedSeats: JSON.parse(show.blockedSeats)?.join(',') || "", //Added blockedSeats to defaultValues
+    },
+  });
+
+  const editShowMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await fetch(`/api/shows/${show.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/shows"] });
+      setOpen(false);
+      onClose();
+      toast({
+        title: "Success",
+        description: "Show updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to update show",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleClose = () => {
+    setOpen(false);
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit Show</DialogTitle>
+          <DialogDescription>Update show details and configuration.</DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit((data) => editShowMutation.mutate(data))}
+            className="space-y-4"
+          >
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <div className="flex gap-2">
+                      <Input placeholder="Enter show title" {...field} />
+                      <FormField
+                        control={form.control}
+                        name="emoji"
+                        render={({ field }) => (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="w-12"
+                            onClick={() => {
+                              const emojis = ["🎭", "🎪", "🎫", "🎬", "🎸", "🎹", "🎺", "🎻"];
+                              const currentIndex = emojis.indexOf(field.value || "🎭");
+                              const nextEmoji = emojis[(currentIndex + 1) % emojis.length];
+                              field.onChange(nextEmoji);
+                            }}
+                          >
+                            {field.value || "🎭"}
+                          </Button>
+                        )}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter show description" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date and Time</FormLabel>
+                    <FormControl>
+                      <Input type="datetime-local" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="themeColor"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    Theme Color
+                    <Palette className="h-4 w-4" />
+                  </FormLabel>
+                  <FormControl>
+                    <div className="flex gap-2">
+                      <Input
+                        type="color"
+                        {...field}
+                        className="h-10 w-20 p-1"
+                      />
+                      <Input
+                        {...field}
+                        placeholder="#4B5320"
+                        className="font-mono"
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="pt-4 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={editShowMutation.isPending}
+              >
+                {editShowMutation.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                )}
+                Update Show
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -434,6 +599,9 @@ function ShowList() {
                     <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-500/10 text-red-500">
                       {bookedSeats.length} Booked
                     </span>
+                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-500/10 text-yellow-500">
+                      {show.blockedSeats ? JSON.parse(show.blockedSeats).length : 0} Blocked
+                    </span>
                   </div>
                   {/* Add seat layout summary */}
                   <div className="mt-2 text-xs text-muted-foreground">
@@ -477,219 +645,6 @@ function ShowList() {
       </div>
     );
   }
-
-function EditShowDialog({ show, onClose }: { show: Show; onClose: () => void }) {
-  const { toast } = useToast();
-  const [open, setOpen] = useState(true);
-
-  const form = useForm({
-    resolver: zodResolver(insertShowSchema),
-    defaultValues: {
-      title: show.title,
-      date: new Date(show.date).toISOString().slice(0, 16),
-      poster: show.poster || "",
-      totalSeats: show.totalSeats,
-      description: show.description || "",
-      themeColor: show.themeColor || "#4B5320",
-      emoji: show.emoji || "🎭",
-      seatLayout: show.seatLayout || JSON.stringify([{row:'A', seats:10}, {row:'B', seats: 10}])
-    },
-  });
-
-  const editShowMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await fetch(`/api/shows/${show.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/shows"] });
-      setOpen(false);
-      onClose();
-      toast({
-        title: "Success",
-        description: "Show updated successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to update show",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleClose = () => {
-    setOpen(false);
-    onClose();
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit Show</DialogTitle>
-          <DialogDescription>Update show details and configuration.</DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit((data) => editShowMutation.mutate(data))}
-            className="space-y-4"
-          >
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl>
-                    <div className="flex gap-2">
-                      <Input placeholder="Enter show title" {...field} />
-                      <FormField
-                        control={form.control}
-                        name="emoji"
-                        render={({ field }) => (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="w-12"
-                            onClick={() => {
-                              const emojis = ["🎭", "🎪", "🎫", "🎬", "🎸", "🎹", "🎺", "🎻"];
-                              const currentIndex = emojis.indexOf(field.value || "🎭");
-                              const nextEmoji = emojis[(currentIndex + 1) % emojis.length];
-                              field.onChange(nextEmoji);
-                            }}
-                          >
-                            {field.value || "🎭"}
-                          </Button>
-                        )}
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter show description" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date and Time</FormLabel>
-                    <FormControl>
-                      <Input type="datetime-local" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="totalSeats"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Total Seats</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={1}
-                        max={500}
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="themeColor"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    Theme Color
-                    <Palette className="h-4 w-4" />
-                  </FormLabel>
-                  <FormControl>
-                    <div className="flex gap-2">
-                      <Input
-                        type="color"
-                        {...field}
-                        className="h-10 w-20 p-1"
-                      />
-                      <Input
-                        {...field}
-                        placeholder="#4B5320"
-                        className="font-mono"
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="seatLayout"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Seat Layout (JSON)</FormLabel>
-                  <FormControl>
-                    <Input placeholder='[{ "row": "A", "seats": 10 }, { "row": "B", "seats": 10 }]' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="pt-4 flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClose}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={editShowMutation.isPending}
-              >
-                {editShowMutation.isPending && (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                )}
-                Update Show
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function CreateUserDialog() {
   const { toast } = useToast();
@@ -1016,7 +971,7 @@ function EditUserDialog({ user, onClose }: { user: User; onClose: () => void }) 
 
 function UserList() {
   const { user: currentUser } = useAuth();
-  const { toast } = useToast();
+const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -1133,7 +1088,7 @@ function UserList() {
 
   if (users.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+      <div className="flex flex-col items-centerjustify-center h-32 text-muted-foreground">
         <Users className="h-8 w-8 mb-2" />
         <p>No users found</p>
       </div>

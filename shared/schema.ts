@@ -23,6 +23,7 @@ export const shows = sqliteTable("shows", {
   description: text("description"),
   themeColor: text("theme_color").default("#4B5320"),
   emoji: text("emoji"),
+  blockedSeats: text("blocked_seats").notNull().default("[]"),
   seatLayout: text("seat_layout").notNull().default(JSON.stringify([
     {
       section: "Balcony",
@@ -61,7 +62,6 @@ export const reservations = sqliteTable("reservations", {
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-// Extended user schema for registration
 export const insertUserSchema = createInsertSchema(users, {
   isAdmin: z.literal(false).optional(),
   isEnabled: z.literal(true).optional(),
@@ -92,7 +92,31 @@ export const insertShowSchema = createInsertSchema(shows).extend({
   description: z.string().optional(),
   themeColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color").optional(),
   emoji: z.string().optional(),
-  seatLayout: z.string().optional(),
+  blockedSeats: z.string().transform(str => {
+    const seats = str ? str.split(',').map(s => s.trim().toUpperCase()) : [];
+    // Validate each blocked seat
+    seats.forEach(seat => {
+      if (!/^[A-N][0-9]{1,2}$/.test(seat)) {
+        throw new Error(`Invalid seat format: ${seat}`);
+      }
+      const [row, number] = [seat[0], parseInt(seat.slice(1))];
+      const isValid = (
+        // Balcony
+        ((row === 'C' || row === 'B') && number >= 1 && number <= 12) || // Balcony B, C rows
+        (row === 'A' && number >= 9 && number <= 12) || // Balcony A row (only 9-12)
+        // Row N specific seats
+        (row === 'N' && [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)) ||
+        // Middle section (G-M)
+        (row >= 'G' && row <= 'M' && number >= 1 && number <= 16) ||
+        // Lower section (A-F)
+        (row >= 'A' && row <= 'F' && number >= 1 && number <= 18)
+      );
+      if (!isValid) {
+        throw new Error(`Invalid seat number: ${seat}`);
+      }
+    });
+    return JSON.stringify(seats);
+  }),
 });
 
 export const insertReservationSchema = createInsertSchema(reservations).pick({
@@ -103,12 +127,15 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
     .refine(
       (seats) => seats.every(seat => {
         const [row, number] = [seat[0], parseInt(seat.slice(1))];
-        // Validate based on the exact layout
-        if (row === 'A' && row === 'B' && number >= 1 && number <= 12) return true; // Balcony B, C
-        if (row === 'A' && number >= 9 && number <= 12) return true; // Balcony A (only 9-12)
-        if (row === 'N' && ([1,2,3,4,9,10,11,12,13,14,15,16].includes(number))) return true; // Row N specific seats
-        if (row >= 'G' && row <= 'M' && number >= 1 && number <= 16) return true; // Middle rows
-        if (row >= 'A' && row <= 'F' && number >= 1 && number <= 18) return true; // Lower rows
+        // Check Balcony section
+        if (row === 'C' || row === 'B') return number >= 1 && number <= 12; // Balcony B, C rows
+        if (row === 'A' && number >= 9 && number <= 12) return true; // Balcony A row (only 9-12)
+        // Check Row N with specific seats
+        if (row === 'N' && [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)) return true;
+        // Check middle section (G-M)
+        if (row >= 'G' && row <= 'M' && number >= 1 && number <= 16) return true;
+        // Check lower section (A-F)
+        if (row >= 'A' && row <= 'F' && number >= 1 && number <= 18) return true;
         return false;
       }),
       { message: "Invalid seat selection" }

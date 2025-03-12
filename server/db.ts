@@ -29,6 +29,7 @@ sqlite.exec(`CREATE TABLE shows (
   description TEXT,
   theme_color TEXT DEFAULT '#4B5320',
   emoji TEXT,
+  blocked_seats TEXT NOT NULL DEFAULT '[]',
   seat_layout TEXT NOT NULL DEFAULT '${JSON.stringify([
     {
       section: "Balcony",
