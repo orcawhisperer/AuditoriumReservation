@@ -65,6 +65,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Seat } from "@/components/seat-grid";
+import { Badge } from "@/components/ui/badge";
 
 interface Reservation {
   id: number;
@@ -593,15 +594,15 @@ function ShowList() {
         return (
           <div
             key={show.id}
-            className="flex items-center justify-between p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors"
+            className="flex flex-col sm:flex-row justify-between gap-4 p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors"
             style={{
               borderColor: show.themeColor || "#4B5320",
               backgroundColor: `${show.themeColor}10` || "#4B532010",
             }}
           >
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               {show.poster && (
-                <div className="relative w-16 sm:w-24 overflow-hidden rounded-lg border">
+                <div className="relative w-full sm:w-24 overflow-hidden rounded-lg border">
                   <div className="relative aspect-video">
                     <img
                       src={show.poster}
@@ -625,7 +626,7 @@ function ShowList() {
                     {show.description}
                   </p>
                 )}
-                <div className="flex gap-2 mt-1">
+                <div className="flex flex-wrap gap-2 mt-2">
                   <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-500/10 text-green-500">
                     {availableSeats} Available
                   </span>
@@ -638,11 +639,13 @@ function ShowList() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-start">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setEditingShow(show)}
+                className="w-full sm:w-auto"
               >
                 Edit
               </Button>
@@ -652,6 +655,7 @@ function ShowList() {
                     variant="destructive"
                     size="sm"
                     disabled={deleteShowMutation.isPending}
+                    className="w-full sm:w-auto"
                   >
                     {deleteShowMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -665,21 +669,17 @@ function ShowList() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete Show</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to delete this show? This action
-                      cannot be undone.
+                      Are you sure you want to delete this show? This action cannot be undone.
                       {showReservations.length > 0 && (
                         <p className="mt-2 text-red-500">
-                          Warning: This show has {showReservations.length}{" "}
-                          active reservations.
+                          Warning: This show has {showReservations.length} active reservations.
                         </p>
                       )}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => deleteShowMutation.mutate(show.id)}
-                    >
+                    <AlertDialogAction onClick={() => deleteShowMutation.mutate(show.id)}>
                       Delete
                     </AlertDialogAction>
                   </AlertDialogFooter>
@@ -690,10 +690,7 @@ function ShowList() {
         );
       })}
       {editingShow && (
-        <EditShowDialog
-          show={editingShow}
-          onClose={() => setEditingShow(null)}
-        />
+        <EditShowDialog show={editingShow} onClose={() => setEditingShow(null)} />
       )}
     </div>
   );
@@ -1041,19 +1038,20 @@ function EditUserDialog({
 }
 
 function UserList() {
-  const { user: currentUser } = useAuth();
   const { toast } = useToast();
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const itemsPerPage = 5;
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],
+    staleTime: 1000,
   });
+  const { user: currentUser } = useAuth();
+  const itemsPerPage = 5;
+  const [page, setPage] = useState(1);
 
   const filteredUsers = users.filter((user) =>
-    user.username.toLowerCase().includes(search.toLowerCase()),
+    user.username.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
@@ -1072,17 +1070,17 @@ function UserList() {
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       toast({
         title: "Success",
-        description: `Temporary password: ${data.temporaryPassword}`,
+        description: "Password reset successfully",
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Failed to reset password",
-        description: error.message,
-        variant: "destructive",
+        description: error.message,        variant: "destructive",
       });
     },
   });
@@ -1103,12 +1101,8 @@ function UserList() {
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData<User[]>(["/api/users"], (oldUsers) => {
-        if (!oldUsers) return [data];
-        return oldUsers.map((user) => (user.id === data.id ? data : user));
-      });
-
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       toast({
         title: "Success",
         description: "User status updated successfully",
@@ -1120,7 +1114,6 @@ function UserList() {
         description: error.message,
         variant: "destructive",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
     },
   });
 
@@ -1180,166 +1173,82 @@ function UserList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div className="relative flex-1 max-w-sm">
-          <Input
-            placeholder="Search users..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="pl-10"
-          />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        </div>
-        <CreateUserDialog />
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search users..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9"
+        />
       </div>
 
-      {paginatedUsers.map((user) => (
-        <div
-          key={user.id}
-          className="flex items-center justify-between p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors"
-        >
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="font-medium">{user.username}</p>
-              {user.isAdmin && (
-                <span className="px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary flex items-center gap-1">
-                  {user.id === users.find((u) => u.isAdmin)?.id && (
-                    <Star className="h-3 w-3" />
-                  )}
-                  Admin
-                </span>
+      <div className="space-y-4">
+        {paginatedUsers.map((user) => (
+          <div
+            key={user.id}
+            className="flex flex-col sm:flex-row justify-between gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+          >
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <p className="font-medium">{user.username}</p>
+                {user.isAdmin && (
+                  <Badge variant="default" className="text-xs">
+                    Admin
+                  </Badge>
+                )}
+              </div>
+              {user.name && (
+                <p className="text-sm text-muted-foreground">{user.name}</p>
               )}
+              <p className="text-sm text-muted-foreground">
+                {user.gender}, {user.dateOfBirth}
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Name: {user.name || "Not set"}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Gender: {user.gender || "Not set"}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Date of Birth:{" "}
-              {user.dateOfBirth
-                ? format(new Date(user.dateOfBirth), "PPP")
-                : "Not set"}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Account status: {user.isEnabled ? "Active" : "Disabled"}
-            </p>
-          </div>
 
-          <div className="flex items-center gap-4">
-            {isPrimaryAdmin && user.id !== currentUser?.id && (
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <div className="flex items-center gap-2">
                 <Switch
-                  checked={user.isAdmin}
+                  checked={user.isEnabled}
                   onCheckedChange={(checked) =>
-                    toggleAdminStatusMutation.mutate({
+                    toggleUserStatusMutation.mutate({
                       userId: user.id,
-                      isAdmin: checked,
+                      isEnabled: checked,
                     })
                   }
-                  disabled={toggleAdminStatusMutation.isPending}
+                  disabled={user.isAdmin || toggleUserStatusMutation.isPending}
                 />
-                <span className="text-sm">Admin</span>
+                <span className="text-sm">
+                  {user.isEnabled ? "Enabled" : "Disabled"}
+                </span>
               </div>
-            )}
 
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={user.isEnabled}
-                onCheckedChange={(checked) =>
-                  toggleUserStatusMutation.mutate({
-                    userId: user.id,
-                    isEnabled: checked,
-                  })
-                }
-                disabled={user.isAdmin || toggleUserStatusMutation.isPending}
-              />
-              <span className="text-sm">
-                {user.isEnabled ? "Enabled" : "Disabled"}
-              </span>
-            </div>
-
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={() => resetPasswordMutation.mutate(user.id)}
                   disabled={user.isAdmin || resetPasswordMutation.isPending}
+                  className="flex-1 sm:flex-none"
                 >
                   Reset Password
                 </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Reset Password</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will reset the user's password to a temporary one. The
-                    user will need to change it upon next login.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => resetPasswordMutation.mutate(user.id)}
-                  >
-                    Reset Password
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setEditingUser(user)}
-            >
-              Edit
-            </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingUser(user)}
+                  className="flex-1 sm:flex-none"
+                >
+                  Edit
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
 
       {editingUser && (
-        <EditUserDialog
-          user={editingUser}
-          onClose={() => setEditingUser(null)}
-        />
-      )}
-
-      {filteredUsers.length > itemsPerPage && (
-        <div className="mt-4">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                />
-              </PaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (pageNum) => (
-                  <PaginationItem key={pageNum}>
-                    <PaginationLink
-                      onClick={() => setPage(pageNum)}
-                      isActive={page === pageNum}
-                    >
-                      {pageNum}
-                    </PaginationLink>
-                  </PaginationItem>
-                ),
-              )}
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+        <EditUserDialog user={editingUser} onClose={() => setEditingUser(null)} />
       )}
     </div>
   );
@@ -1630,61 +1539,54 @@ function EditReservationDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle>Edit Reservation</DialogTitle>
           <DialogDescription>
-            Update reservation details and seat assignments for{" "}
-            {currentShow.title}
+            Update reservation details and seat assignments for {currentShow.title}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto py-4">
-          <div className="space-y-2">
+        <div className="flex-1 overflow-y-auto p-6 pt-0">
+          <div className="space-y-4">
             {layout.map((section: any) => (
               <div key={section.section} className="space-y-4">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                   {section.section}
                   <span className="text-sm text-muted-foreground font-normal">
-                    {section.section === "Balcony"
-                      ? "(Prefix: B)"
-                      : "(Prefix: D)"}
+                    {section.section === "Balcony" ? "(Prefix: B)" : "(Prefix: D)"}
                   </span>
                 </h3>
-                <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
+                <div className="w-full bg-muted/30 p-4 sm:p-8 rounded-lg shadow-inner overflow-x-auto">
                   <div className="space-y-3 min-w-fit">
                     {section.rows.map((rowData: any) => (
-                      <div
-                        key={rowData.row}
-                        className="flex gap-3 justify-center"
-                      >
+                      <div key={rowData.row} className="flex gap-3 justify-center">
                         <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                           {rowData.row}
                         </span>
-                        <div className="flex gap-3">
-                          {Array.from({
-                            length: Math.max(...rowData.seats),
-                          }).map((_, seatIndex) => {
-                            const seatNumber = seatIndex + 1;
-                            const prefix =
-                              section.section === "Balcony" ? "B" : "D";
-                            const seatId = `${prefix}${rowData.row}${seatNumber}`;
+                        <div className="flex gap-2 sm:gap-3">
+                          {Array.from({ length: Math.max(...rowData.seats) }).map(
+                            (_, seatIndex) => {
+                              const seatNumber = seatIndex + 1;
+                              const prefix = section.section === "Balcony" ? "B" : "D";
+                              const seatId = `${prefix}${rowData.row}${seatNumber}`;
 
-                            if (!rowData.seats.includes(seatNumber)) {
-                              return <div key={seatId} className="w-8" />;
+                              if (!rowData.seats.includes(seatNumber)) {
+                                return <div key={seatId} className="w-6 sm:w-8" />;
+                              }
+
+                              return (
+                                <Seat
+                                  key={seatId}
+                                  seatId={seatId}
+                                  isReserved={reservedSeats.has(seatId)}
+                                  isBlocked={blockedSeats.has(seatId)}
+                                  isSelected={selectedSeats.includes(seatId)}
+                                  onSelect={handleSeatSelect}
+                                />
+                              );
                             }
-
-                            return (
-                              <Seat
-                                key={seatId}
-                                seatId={seatId}
-                                isReserved={reservedSeats.has(seatId)}
-                                isBlocked={blockedSeats.has(seatId)}
-                                isSelected={selectedSeats.includes(seatId)}
-                                onSelect={handleSeatSelect}
-                              />
-                            );
-                          })}
+                          )}
                         </div>
                         <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                           {rowData.row}
@@ -1698,9 +1600,9 @@ function EditReservationDialog({
           </div>
         </div>
 
-        <div className="border-t pt-4 mt-4">
-          <div className="flex items-center justify-between">
-            <div className="flex gap-4 text-sm">
+        <div className="border-t p-6">
+          <div className="flex flex-col sm:flex-row justify-between gap-4">
+            <div className="flex flex-wrap gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded border-2" />
                 <span>Available</span>
@@ -1718,26 +1620,29 @@ function EditReservationDialog({
                 <span>Blocked</span>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center justify-between mt-4">
-            <p className="text-sm text-muted-foreground">
-              Selected: {selectedSeats.join(", ")}
-            </p>
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button
-                variant="default"
-                onClick={() => setShowConfirm(true)}
-                disabled={
-                  editReservationMutation.isPending ||
-                  selectedSeats.length === 0
-                }
-              >
-                Update Reservation
-              </Button>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="text-sm text-muted-foreground">
+                Selected: {selectedSeats.join(", ")}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleClose}
+                  className="flex-1 sm:flex-none"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="default"
+                  onClick={() => setShowConfirm(true)}
+                  disabled={editReservationMutation.isPending || selectedSeats.length === 0}
+                  className="flex-1 sm:flex-none"
+                >
+                  Update Reservation
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -1748,8 +1653,7 @@ function EditReservationDialog({
           <AlertDialogHeader>
             <AlertDialogTitle>Update Reservation</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to update this reservation? The following
-              seats will be assigned:
+              Are you sure you want to update this reservation? The following seats will be assigned:
               <br />
               <span className="font-medium">{selectedSeats.join(", ")}</span>
             </AlertDialogDescription>
@@ -1807,23 +1711,25 @@ export default function AdminPage() {
             <Shield className="h-6 w-6 text-primary" />
             <h1 className="text-2xl font-bold">Admin Panel</h1>
           </div>
-          <Button variant="outline" onClick={() => setLocation("/")}>
+          <Button
+            variant="outline"
+            onClick={() => setLocation("/")}
+            className="w-full sm:w-auto"
+          >
             Back to Home
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto py-8 px-4 sm:px-8">
-        <div className="grid gap-8 lg:grid-cols-2">
-          <div className="space-y-8">
+      <main className="container mx-auto py-4 sm:py-8 px-4 sm:px-8">
+        <div className="grid gap-4 md:gap-8 xl:grid-cols-2">
+          <div className="space-y-4 md:space-y-8">
             <Card>
               <CardHeader>
                 <CardTitle>Create Show</CardTitle>
-                <CardDescription>
-                  Add a new show to the system
-                </CardDescription>
+                <CardDescription>Add a new show to the system</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <ShowForm />
               </CardContent>
             </Card>
@@ -1835,13 +1741,13 @@ export default function AdminPage() {
                   Manage existing shows and their configurations
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <ShowList />
               </CardContent>
             </Card>
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-4 md:space-y-8">
             <Card>
               <CardHeader>
                 <CardTitle>User Management</CardTitle>
@@ -1849,7 +1755,7 @@ export default function AdminPage() {
                   Manage user accounts and permissions
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <UserManagement />
               </CardContent>
             </Card>
@@ -1861,7 +1767,7 @@ export default function AdminPage() {
                   View and manage show reservations
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <ReservationManagement />
               </CardContent>
             </Card>
