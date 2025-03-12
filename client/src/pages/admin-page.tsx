@@ -64,21 +64,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 
 interface Reservation {
   id: number;
   showId: number;
+  userId: number;
   seatNumbers: string;
 }
-
 
 function ShowForm() {
   const { toast } = useToast();
@@ -93,7 +85,7 @@ function ShowForm() {
       description: "",
       themeColor: "#4B5320",
       emoji: "🎭",
-      blockedSeats: "", // Added blockedSeats to defaultValues
+      blockedSeats: "", 
     },
   });
 
@@ -318,7 +310,7 @@ function EditShowDialog({ show, onClose }: { show: Show; onClose: () => void }) 
       description: show.description || "",
       themeColor: show.themeColor || "#4B5320",
       emoji: show.emoji || "🎭",
-      blockedSeats: JSON.parse(show.blockedSeats || "[]").join(","), // Parse the JSON array back to comma-separated string
+      blockedSeats: JSON.parse(show.blockedSeats || "[]").join(","), 
     },
   });
 
@@ -510,12 +502,17 @@ function ShowList() {
     const [editingShow, setEditingShow] = useState<Show | null>(null);
     const { data: shows = [], isLoading } = useQuery<Show[]>({
       queryKey: ["/api/shows"],
-      staleTime: 0, // Add staleTime: 0 to ensure real-time updates
+      staleTime: 0, 
     });
 
     const { data: reservations = [], isLoading: reservationsLoading } = useQuery<Reservation[]>({
       queryKey: ["/api/reservations"],
-      staleTime: 0, // Add staleTime: 0 to ensure real-time updates
+      staleTime: 0, 
+    });
+
+    const { data: users = [] } = useQuery<User[]>({
+      queryKey: ["/api/users"],
+      staleTime: 0,
     });
 
     const deleteShowMutation = useMutation({
@@ -557,6 +554,11 @@ function ShowList() {
           return sectionTotal + row.seats.length;
         }, 0);
       }, 0);
+    };
+
+    const getUserName = (userId: number) => {
+      const user = users.find(u => u.id === userId);
+      return user ? user.name || user.username : 'Unknown User';
     };
 
     if (isLoading || reservationsLoading) {
@@ -635,7 +637,7 @@ function ShowList() {
                       <div className="space-y-1">
                         {showReservations.map((reservation) => (
                           <div key={reservation.id} className="text-sm text-muted-foreground">
-                            • Seats {JSON.parse(reservation.seatNumbers).join(", ")}
+                            • {getUserName(reservation.userId)}: Seats {JSON.parse(reservation.seatNumbers).join(", ")}
                           </div>
                         ))}
                       </div>
@@ -700,7 +702,146 @@ function ShowList() {
         )}
       </div>
     );
-  }
+}
+
+function ReservationManagement() {
+  const { toast } = useToast();
+  const [selectedShow, setSelectedShow] = useState<number | null>(null);
+
+  const { data: shows = [] } = useQuery<Show[]>({
+    queryKey: ["/api/shows"],
+    staleTime: 0,
+  });
+
+  const { data: reservations = [] } = useQuery<Reservation[]>({
+    queryKey: ["/api/reservations"],
+    staleTime: 0,
+  });
+
+  const { data: users = [] } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+    staleTime: 0,
+  });
+
+  const deleteReservationMutation = useMutation({
+    mutationFn: async (reservationId: number) => {
+      const res = await fetch(`/api/reservations/${reservationId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete reservation");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/reservations"] });
+      toast({
+        title: "Success",
+        description: "Reservation deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete reservation",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const getShowTitle = (showId: number) => {
+    const show = shows.find(s => s.id === showId);
+    return show ? show.title : 'Unknown Show';
+  };
+
+  const getUserName = (userId: number) => {
+    const user = users.find(u => u.id === userId);
+    return user ? user.name || user.username : 'Unknown User';
+  };
+
+  const filteredReservations = selectedShow
+    ? reservations.filter(r => r.showId === selectedShow)
+    : reservations;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Manage Reservations</CardTitle>
+        <CardDescription>View and manage all show reservations</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex gap-4">
+            <Select
+              value={selectedShow?.toString() || ""}
+              onValueChange={(value) => setSelectedShow(value ? parseInt(value) : null)}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filter by show" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Shows</SelectItem>
+                {shows.map((show) => (
+                  <SelectItem key={show.id} value={show.id.toString()}>
+                    {show.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            {filteredReservations.map((reservation) => (
+              <div
+                key={reservation.id}
+                className="flex items-center justify-between p-4 border rounded-lg"
+              >
+                <div>
+                  <p className="font-medium">{getShowTitle(reservation.showId)}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Reserved by: {getUserName(reservation.userId)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Seats: {JSON.parse(reservation.seatNumbers).join(", ")}
+                  </p>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={deleteReservationMutation.isPending}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Reservation</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this reservation? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteReservationMutation.mutate(reservation.id)}
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            ))}
+            {filteredReservations.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                No reservations found
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 function CreateUserDialog() {
   const { toast } = useToast();
@@ -840,8 +981,7 @@ function CreateUserDialog() {
               )}
             />
             <div className="pt-4 flex justify-end gap-2">
-              <Button
-                type="button"
+              <Button                type="button"
                 variant="outline"
                 onClick={() => setOpen(false)}
               >
@@ -930,8 +1070,7 @@ function EditUserDialog({ user, onClose }: { user: User; onClose: () => void }) 
               control={form.control}
               name="username"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
+                <FormItem><FormLabel>Username</FormLabel>
                   <FormControl>
                     <Input {...field} disabled />
                   </FormControl>
@@ -1307,10 +1446,10 @@ function UserList() {
   );
 }
 
-function AdminPage() {
+export default function AdminPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<"shows" | "users" | "reservations">("shows");
 
   if (user && !user.isAdmin) {
     setLocation("/");
@@ -1332,35 +1471,63 @@ function AdminPage() {
       </header>
 
       <main className="container mx-auto py-8 space-y-8">
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card className="border-2">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <CalendarPlus className="h-5 w-5 text-primary" />
-                <CardTitle>Add New Show</CardTitle>
-              </div>
-              <CardDescription>
-                Schedule a new show in the auditorium
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ShowForm />
-            </CardContent>
-          </Card>
+        <div className="flex gap-4 border-b mb-6">
+          <Button
+            variant={activeTab === "shows" ? "default" : "ghost"}
+            onClick={() => setActiveTab("shows")}
+          >
+            <CalendarPlus className="h-4 w-4 mr-2" />
+            Shows
+          </Button>
+          <Button
+            variant={activeTab === "users" ? "default" : "ghost"}
+            onClick={() => setActiveTab("users")}
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Users
+          </Button>
+          <Button
+            variant={activeTab === "reservations" ? "default" : "ghost"}
+            onClick={() => setActiveTab("reservations")}
+          >
+            <Star className="h-4 w-4 mr-2" />
+            Reservations
+          </Button>
+        </div>
 
-          <Card className="border-2">
-            <CardHeader>
-              <CardTitle>Manage Shows</CardTitle>
-              <CardDescription>
-                View and manage scheduled shows
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ShowList />
-            </CardContent>
-          </Card>
+        {activeTab === "shows" && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card className="border-2">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <CalendarPlus className="h-5 w-5 text-primary" />
+                  <CardTitle>Add New Show</CardTitle>
+                </div>
+                <CardDescription>
+                  Schedule a new show in the auditorium
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ShowForm />
+              </CardContent>
+            </Card>
 
-          <Card className="border-2 lg:col-span-2">
+            <Card className="border-2">
+              <CardHeader>
+                <CardTitle>Manage Shows</CardTitle>
+                <CardDescription>
+                  View and manage scheduled shows
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ShowList />
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {activeTab === "users" && (
+          <Card className="border-2">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
@@ -1371,13 +1538,16 @@ function AdminPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <UserList />
+              <div className="space-y-4">
+                <CreateUserDialog />
+                <UserList />
+              </div>
             </CardContent>
           </Card>
-        </div>
+        )}
+
+        {activeTab === "reservations" && <ReservationManagement />}
       </main>
     </div>
   );
 }
-
-export default AdminPage;
