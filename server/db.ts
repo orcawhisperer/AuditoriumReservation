@@ -7,6 +7,11 @@ import { eq } from "drizzle-orm";
 const sqlite = new Database("sqlite.db");
 export const db = drizzle(sqlite, { schema });
 
+// Drop existing tables to recreate with updated schema
+sqlite.exec(`DROP TABLE IF EXISTS reservations`);
+sqlite.exec(`DROP TABLE IF EXISTS shows`);
+sqlite.exec(`DROP TABLE IF EXISTS users`);
+
 // Ensure tables are created
 sqlite.exec(`CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
