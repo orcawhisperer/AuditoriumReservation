@@ -36,7 +36,7 @@ import {
   Smile,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,7 +64,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface Reservation {
   id: number;
@@ -155,9 +162,21 @@ function ShowForm() {
                         variant="outline"
                         className="w-12"
                         onClick={() => {
-                          const emojis = ["🎭", "🎪", "🎫", "🎬", "🎸", "🎹", "🎺", "🎻"];
-                          const currentIndex = emojis.indexOf(field.value || "🎭");
-                          const nextEmoji = emojis[(currentIndex + 1) % emojis.length];
+                          const emojis = [
+                            "🎭",
+                            "🎪",
+                            "🎫",
+                            "🎬",
+                            "🎸",
+                            "🎹",
+                            "🎺",
+                            "🎻",
+                          ];
+                          const currentIndex = emojis.indexOf(
+                            field.value || "🎭",
+                          );
+                          const nextEmoji =
+                            emojis[(currentIndex + 1) % emojis.length];
                           field.onChange(nextEmoji);
                         }}
                       >
@@ -234,11 +253,7 @@ function ShowForm() {
                 </FormLabel>
                 <FormControl>
                   <div className="flex gap-2">
-                    <Input
-                      type="color"
-                      {...field}
-                      className="h-10 w-20 p-1"
-                    />
+                    <Input type="color" {...field} className="h-10 w-20 p-1" />
                     <Input
                       {...field}
                       placeholder="#4B5320"
@@ -298,7 +313,13 @@ function ShowForm() {
   );
 }
 
-function EditShowDialog({ show, onClose }: { show: Show; onClose: () => void }) {
+function EditShowDialog({
+  show,
+  onClose,
+}: {
+  show: Show;
+  onClose: () => void;
+}) {
   const { toast } = useToast();
   const [open, setOpen] = useState(true);
 
@@ -353,11 +374,15 @@ function EditShowDialog({ show, onClose }: { show: Show; onClose: () => void }) 
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Show</DialogTitle>
-          <DialogDescription>Update show details and configuration.</DialogDescription>
+          <DialogDescription>
+            Update show details and configuration.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((data) => editShowMutation.mutate(data))}
+            onSubmit={form.handleSubmit((data) =>
+              editShowMutation.mutate(data),
+            )}
             className="space-y-4"
           >
             <FormField
@@ -378,9 +403,21 @@ function EditShowDialog({ show, onClose }: { show: Show; onClose: () => void }) 
                             variant="outline"
                             className="w-12"
                             onClick={() => {
-                              const emojis = ["🎭", "🎪", "🎫", "🎬", "🎸", "🎹", "🎺", "🎻"];
-                              const currentIndex = emojis.indexOf(field.value || "🎭");
-                              const nextEmoji = emojis[(currentIndex + 1) % emojis.length];
+                              const emojis = [
+                                "🎭",
+                                "🎪",
+                                "🎫",
+                                "🎬",
+                                "🎸",
+                                "🎹",
+                                "🎺",
+                                "🎻",
+                              ];
+                              const currentIndex = emojis.indexOf(
+                                field.value || "🎭",
+                              );
+                              const nextEmoji =
+                                emojis[(currentIndex + 1) % emojis.length];
                               field.onChange(nextEmoji);
                             }}
                           >
@@ -409,7 +446,8 @@ function EditShowDialog({ show, onClose }: { show: Show; onClose: () => void }) 
                   </FormControl>
                   <FormMessage />
                   <p className="text-sm text-muted-foreground">
-                    Enter comma-separated seat numbers to block (e.g., BA1,BB2,DN1)
+                    Enter comma-separated seat numbers to block (e.g.,
+                    BA1,BB2,DN1)
                   </p>
                 </FormItem>
               )}
@@ -474,17 +512,10 @@ function EditShowDialog({ show, onClose }: { show: Show; onClose: () => void }) 
             />
 
             <div className="pt-4 flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClose}
-              >
+              <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={editShowMutation.isPending}
-              >
+              <Button type="submit" disabled={editShowMutation.isPending}>
                 {editShowMutation.isPending && (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 )}
@@ -499,199 +530,213 @@ function EditShowDialog({ show, onClose }: { show: Show; onClose: () => void }) 
 }
 
 function ShowList() {
-    const { toast } = useToast();
-    const [editingShow, setEditingShow] = useState<Show | null>(null);
-    const { data: shows = [], isLoading } = useQuery<Show[]>({
-      queryKey: ["/api/shows"],
-      staleTime: 0, 
-    });
-    const { data: reservations = [], isLoading: reservationsLoading } = useQuery<Reservation[]>({
-      queryKey: ["/api/reservations"],
-      staleTime: 0, 
-    });
-    const { data: users = [] } = useQuery<User[]>({
-      queryKey: ["/api/users"],
-      staleTime: 0,
-    });
-    const deleteShowMutation = useMutation({
-      mutationFn: async (showId: number) => {
-        const res = await fetch(`/api/shows/${showId}`, {
-          method: "DELETE",
-        });
-        if (!res.ok) throw new Error("Failed to delete show");
-      },
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["/api/shows"] });
-        toast({
-          title: "Success",
-          description: "Show deleted successfully",
-        });
-      },
-      onError: (error: Error) => {
-        toast({
-          title: "Failed to delete show",
-          description: error.message,
-          variant: "destructive",
-        });
-      },
-    });
-    const getShowReservations = (showId: number) => {
-      return reservations.filter((r) => r.showId === showId);
-    };
-    const getBookedSeats = (showId: number) => {
-      const showReservations = getShowReservations(showId);
-      return showReservations.flatMap((r) => JSON.parse(r.seatNumbers));
-    };
-    const calculateTotalSeats = (show: Show) => {
-      const layout = JSON.parse(show.seatLayout);
-      return layout.reduce((total: number, section: any) => {
-        return total + section.rows.reduce((sectionTotal: number, row: any) => {
+  const { toast } = useToast();
+  const [editingShow, setEditingShow] = useState<Show | null>(null);
+  const { data: shows = [], isLoading } = useQuery<Show[]>({
+    queryKey: ["/api/shows"],
+    staleTime: 0,
+  });
+  const { data: reservations = [], isLoading: reservationsLoading } = useQuery<
+    Reservation[]
+  >({
+    queryKey: ["/api/reservations"],
+    staleTime: 0,
+  });
+  const { data: users = [] } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+    staleTime: 0,
+  });
+  const deleteShowMutation = useMutation({
+    mutationFn: async (showId: number) => {
+      const res = await fetch(`/api/shows/${showId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete show");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/shows"] });
+      toast({
+        title: "Success",
+        description: "Show deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete show",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  const getShowReservations = (showId: number) => {
+    return reservations.filter((r) => r.showId === showId);
+  };
+  const getBookedSeats = (showId: number) => {
+    const showReservations = getShowReservations(showId);
+    return showReservations.flatMap((r) => JSON.parse(r.seatNumbers));
+  };
+  const calculateTotalSeats = (show: Show) => {
+    const layout = JSON.parse(show.seatLayout);
+    return layout.reduce((total: number, section: any) => {
+      return (
+        total +
+        section.rows.reduce((sectionTotal: number, row: any) => {
           return sectionTotal + row.seats.length;
-        }, 0);
-      }, 0);
-    };
-    const getUserName = (userId: number) => {
-      const user = users.find(u => u.id === userId);
-      return user ? user.name || user.username : 'Unknown User';
-    };
-    if (isLoading || reservationsLoading) {
-      return (
-        <div className="flex items-center justify-center h-32">
-          <Loader2 className="h-8 w-8 animate-spin text-border" />
-        </div>
+        }, 0)
       );
-    }
-    if (shows.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-          <CalendarPlus className="h-8 w-8 mb-2" />
-          <p>No shows scheduled</p>
-        </div>
-      );
-    }
+    }, 0);
+  };
+  const getUserName = (userId: number) => {
+    const user = users.find((u) => u.id === userId);
+    return user ? user.name || user.username : "Unknown User";
+  };
+  if (isLoading || reservationsLoading) {
     return (
-      <div className="space-y-4">
-        {shows.map((show) => {
-          const showReservations = getShowReservations(show.id);
-          const bookedSeats = getBookedSeats(show.id);
-          const blockedSeats = JSON.parse(show.blockedSeats || "[]");
-          const totalSeats = calculateTotalSeats(show);
-          const availableSeats = totalSeats - bookedSeats.length - blockedSeats.length;
-          return (
-            <div
-              key={show.id}
-              className="flex items-center justify-between p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors"
-              style={{
-                borderColor: show.themeColor || "#4B5320",
-                backgroundColor: `${show.themeColor}10` || "#4B532010",
-              }}
-            >
-              <div className="flex gap-4">
-                {show.poster && (
-                  <div className="relative w-16 sm:w-24 overflow-hidden rounded-lg border">
-                    <div className="relative aspect-video">
-                      <img
-                        src={show.poster}
-                        alt={`Poster for ${show.title}`}
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
+      <div className="flex items-center justify-center h-32">
+        <Loader2 className="h-8 w-8 animate-spin text-border" />
+      </div>
+    );
+  }
+  if (shows.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+        <CalendarPlus className="h-8 w-8 mb-2" />
+        <p>No shows scheduled</p>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-4">
+      {shows.map((show) => {
+        const showReservations = getShowReservations(show.id);
+        const bookedSeats = getBookedSeats(show.id);
+        const blockedSeats = JSON.parse(show.blockedSeats || "[]");
+        const totalSeats = calculateTotalSeats(show);
+        const availableSeats =
+          totalSeats - bookedSeats.length - blockedSeats.length;
+        return (
+          <div
+            key={show.id}
+            className="flex items-center justify-between p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors"
+            style={{
+              borderColor: show.themeColor || "#4B5320",
+              backgroundColor: `${show.themeColor}10` || "#4B532010",
+            }}
+          >
+            <div className="flex gap-4">
+              {show.poster && (
+                <div className="relative w-16 sm:w-24 overflow-hidden rounded-lg border">
+                  <div className="relative aspect-video">
+                    <img
+                      src={show.poster}
+                      alt={`Poster for ${show.title}`}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium">
+                    {show.emoji} {show.title}
+                  </p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {format(new Date(show.date), "PPP p")}
+                </p>
+                {show.description && (
+                  <p className="text-sm text-muted-foreground">
+                    {show.description}
+                  </p>
+                )}
+                <div className="flex gap-2 mt-1">
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-500/10 text-green-500">
+                    {availableSeats} Available
+                  </span>
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-500/10 text-red-500">
+                    {bookedSeats.length} Booked
+                  </span>
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-500/10 text-yellow-500">
+                    {blockedSeats.length} Blocked
+                  </span>
+                </div>
+                {showReservations.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm font-medium mb-1">Reservations:</p>
+                    <div className="space-y-1">
+                      {showReservations.map((reservation) => (
+                        <div
+                          key={reservation.id}
+                          className="text-sm text-muted-foreground"
+                        >
+                          • {getUserName(reservation.userId)}: Seats{" "}
+                          {JSON.parse(reservation.seatNumbers).join(", ")}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium">{show.emoji} {show.title}</p>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {format(new Date(show.date), "PPP p")}
-                  </p>
-                  {show.description && (
-                    <p className="text-sm text-muted-foreground">
-                      {show.description}
-                    </p>
-                  )}
-                  <div className="flex gap-2 mt-1">
-                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-500/10 text-green-500">
-                      {availableSeats} Available
-                    </span>
-                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-500/10 text-red-500">
-                      {bookedSeats.length} Booked
-                    </span>
-                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-500/10 text-yellow-500">
-                      {blockedSeats.length} Blocked
-                    </span>
-                  </div>
-                  {showReservations.length > 0 && (
-                    <div className="mt-2">
-                      <p className="text-sm font-medium mb-1">Reservations:</p>
-                      <div className="space-y-1">
-                        {showReservations.map((reservation) => (
-                          <div key={reservation.id} className="text-sm text-muted-foreground">
-                            • {getUserName(reservation.userId)}: Seats {JSON.parse(reservation.seatNumbers).join(", ")}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditingShow(show)}
-                >
-                  Edit
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      disabled={deleteShowMutation.isPending}
-                    >
-                      {deleteShowMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : (
-                        <Trash2 className="h-4 w-4 mr-2" />
-                      )}
-                      Delete
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Show</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete this show? This action cannot be undone.
-                        {showReservations.length > 0 && (
-                          <p className="mt-2 text-red-500">
-                            Warning: This show has {showReservations.length} active reservations.
-                          </p>
-                        )}
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => deleteShowMutation.mutate(show.id)}
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
               </div>
             </div>
-          );
-        })}
-        {editingShow && (
-          <EditShowDialog
-            show={editingShow}
-            onClose={() => setEditingShow(null)}
-          />
-        )}
-      </div>
-    );
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditingShow(show)}
+              >
+                Edit
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={deleteShowMutation.isPending}
+                  >
+                    {deleteShowMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Trash2 className="h-4 w-4 mr-2" />
+                    )}
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Show</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete this show? This action
+                      cannot be undone.
+                      {showReservations.length > 0 && (
+                        <p className="mt-2 text-red-500">
+                          Warning: This show has {showReservations.length}{" "}
+                          active reservations.
+                        </p>
+                      )}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => deleteShowMutation.mutate(show.id)}
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
+        );
+      })}
+      {editingShow && (
+        <EditShowDialog
+          show={editingShow}
+          onClose={() => setEditingShow(null)}
+        />
+      )}
+    </div>
+  );
 }
 
 function CreateUserDialog() {
@@ -750,11 +795,15 @@ function CreateUserDialog() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create New User</DialogTitle>
-          <DialogDescription>Create a new user account with all required information.</DialogDescription>
+          <DialogDescription>
+            Create a new user account with all required information.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((data) => createUserMutation.mutate(data))}
+            onSubmit={form.handleSubmit((data) =>
+              createUserMutation.mutate(data),
+            )}
             className="space-y-4"
           >
             <FormField
@@ -777,7 +826,11 @@ function CreateUserDialog() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="Enter password" {...field} />
+                    <Input
+                      type="password"
+                      placeholder="Enter password"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -802,7 +855,10 @@ function CreateUserDialog() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Gender</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select gender" />
@@ -832,16 +888,14 @@ function CreateUserDialog() {
               )}
             />
             <div className="pt-4 flex justify-end gap-2">
-              <Button                type="button"
+              <Button
+                type="button"
                 variant="outline"
                 onClick={() => setOpen(false)}
               >
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={createUserMutation.isPending}
-              >
+              <Button type="submit" disabled={createUserMutation.isPending}>
                 {createUserMutation.isPending && (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 )}
@@ -855,7 +909,13 @@ function CreateUserDialog() {
   );
 }
 
-function EditUserDialog({ user, onClose }: { user: User; onClose: () => void }) {
+function EditUserDialog({
+  user,
+  onClose,
+}: {
+  user: User;
+  onClose: () => void;
+}) {
   const { toast } = useToast();
   const [open, setOpen] = useState(true);
 
@@ -914,7 +974,9 @@ function EditUserDialog({ user, onClose }: { user: User; onClose: () => void }) 
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((data) => editUserMutation.mutate(data))}
+            onSubmit={form.handleSubmit((data) =>
+              editUserMutation.mutate(data),
+            )}
             className="space-y-4"
           >
             <FormField
@@ -935,9 +997,15 @@ function EditUserDialog({ user, onClose }: { user: User; onClose: () => void }) 
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>New Password (leave blank to keep current)</FormLabel>
+                  <FormLabel>
+                    New Password (leave blank to keep current)
+                  </FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="Enter new password" {...field} />
+                    <Input
+                      type="password"
+                      placeholder="Enter new password"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -962,7 +1030,10 @@ function EditUserDialog({ user, onClose }: { user: User; onClose: () => void }) 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Gender</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select gender" />
@@ -992,17 +1063,10 @@ function EditUserDialog({ user, onClose }: { user: User; onClose: () => void }) 
               )}
             />
             <div className="pt-4 flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClose}
-              >
+              <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={editUserMutation.isPending}
-              >
+              <Button type="submit" disabled={editUserMutation.isPending}>
                 {editUserMutation.isPending && (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 )}
@@ -1029,13 +1093,13 @@ function UserList() {
   });
 
   const filteredUsers = users.filter((user) =>
-    user.username.toLowerCase().includes(search.toLowerCase())
+    user.username.toLowerCase().includes(search.toLowerCase()),
   );
 
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const paginatedUsers = filteredUsers.slice(
     (page - 1) * itemsPerPage,
-    page * itemsPerPage
+    page * itemsPerPage,
   );
 
   const isPrimaryAdmin = currentUser?.id === users.find((u) => u.isAdmin)?.id;
@@ -1064,7 +1128,13 @@ function UserList() {
   });
 
   const toggleUserStatusMutation = useMutation({
-    mutationFn: async ({ userId, isEnabled }: { userId: number; isEnabled: boolean }) => {
+    mutationFn: async ({
+      userId,
+      isEnabled,
+    }: {
+      userId: number;
+      isEnabled: boolean;
+    }) => {
       const res = await fetch(`/api/users/${userId}/toggle-status`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1095,7 +1165,13 @@ function UserList() {
   });
 
   const toggleAdminStatusMutation = useMutation({
-    mutationFn: async ({ userId, isAdmin }: { userId: number; isAdmin: boolean }) => {
+    mutationFn: async ({
+      userId,
+      isAdmin,
+    }: {
+      userId: number;
+      isAdmin: boolean;
+    }) => {
       const res = await fetch(`/api/users/${userId}/toggle-admin`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1184,7 +1260,10 @@ function UserList() {
               Gender: {user.gender || "Not set"}
             </p>
             <p className="text-sm text-muted-foreground">
-              Date of Birth: {user.dateOfBirth ? format(new Date(user.dateOfBirth), "PPP") : "Not set"}
+              Date of Birth:{" "}
+              {user.dateOfBirth
+                ? format(new Date(user.dateOfBirth), "PPP")
+                : "Not set"}
             </p>
             <p className="text-sm text-muted-foreground">
               Account status: {user.isEnabled ? "Active" : "Disabled"}
@@ -1197,7 +1276,10 @@ function UserList() {
                 <Switch
                   checked={user.isAdmin}
                   onCheckedChange={(checked) =>
-                    toggleAdminStatusMutation.mutate({ userId: user.id, isAdmin: checked })
+                    toggleAdminStatusMutation.mutate({
+                      userId: user.id,
+                      isAdmin: checked,
+                    })
                   }
                   disabled={toggleAdminStatusMutation.isPending}
                 />
@@ -1209,7 +1291,10 @@ function UserList() {
               <Switch
                 checked={user.isEnabled}
                 onCheckedChange={(checked) =>
-                  toggleUserStatusMutation.mutate({ userId: user.id, isEnabled: checked })
+                  toggleUserStatusMutation.mutate({
+                    userId: user.id,
+                    isEnabled: checked,
+                  })
                 }
                 disabled={user.isAdmin || toggleUserStatusMutation.isPending}
               />
@@ -1232,8 +1317,8 @@ function UserList() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Reset Password</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will reset the user's password to a temporary one. The user
-                    will need to change it upon next login.
+                    This will reset the user's password to a temporary one. The
+                    user will need to change it upon next login.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -1274,16 +1359,18 @@ function UserList() {
                   disabled={page === 1}
                 />
               </PaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                <PaginationItem key={pageNum}>
-                  <PaginationLink
-                    onClick={() => setPage(pageNum)}
-                    isActive={page === pageNum}
-                  >
-                    {pageNum}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (pageNum) => (
+                  <PaginationItem key={pageNum}>
+                    <PaginationLink
+                      onClick={() => setPage(pageNum)}
+                      isActive={page === pageNum}
+                    >
+                      {pageNum}
+                    </PaginationLink>
+                  </PaginationItem>
+                ),
+              )}
               <PaginationItem>
                 <PaginationNext
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
@@ -1300,21 +1387,23 @@ function UserList() {
 
 function ReservationManagement() {
   const { toast } = useToast();
-  const [selectedShow, setSelectedShow] = useState<number | null>(null);
+  const [selectedShowId, setSelectedShowId] = useState<string>("all");
 
-  const { data: shows = [] } = useQuery<Show[]>({
+  const { data: shows = [], isLoading: showsLoading } = useQuery<Show[]>({
     queryKey: ["/api/shows"],
-    staleTime: 1000, // Updated staleTime
+    staleTime: 0,
   });
 
-  const { data: reservations = [] } = useQuery<Reservation[]>({
+  const { data: reservations = [], isLoading: reservationsLoading } = useQuery<
+    Reservation[]
+  >({
     queryKey: ["/api/reservations"],
-    staleTime: 1000, // Updated staleTime
+    staleTime: 0,
   });
 
-  const { data: users = [] } = useQuery<User[]>({
+  const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],
-    staleTime: 1000, // Updated staleTime
+    staleTime: 0,
   });
 
   const deleteReservationMutation = useMutation({
@@ -1341,18 +1430,36 @@ function ReservationManagement() {
   });
 
   const getShowTitle = (showId: number) => {
-    const show = shows.find(s => s.id === showId);
-    return show ? show.title : 'Unknown Show';
+    const show = shows.find((s) => s.id === showId);
+    return show ? show.title : "Unknown Show";
   };
 
   const getUserName = (userId: number) => {
-    const user = users.find(u => u.id === userId);
-    return user ? user.name || user.username : 'Unknown User';
+    const user = users.find((u) => u.id === userId);
+    return user ? user.name || user.username : "Unknown User";
   };
 
-  const filteredReservations = selectedShow
-    ? reservations.filter(r => r.showId === selectedShow)
-    : reservations;
+  const filteredReservations = useMemo(() => {
+    if (selectedShowId === "all") return reservations;
+    const showId = parseInt(selectedShowId, 10);
+    return reservations.filter((r) => r.showId === showId);
+  }, [selectedShowId, reservations]);
+
+  if (showsLoading || reservationsLoading || usersLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Manage Reservations</CardTitle>
+          <CardDescription>Loading...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-32">
+            <Loader2 className="h-8 w-8 animate-spin text-border" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -1363,14 +1470,7 @@ function ReservationManagement() {
       <CardContent>
         <div className="space-y-4">
           <div className="flex gap-4">
-            <Select
-              value={selectedShow?.toString() || "all"}
-              onValueChange={(value) => {
-                const showId = value === "all" ? null : parseInt(value, 10); //Added type safety
-                setSelectedShow(showId);
-                console.log("Selected Show ID:", showId); // Added console logging
-              }}
-            >
+            <Select value={selectedShowId} onValueChange={setSelectedShowId}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Filter by show" />
               </SelectTrigger>
@@ -1392,11 +1492,15 @@ function ReservationManagement() {
                 className="flex items-center justify-between p-4 border rounded-lg"
               >
                 <div>
-                  <p className="font-medium">{getShowTitle(reservation.showId)}</p>
+                  <p className="font-medium">
+                    {getShowTitle(reservation.showId)}
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    Reserved by: {getUserName(reservation.userId)}</p>
+                    Reserved by: {getUserName(reservation.userId)}
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    Seats: {JSON.parse(reservation.seatNumbers).join(", ")}</p>
+                    Seats: {JSON.parse(reservation.seatNumbers).join(", ")}
+                  </p>
                 </div>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -1412,13 +1516,16 @@ function ReservationManagement() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete Reservation</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Are you sure you want to delete this reservation? This action cannot be undone.
+                        Are you sure you want to delete this reservation? This
+                        action cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
-                        onClick={() => deleteReservationMutation.mutate(reservation.id)}
+                        onClick={() =>
+                          deleteReservationMutation.mutate(reservation.id)
+                        }
                       >
                         Delete
                       </AlertDialogAction>
@@ -1429,7 +1536,9 @@ function ReservationManagement() {
             ))}
             {filteredReservations.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
-                No reservations found
+                {selectedShowId === "all"
+                  ? "No reservations found"
+                  : "No reservations found for this show"}
               </div>
             )}
           </div>
@@ -1442,7 +1551,9 @@ function ReservationManagement() {
 export default function AdminPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState<"shows" | "users" | "reservations">("shows");
+  const [activeTab, setActiveTab] = useState<
+    "shows" | "users" | "reservations"
+  >("shows");
 
   if (user && !user.isAdmin) {
     setLocation("/");
@@ -1526,9 +1637,7 @@ export default function AdminPage() {
                 <Users className="h-5 w-5 text-primary" />
                 <CardTitle>Manage Users</CardTitle>
               </div>
-              <CardDescription>
-                View and manage user accounts
-              </CardDescription>
+              <CardDescription>View and manage user accounts</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">

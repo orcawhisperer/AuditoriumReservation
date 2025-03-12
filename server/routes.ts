@@ -221,6 +221,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Reservation routes with improved transaction handling and logging
+  // Add new endpoint for getting all reservations
+  app.get("/api/reservations", async (req, res) => {
+    if (!req.user?.isAdmin) {
+      return res.status(403).send("Admin access required");
+    }
+
+    const reservations = await storage.getReservations();
+    res.json(reservations);
+  });
+
   app.post("/api/reservations", async (req, res) => {
     if (!req.user) return res.sendStatus(401);
 
