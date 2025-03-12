@@ -72,6 +72,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Seat } from "@/components/seat-grid";
 
 interface Reservation {
   id: number;
@@ -1106,7 +1107,7 @@ function UserList() {
 
   const resetPasswordMutation = useMutation({
     mutationFn: async (userId: number) => {
-      const res = await fetch(`/api/users/${userId}/reset-password`, {
+      const res = awaitfetch(`/api/users/${userId}/reset-password`, {
         method: "POST",
       });
       if (!res.ok) throw new Error(await res.text());
@@ -1570,6 +1571,16 @@ function EditReservationDialog({
 }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(true);
+  const [selectedSeats, setSelectedSeats] = useState<string[]>(
+    JSON.parse(reservation.seatNumbers)
+  );
+
+  const { data: showReservations = [] } = useQuery<Reservation[]>({
+    queryKey: [`/api/reservations/show/${reservation.showId}`],
+    staleTime: 0,
+  });
+
+  const currentShow = shows.find(s => s.id === reservation.showId);
 
   const form = useForm({
     resolver: zodResolver(insertReservationSchema),
@@ -1579,18 +1590,50 @@ function EditReservationDialog({
     },
   });
 
+  const reservedSeats = useMemo(() => {
+    return new Set(
+      showReservations
+        .filter(r => r.id !== reservation.id)
+        .flatMap(r => JSON.parse(r.seatNumbers))
+    );
+  }, [showReservations, reservation.id]);
+
+  const handleSeatSelect = (seatId: string) => {
+    setSelectedSeats((current) => {
+      if (current.includes(seatId)) {
+        return current.filter((id) => id !== seatId);
+      }
+      if (current.length >= 4) {
+        toast({
+          title: "Maximum seats reached",
+          description: "You can only reserve up to 4 seats",
+          variant: "destructive",
+        });
+        return current;
+      }
+      return [...current, seatId].sort();
+    });
+    form.setValue("seatNumbers", selectedSeats);
+  };
+
   const editReservationMutation = useMutation({
     mutationFn: async (data: any) => {
+      const payload = {
+        ...data,
+        seatNumbers: selectedSeats
+      };
+
       const res = await fetch(`/api/reservations/${reservation.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/reservations"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/reservations/show/${reservation.showId}`] });
       setOpen(false);
       onClose();
       toast({
@@ -1612,13 +1655,18 @@ function EditReservationDialog({
     onClose();
   };
 
+  if (!currentShow) return null;
+
+  const layout = JSON.parse(currentShow.seatLayout);
+  const blockedSeats = new Set(JSON.parse(currentShow.blockedSeats || "[]"));
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent>
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>Edit Reservation</DialogTitle>
           <DialogDescription>
-            Update reservation details and seat assignments.
+            Update reservation details and seat assignments for {currentShow.title}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -1626,72 +1674,97 @@ function EditReservationDialog({
             onSubmit={form.handleSubmit((data) => editReservationMutation.mutate(data))}
             className="space-y-4"
           >
-            <FormField
-              control={form.control}
-              name="showId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Show</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(parseInt(value))}
-                    defaultValue={field.value.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select show" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {shows.map((show) => (
-                        <SelectItem key={show.id} value={show.id.toString()}>
-                          {show.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid gap-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  {layout.map((section: any) => (
+                    <div key={section.section} className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        {section.section}
+                        <span className="text-sm text-muted-foreground font-normal">
+                          {section.section === "Balcony" ? "(Prefix: B)" : "(Prefix: D)"}
+                        </span>
+                      </h3>
+                      <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
+                        <div className="space-y-3 min-w-fit">
+                          {section.rows.map((rowData: any) => (
+                            <div key={rowData.row} className="flex gap-3 justify-center">
+                              <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
+                                {rowData.row}
+                              </span>
+                              <div className="flex gap-3">
+                                {Array.from({ length: Math.max(...rowData.seats) }).map(
+                                  (_, seatIndex) => {
+                                    const seatNumber = seatIndex + 1;
+                                    const prefix = section.section === "Balcony" ? "B" : "D";
+                                    const seatId = `${prefix}${rowData.row}${seatNumber}`;
 
-            <FormField
-              control={form.control}
-              name="seatNumbers"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Seat Numbers</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter seats (e.g., BA1,BB2,BC3)"
-                      value={field.value.join(",")}
-                      onChange={(e) => {
-                        const seats = e.target.value.split(",").map(s => s.trim());
-                        field.onChange(seats);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
+                                    if (!rowData.seats.includes(seatNumber)) {
+                                      return <div key={seatId} className="w-8" />;
+                                    }
+
+                                    return (
+                                      <Seat
+                                        key={seatId}
+                                        seatId={seatId}
+                                        isReserved={reservedSeats.has(seatId)}
+                                        isBlocked={blockedSeats.has(seatId)}
+                                        isSelected={selectedSeats.includes(seatId)}
+                                        onSelect={handleSeatSelect}
+                                      />
+                                    );
+                                  }
+                                )}
+                              </div>
+                              <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
+                                {rowData.row}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-4">
                   <p className="text-sm text-muted-foreground">
-                    Enter comma-separated seat numbers (max 4 seats)
+                    Selected: {selectedSeats.join(", ")}
                   </p>
-                </FormItem>
-              )}
-            />
+                </div>
+              </div>
+            </div>
 
-            <div className="pt-4 flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClose}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={editReservationMutation.isPending}>
-                {editReservationMutation.isPending && (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                )}
-                Update Reservation
-              </Button>
+            <div className="flex items-center justify-between pt-4 border-t">
+              <div className="flex gap-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-4 h-4 rounded border-2" />
+                  <span>Available</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-4 h-4 rounded bg-primary border-2 border-primary" />
+                  <span>Selected</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-4 h-4 rounded bg-red-100 border-2 border-red-200" />
+                  <span>Reserved</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-4 h-4 rounded bg-yellow-100 border-2 border-yellow-200" />
+                  <span>Blocked</span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={handleClose}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={editReservationMutation.isPending}>
+                  {editReservationMutation.isPending && (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  )}
+                  Update Reservation
+                </Button>
+              </div>
             </div>
           </form>
         </Form>

@@ -17,7 +17,7 @@ type SeatProps = {
   onSelect: (seatId: string) => void;
 };
 
-function Seat({
+export function Seat({
   seatId,
   isReserved,
   isBlocked,
@@ -31,15 +31,10 @@ function Seat({
     <button
       className={cn(
         "w-8 h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm",
-        isReserved &&
-          "bg-red-100 border-red-200 text-red-500 cursor-not-allowed",
-        isBlocked &&
-          "bg-yellow-100 border-yellow-200 text-yellow-500 cursor-not-allowed",
+        isReserved && "bg-red-100 border-red-200 text-red-500 cursor-not-allowed",
+        isBlocked && "bg-yellow-100 border-yellow-200 text-yellow-500 cursor-not-allowed",
         isSelected && "bg-primary border-primary text-primary-foreground",
-        !isReserved &&
-          !isBlocked &&
-          !isSelected &&
-          "hover:bg-accent hover:border-accent hover:text-accent-foreground active:scale-95",
+        !isReserved && !isBlocked && !isSelected && "hover:bg-accent hover:border-accent hover:text-accent-foreground active:scale-95",
       )}
       disabled={isReserved || isBlocked}
       onClick={() => onSelect(seatId)}
