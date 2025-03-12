@@ -19,17 +19,18 @@ export interface IStorage {
   toggleUserAdmin(userId: number, isAdmin: boolean): Promise<void>;
   deleteAdmin(): Promise<void>;
   initializeAdmin(): Promise<void>;
-  updateUser(id: number, user: Partial<InsertUser>): Promise<User>; // Add to IStorage interface
+  updateUser(id: number, user: Partial<InsertUser>): Promise<User>;
 
   // Show operations
   createShow(show: InsertShow): Promise<Show>;
   getShow(id: number): Promise<Show | undefined>;
   getShows(): Promise<Show[]>;
   deleteShow(id: number): Promise<void>;
-  updateShow(id: number, show: InsertShow): Promise<Show>; // Added updateShow method
+  updateShow(id: number, show: InsertShow): Promise<Show>;
 
   // Reservation operations
   createReservation(userId: number, reservation: InsertReservation): Promise<Reservation>;
+  getReservations(): Promise<Reservation[]>;
   getReservationsByShow(showId: number): Promise<Reservation[]>;
   getReservationsByUser(userId: number): Promise<Reservation[]>;
   deleteReservation(id: number): Promise<void>;
@@ -44,11 +45,6 @@ export class SQLiteStorage implements IStorage {
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
-
-    // Check for required environment variables
-    if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
-      console.warn('Warning: ADMIN_USERNAME and/or ADMIN_PASSWORD not set. Using defaults: admin/admin');
-    }
     this.initializeAdmin();
   }
 
@@ -150,7 +146,7 @@ export class SQLiteStorage implements IStorage {
     await db.delete(shows).where(eq(shows.id, id));
   }
 
-  async updateShow(id: number, show: InsertShow): Promise<Show> { // Added updateShow method implementation
+  async updateShow(id: number, show: InsertShow): Promise<Show> {
     const result = await db.update(shows)
       .set(show)
       .where(eq(shows.id, id))
@@ -164,6 +160,10 @@ export class SQLiteStorage implements IStorage {
       userId,
     }).returning();
     return result[0];
+  }
+
+  async getReservations(): Promise<Reservation[]> {
+    return await db.select().from(reservations);
   }
 
   async getReservationsByShow(showId: number): Promise<Reservation[]> {
@@ -181,7 +181,7 @@ export class SQLiteStorage implements IStorage {
   async deleteReservation(id: number): Promise<void> {
     await db.delete(reservations).where(eq(reservations.id, id));
   }
-  async updateUser(id: number, updateData: Partial<InsertUser>): Promise<User> { // Add to SQLiteStorage class implementation
+  async updateUser(id: number, updateData: Partial<InsertUser>): Promise<User> {
     const result = await db.update(users)
       .set(updateData)
       .where(eq(users.id, id))
