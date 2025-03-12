@@ -760,7 +760,6 @@ function ShowList() {
 function CreateUserDialog() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const { user } = useAuth();
 
   const form = useForm({
     resolver: zodResolver(insertUserSchema),
@@ -906,24 +905,6 @@ function CreateUserDialog() {
                 </FormItem>
               )}
             />
-            {user?.isSuper && (
-              <FormField
-                control={form.control}
-                name="isAdmin"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-2">
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormLabel className="!mt-0">Admin Privileges</FormLabel>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
             <div className="pt-4 flex justify-end gap-2">
               <Button
                 type="button"
@@ -1086,6 +1067,19 @@ function EditUserDialog({
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="dateOfBirth"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date of Birth</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <div className="pt-4 flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
@@ -1094,8 +1088,7 @@ function EditUserDialog({
                 {editUserMutation.isPending && (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 )}
-                Update User
-              </Button>
+                Update User              </Button>
             </div>
           </form>
         </Form>
@@ -1127,7 +1120,7 @@ function UserList() {
     page * itemsPerPage,
   );
 
-  const isPrimaryAdmin = currentUser?.isSuper;
+  const isPrimaryAdmin = currentUser?.id === users.find((u) => u.isAdmin)?.id;
 
   const resetPasswordMutation = useMutation({
     mutationFn: async (userId: number) => {
@@ -1147,8 +1140,7 @@ function UserList() {
     onError: (error: Error) => {
       toast({
         title: "Failed to reset password",
-        description: error.message,
-        variant: "destructive",
+        description: error.message,        variant: "destructive",
       });
     },
   });
@@ -1260,13 +1252,8 @@ function UserList() {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <p className="font-medium">{user.username}</p>
-                {user.isSuper && (
-                  <Badge className="bg-yellow-500/10 text-yellow-500">
-                    Super Admin
-                  </Badge>
-                )}
-                {user.isAdmin && !user.isSuper && (
-                  <Badge className="bg-primary/10 text-primary">
+                {user.isAdmin && (
+                  <Badge variant="default" className="text-xs">
                     Admin
                   </Badge>
                 )}
@@ -1296,21 +1283,6 @@ function UserList() {
                 </span>
               </div>
 
-              {isPrimaryAdmin && !user.isSuper && (
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={user.isAdmin}
-                    onCheckedChange={(checked) =>
-                      toggleAdminStatusMutation.mutate({
-                        userId: user.id,
-                        isAdmin: checked,
-                      })
-                    }
-                    disabled={toggleAdminStatusMutation.isPending}
-                  />
-                  <span className="text-sm">Admin</span>
-                </div>
-              )}
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"

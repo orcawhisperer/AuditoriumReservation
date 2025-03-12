@@ -1,16 +1,10 @@
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
 import * as schema from "@shared/schema";
-import { eq } from "drizzle-orm";
 
 // Create SQLite database connection
 const sqlite = new Database("sqlite.db");
 export const db = drizzle(sqlite, { schema });
-
-// Drop existing tables to recreate with updated schema
-sqlite.exec(`DROP TABLE IF EXISTS reservations`);
-sqlite.exec(`DROP TABLE IF EXISTS shows`);
-sqlite.exec(`DROP TABLE IF EXISTS users`);
 
 // Ensure tables are created
 sqlite.exec(`CREATE TABLE IF NOT EXISTS users (
@@ -18,7 +12,6 @@ sqlite.exec(`CREATE TABLE IF NOT EXISTS users (
   username TEXT NOT NULL UNIQUE,
   password TEXT NOT NULL,
   is_admin INTEGER NOT NULL DEFAULT 0,
-  is_super INTEGER NOT NULL DEFAULT 0,
   is_enabled INTEGER NOT NULL DEFAULT 1,
   name TEXT,
   gender TEXT,
@@ -77,16 +70,3 @@ sqlite.exec(`CREATE TABLE IF NOT EXISTS reservations (
   FOREIGN KEY(user_id) REFERENCES users(id),
   FOREIGN KEY(show_id) REFERENCES shows(id)
 )`);
-
-// Create super admin if it doesn't exist
-const superAdmin = db.select().from(schema.users).where(eq(schema.users.username, 'superadmin')).get();
-if (!superAdmin) {
-  db.insert(schema.users).values({
-    username: 'superadmin',
-    password: '$2b$10$bn5MavFZbgn2VyWfv4q73eHoXEywIgQWKJXqKkJvvgUOHOwj.FhUe', // hashed 'password'
-    isAdmin: true,
-    isSuper: true,
-    isEnabled: true,
-    name: 'Super Administrator',
-  }).run();
-}
