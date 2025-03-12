@@ -19,7 +19,9 @@ sqlite.exec(`CREATE TABLE IF NOT EXISTS users (
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 )`);
 
-sqlite.exec(`CREATE TABLE IF NOT EXISTS shows (
+// Recreate shows table with updated schema
+sqlite.exec(`DROP TABLE IF EXISTS shows`);
+sqlite.exec(`CREATE TABLE shows (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
   date TEXT NOT NULL,
@@ -27,7 +29,11 @@ sqlite.exec(`CREATE TABLE IF NOT EXISTS shows (
   description TEXT,
   theme_color TEXT DEFAULT '#4B5320',
   emoji TEXT,
-  seat_layout TEXT NOT NULL DEFAULT '{"balcony":{"rows":["A","B","C"],"seatsPerRow":12},"middle":{"rows":["N","M","L","K","J","I","H","G"],"seatsPerRow":16},"lower":{"rows":["F","E","D","C","B","A"],"seatsPerRow":17}}'
+  seat_layout TEXT NOT NULL DEFAULT '{
+    "balcony": {"rows": ["A","B","C"], "seatsPerRow": 12},
+    "middle": {"rows": ["N","M","L","K","J","I","H","G"], "seatsPerRow": 16},
+    "lower": {"rows": ["F","E","D","C","B","A"], "seatsPerRow": 17}
+  }'
 )`);
 
 sqlite.exec(`CREATE TABLE IF NOT EXISTS reservations (
