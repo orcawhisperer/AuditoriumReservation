@@ -14,6 +14,21 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { Show, insertShowSchema, User, insertUserSchema, insertReservationSchema } from "@shared/schema";
@@ -33,10 +48,10 @@ import {
   Star,
   UserPlus,
   Palette,
-  Smile,
+  Ticket,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,7 +71,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -64,8 +78,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Seat } from "@/components/seat-grid";
+import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface Reservation {
   id: number;
@@ -567,6 +582,14 @@ function ShowList() {
     const user = users.find((u) => u.id === userId);
     return user ? user.name || user.username : "Unknown User";
   };
+  const itemsPerPage = 5;
+  const [page, setPage] = useState(1);
+  const totalPages = Math.ceil(shows.length / itemsPerPage);
+  const paginatedShows = shows.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage,
+  );
+
   if (isLoading || reservationsLoading) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -584,111 +607,148 @@ function ShowList() {
   }
   return (
     <div className="space-y-4">
-      {shows.map((show) => {
-        const showReservations = getShowReservations(show.id);
-        const bookedSeats = getBookedSeats(show.id);
-        const blockedSeats = JSON.parse(show.blockedSeats || "[]");
-        const totalSeats = calculateTotalSeats(show);
-        const availableSeats =
-          totalSeats - bookedSeats.length - blockedSeats.length;
-        return (
-          <div
-            key={show.id}
-            className="flex flex-col sm:flex-row justify-between gap-4 p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors"
-            style={{
-              borderColor: show.themeColor || "#4B5320",
-              backgroundColor: `${show.themeColor}10` || "#4B532010",
-            }}
-          >
-            <div className="flex flex-col sm:flex-row gap-4">
-              {show.poster && (
-                <div className="relative w-full sm:w-24 overflow-hidden rounded-lg border">
-                  <div className="relative aspect-video">
-                    <img
-                      src={show.poster}
-                      alt={`Poster for ${show.title}`}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
+      <div className="space-y-4 h-[400px] overflow-y-auto pr-2">
+        {paginatedShows.map((show) => {
+          const showReservations = getShowReservations(show.id);
+          const bookedSeats = getBookedSeats(show.id);
+          const blockedSeats = JSON.parse(show.blockedSeats || "[]");
+          const totalSeats = calculateTotalSeats(show);
+          const availableSeats =
+            totalSeats - bookedSeats.length - blockedSeats.length;
+          return (
+            <div
+              key={show.id}
+              className="flex flex-col sm:flex-row justify-between gap-4 p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors"
+              style={{
+                borderColor: show.themeColor || "#4B5320",
+                backgroundColor: `${show.themeColor}10` || "#4B532010",
+              }}
+            >
+              <div className="flex flex-col sm:flex-row gap-4">
+                {show.poster && (
+                  <div className="relative w-full sm:w-24 overflow-hidden rounded-lg border">
+                    <div className="relative aspect-video">
+                      <img
+                        src={show.poster}
+                        alt={`Poster for ${show.title}`}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">
+                      {show.emoji} {show.title}
+                    </p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {format(new Date(show.date), "PPP p")}
+                  </p>
+                  {show.description && (
+                    <p className="text-sm text-muted-foreground">
+                      {show.description}
+                    </p>
+                  )}
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-500/10 text-green-500">
+                      {availableSeats} Available
+                    </span>
+                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-500/10 text-red-500">
+                      {bookedSeats.length} Booked
+                    </span>
+                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-500/10 text-yellow-500">
+                      {blockedSeats.length} Blocked
+                    </span>
                   </div>
                 </div>
-              )}
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="font-medium">
-                    {show.emoji} {show.title}
-                  </p>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {format(new Date(show.date), "PPP p")}
-                </p>
-                {show.description && (
-                  <p className="text-sm text-muted-foreground">
-                    {show.description}
-                  </p>
-                )}
-                <div className="flex flex-wrap gap-2 mt-2">
-                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-500/10 text-green-500">
-                    {availableSeats} Available
-                  </span>
-                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-500/10 text-red-500">
-                    {bookedSeats.length} Booked
-                  </span>
-                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-500/10 text-yellow-500">
-                    {blockedSeats.length} Blocked
-                  </span>
-                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2 sm:items-start">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingShow(show)}
+                  className="w-full sm:w-auto"
+                >
+                  Edit
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={deleteShowMutation.isPending}
+                      className="w-full sm:w-auto"
+                    >
+                      {deleteShowMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Trash2 className="h-4 w-4 mr-2" />
+                      )}
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Show</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this show? This action cannot be undone.
+                        {showReservations.length > 0 && (
+                          <p className="mt-2 text-red-500">
+                            Warning: This show has {showReservations.length} active reservations.
+                          </p>
+                        )}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => deleteShowMutation.mutate(show.id)}>
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
-
-            <div className="flex flex-col sm:flex-row gap-2 sm:items-start">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setEditingShow(show)}
-                className="w-full sm:w-auto"
-              >
-                Edit
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    disabled={deleteShowMutation.isPending}
-                    className="w-full sm:w-auto"
-                  >
-                    {deleteShowMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <Trash2 className="h-4 w-4 mr-2" />
-                    )}
-                    Delete
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Show</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete this show? This action cannot be undone.
-                      {showReservations.length > 0 && (
-                        <p className="mt-2 text-red-500">
-                          Warning: This show has {showReservations.length} active reservations.
-                        </p>
-                      )}
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => deleteShowMutation.mutate(show.id)}>
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
+          );
+        })}
+        {shows.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+            <CalendarPlus className="h-8 w-8 mb-2" />
+            <p>No shows scheduled</p>
           </div>
-        );
-      })}
+        )}
+      </div>
+
+      {shows.length > itemsPerPage && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+              />
+            </PaginationItem>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+              <PaginationItem key={pageNum}>
+                <PaginationLink
+                  onClick={() => setPage(pageNum)}
+                  isActive={page === pageNum}
+                >
+                  {pageNum}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
       {editingShow && (
         <EditShowDialog show={editingShow} onClose={() => setEditingShow(null)} />
       )}
@@ -1027,8 +1087,7 @@ function EditUserDialog({
                 {editUserMutation.isPending && (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 )}
-                Update User
-              </Button>
+                Update User              </Button>
             </div>
           </form>
         </Form>
@@ -1183,7 +1242,7 @@ function UserList() {
         />
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 h-[400px] overflow-y-auto pr-2">
         {paginatedUsers.map((user) => (
           <div
             key={user.id}
@@ -1245,8 +1304,42 @@ function UserList() {
             </div>
           </div>
         ))}
+        {filteredUsers.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+            <Users className="h-8 w-8 mb-2" />
+            <p>No users found</p>
+          </div>
+        )}
       </div>
 
+      {filteredUsers.length > itemsPerPage && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+              />
+            </PaginationItem>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+              <PaginationItem key={pageNum}>
+                <PaginationLink
+                  onClick={() => setPage(pageNum)}
+                  isActive={page === pageNum}
+                >
+                  {pageNum}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
       {editingUser && (
         <EditUserDialog user={editingUser} onClose={() => setEditingUser(null)} />
       )}
@@ -1316,6 +1409,14 @@ function ReservationManagement() {
     return reservations.filter((r) => r.showId === showId);
   }, [selectedShowId, reservations]);
 
+  const itemsPerPage = 5;
+  const [page, setPage] = useState(1);
+  const totalPages = Math.ceil(filteredReservations.length / itemsPerPage);
+  const paginatedReservations = filteredReservations.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage,
+  );
+
   if (showsLoading || reservationsLoading || usersLoading) {
     return (
       <Card>
@@ -1356,8 +1457,8 @@ function ReservationManagement() {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            {filteredReservations.map((reservation) => (
+          <div className="space-y-4 h-[400px] overflow-y-auto pr-2">
+            {paginatedReservations.map((reservation) => (
               <div
                 key={reservation.id}
                 className="flex items-center justify-between p-4 border rounded-lg"
@@ -1415,13 +1516,47 @@ function ReservationManagement() {
               </div>
             ))}
             {filteredReservations.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                {selectedShowId === "all"
-                  ? "No reservations found"
-                  : "No reservations found for this show"}
+              <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+                <Ticket className="h-8 w-8 mb-2" />
+                <p>
+                  {selectedShowId === "all"
+                    ? "No reservations found"
+                    : "No reservations found for this show"}
+                </p>
               </div>
             )}
           </div>
+
+          {filteredReservations.length > itemsPerPage && (
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  />
+                </PaginationItem>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (pageNum) => (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink
+                        onClick={() => setPage(pageNum)}
+                        isActive={page === pageNum}
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ),
+                )}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
         </div>
       </CardContent>
       {editingReservation && (
@@ -1684,7 +1819,7 @@ function EditReservationDialog({
 function UserManagement() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-h-[600px] overflow-y-auto pr-4">
       <CreateUserDialog />
       <UserList />
     </div>
@@ -1694,9 +1829,7 @@ function UserManagement() {
 export default function AdminPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState<
-    "shows" | "users" | "reservations"
-  >("shows");
+  const [activeTab, setActiveTab] = useState("shows");
 
   if (!user?.isAdmin) {
     setLocation("/");
@@ -1722,32 +1855,51 @@ export default function AdminPage() {
       </header>
 
       <main className="container mx-auto py-4 sm:py-8 px-4 sm:px-8">
-        <div className="grid gap-4 md:gap-8 xl:grid-cols-2">
-          <div className="space-y-4 md:space-y-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Create Show</CardTitle>
-                <CardDescription>Add a new show to the system</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <ShowForm />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Show Management</CardTitle>
-                <CardDescription>
-                  Manage existing shows and their configurations
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <ShowList />
-              </CardContent>
-            </Card>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <div className="flex items-center justify-between">
+            <TabsList className="grid w-full sm:w-auto grid-cols-3 sm:grid-cols-none sm:flex gap-2">
+              <TabsTrigger value="shows" className="flex items-center gap-2">
+                <CalendarPlus className="h-4 w-4" />
+                <span className="hidden sm:inline">Shows</span>
+              </TabsTrigger>
+              <TabsTrigger value="users" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Users</span>
+              </TabsTrigger>
+              <TabsTrigger value="reservations" className="flex items-center gap-2">
+                <Ticket className="h-4 w-4" />
+                <span className="hidden sm:inline">Reservations</span>
+              </TabsTrigger>
+            </TabsList>
           </div>
 
-          <div className="space-y-4 md:space-y-8">
+          <TabsContent value="shows" className="space-y-4">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Create Show</CardTitle>
+                  <CardDescription>Add a new show to the system</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ShowForm />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Show Management</CardTitle>
+                  <CardDescription>
+                    Manage existing shows and their configurations
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="max-h-[600px] overflow-y-auto pr-4">
+                  <ShowList />
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="users">
             <Card>
               <CardHeader>
                 <CardTitle>User Management</CardTitle>
@@ -1755,11 +1907,13 @@ export default function AdminPage() {
                   Manage user accounts and permissions
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="max-h-[600px] overflow-y-auto pr-4">
                 <UserManagement />
               </CardContent>
             </Card>
+          </TabsContent>
 
+          <TabsContent value="reservations">
             <Card>
               <CardHeader>
                 <CardTitle>Reservation Management</CardTitle>
@@ -1767,12 +1921,12 @@ export default function AdminPage() {
                   View and manage show reservations
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="max-h-[600px] overflow-y-auto pr-4">
                 <ReservationManagement />
               </CardContent>
             </Card>
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
