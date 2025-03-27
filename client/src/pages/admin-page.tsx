@@ -350,6 +350,18 @@ function EditShowDialog({
 }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(true);
+  const isPastShow = new Date(show.date) < new Date();
+
+  // Show warning if trying to edit a past show
+  if (isPastShow) {
+    toast({
+      title: "Cannot Edit Past Show",
+      description: "Shows that have already passed cannot be edited.",
+      variant: "destructive",
+    });
+    onClose();
+    return null;
+  }
 
   const form = useForm({
     resolver: zodResolver(insertShowSchema),
@@ -651,10 +663,11 @@ function ShowList() {
           const totalSeats = calculateTotalSeats(show);
           const availableSeats =
             totalSeats - bookedSeats.length - blockedSeats.length;
+          const isPastShow = new Date(show.date) < new Date();
           return (
             <div
               key={show.id}
-              className="flex flex-col sm:flex-row justify-between gap-4 p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors"
+              className={`flex flex-col sm:flex-row justify-between gap-4 p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors ${isPastShow ? 'opacity-75' : ''}`}
               style={{
                 borderColor: show.themeColor || "#4B5320",
                 backgroundColor: `${show.themeColor}10` || "#4B532010",
@@ -677,6 +690,9 @@ function ShowList() {
                     <p className="font-medium">
                       {show.emoji} {show.title}
                     </p>
+                    {isPastShow && (
+                      <Badge variant="outline" className="text-xs">Past Show</Badge>
+                    )}
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {format(new Date(show.date), "PPP p")}
@@ -705,6 +721,7 @@ function ShowList() {
                   variant="outline"
                   size="sm"
                   onClick={() => setEditingShow(show)}
+                  disabled={isPastShow}
                   className="w-full sm:w-auto"
                 >
                   Edit
@@ -714,7 +731,7 @@ function ShowList() {
                     <Button
                       variant="destructive"
                       size="sm"
-                      disabled={deleteShowMutation.isPending}
+                      disabled={deleteShowMutation.isPending || isPastShow}
                       className="w-full sm:w-auto"
                     >
                       {deleteShowMutation.isPending ? (

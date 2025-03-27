@@ -120,31 +120,63 @@ export default function HomePage() {
 
       <main className="container mx-auto py-8 px-4 sm:px-8 space-y-8">
         <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Upcoming Shows</CardTitle>
-              <CardDescription>
-                Select a show to make a reservation
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[400px] overflow-y-auto pr-2">
-                {shows.length === 0 ? (
-                  <p className="text-muted-foreground">No shows available</p>
-                ) : (
-                  <div className="space-y-4">
-                    {shows.map((show) => (
-                      <ShowCard
-                        key={show.id}
-                        show={show}
-                        reservations={reservations}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Upcoming Shows</CardTitle>
+                <CardDescription>
+                  Select a show to make a reservation
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[400px] overflow-y-auto pr-2">
+                  {shows.filter(show => new Date(show.date) >= new Date()).length === 0 ? (
+                    <p className="text-muted-foreground">No upcoming shows available</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {shows
+                        .filter(show => new Date(show.date) >= new Date())
+                        .map((show) => (
+                          <ShowCard
+                            key={show.id}
+                            show={show}
+                            reservations={reservations}
+                          />
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Past Shows</CardTitle>
+                <CardDescription>
+                  Past shows are no longer available for reservation
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px] overflow-y-auto pr-2">
+                  {shows.filter(show => new Date(show.date) < new Date()).length === 0 ? (
+                    <p className="text-muted-foreground">No past shows</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {shows
+                        .filter(show => new Date(show.date) < new Date())
+                        .map((show) => (
+                          <ShowCard
+                            key={show.id}
+                            show={show}
+                            reservations={reservations}
+                          />
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           <Card>
             <CardHeader>
@@ -154,7 +186,7 @@ export default function HomePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
+              <div className="h-[750px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
                 {reservations.length === 0 ? (
                   <p className="text-muted-foreground">No reservations yet</p>
                 ) : (

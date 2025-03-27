@@ -223,21 +223,21 @@ export function SeatGrid() {
 
                 {section.rows.map((rowData: any, rowIndex: number) => (
                   <div key={rowData.row} className="flex gap-3 justify-center">
-                    {/* Exit on the left side for row G in Downstairs section */}
-                    {section.section === "Downstairs" && rowData.row === "G" && (
-                      <Exit position="left" />
-                    )}
+                    {section.section === "Downstairs" &&
+                      rowData.row === "G" && <Exit position="left" />}
 
-                    {/* Exit on the left side for Balcony row A */}
+                    {/* Exit on the left side */}
+                    {/* Based on the layout image - Add exits on the sides */}
                     {section.section === "Balcony" && rowData.row === "A" && (
-                      <Exit position="left" />
+                      <Exit position="top" />
                     )}
-
                     <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                       {rowData.row}
                     </span>
 
                     <div className="flex gap-3 relative">
+                      {/* Aisle/Exit markers will be added elsewhere */}
+
                       {Array.from({ length: Math.max(...rowData.seats) }).map(
                         (_, seatIndex) => {
                           const seatNumber = seatIndex + 1;
@@ -268,17 +268,20 @@ export function SeatGrid() {
                       {rowData.row}
                     </span>
 
-                    {/* Exit on the right side for Balcony row A */}
-                    {section.section === "Balcony" && rowData.row === "A" && (
-                      <Exit position="right" />
-                    )}
-
-                    {/* Exit on the right side for row G in Downstairs section */}
-                    {section.section === "Downstairs" && rowData.row === "G" && (
-                      <Exit position="right" />
-                    )}
+                    {/* Exits on left and right between rows F and G */}
+                    {section.section === "Downstairs" &&
+                      rowData.row === "G" && <Exit position="right" />}
                   </div>
                 ))}
+
+                {/* Bottom exits for Downstairs section */}
+                {section.section === "Downstairs" && (
+                  <div className="flex justify-between mt-4">
+                    <Exit position="left" />
+                    <div className="flex-grow"></div>
+                    <Exit position="right" />
+                  </div>
+                )}
 
                 {section.section === "Downstairs" && (
                   <div className="mt-8 flex justify-center items-center">
@@ -287,15 +290,6 @@ export function SeatGrid() {
                       SCREEN
                     </div>
                     <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
-                  </div>
-                )}
-
-                {/* Bottom exits for Downstairs section */}
-                {section.section === "Downstairs" && (
-                  <div className="flex justify-between mt-4">
-                    <Exit position="left" />
-                    <div className="flex-grow"></div>
-                    <Exit position="right" />
                   </div>
                 )}
               </div>
