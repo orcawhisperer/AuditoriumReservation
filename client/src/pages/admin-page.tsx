@@ -1691,6 +1691,14 @@ function EditReservationDialog({
     queryKey: [`/api/reservations/show/${reservation.showId}`],
     staleTime: 0,
   });
+  
+  // Fetch the user associated with this reservation to get their seat limit
+  const { data: users = [] } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+  });
+  
+  const reservationUser = users.find(u => u.id === reservation.userId);
+  const userSeatLimit = reservationUser?.seatLimit || 4; // Default to 4 if not found
 
   const currentShow = shows.find((s) => s.id === reservation.showId);
 
@@ -1715,10 +1723,10 @@ function EditReservationDialog({
       if (current.includes(seatId)) {
         return current.filter((id) => id !== seatId);
       }
-      if (current.length >= 4) {
+      if (current.length >= userSeatLimit) {
         toast({
           title: "Maximum seats reached",
-          description: "You can only reserve up to 4 seats",
+          description: `You can only reserve up to ${userSeatLimit} seats for this user`,
           variant: "destructive",
         });
         return current;
@@ -1780,6 +1788,10 @@ function EditReservationDialog({
           <DialogTitle>Edit Reservation</DialogTitle>
           <DialogDescription>
             Update reservation details and seat assignments for {currentShow.title}
+            <div className="mt-2 text-sm">
+              <span className="font-medium">User:</span> {reservationUser?.username || 'Unknown'}
+              <span className="ml-4 font-medium">Seat Limit:</span> {userSeatLimit}
+            </div>
           </DialogDescription>
         </DialogHeader>
 

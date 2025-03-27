@@ -129,12 +129,15 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <div className="h-[500px] overflow-y-auto pr-2">
-                {shows.filter(show => new Date(show.date) >= new Date()).length === 0 ? (
-                  <p className="text-muted-foreground">No upcoming shows available</p>
+                {shows.filter((show) => new Date(show.date) >= new Date())
+                  .length === 0 ? (
+                  <p className="text-muted-foreground">
+                    No upcoming shows available
+                  </p>
                 ) : (
                   <div className="space-y-4">
                     {shows
-                      .filter(show => new Date(show.date) >= new Date())
+                      .filter((show) => new Date(show.date) >= new Date())
                       .map((show) => (
                         <ShowCard
                           key={show.id}

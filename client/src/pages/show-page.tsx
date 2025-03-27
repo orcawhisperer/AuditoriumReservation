@@ -6,7 +6,6 @@ import { format } from "date-fns";
 import { Shield, AlertTriangle } from "lucide-react";
 import { Show } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function ShowPage() {
   const [, setLocation] = useLocation();
@@ -62,28 +61,11 @@ export default function ShowPage() {
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Past Show</AlertTitle>
               <AlertDescription>
-                This show took place on {format(new Date(show.date), "PPP")} at {format(new Date(show.date), "p")}. 
-                Reservations are no longer available.
+                This show took place on {format(new Date(show.date), "PPP")} at{" "}
+                {format(new Date(show.date), "p")}. Reservations are no longer
+                available.
               </AlertDescription>
             </Alert>
-          )}
-
-          {show && (
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <span>{show.emoji}</span> {show.title}
-                </CardTitle>
-                <CardDescription>
-                  {format(new Date(show.date), "PPP")} at {format(new Date(show.date), "p")}
-                </CardDescription>
-              </CardHeader>
-              {show.description && (
-                <CardContent>
-                  <p>{show.description}</p>
-                </CardContent>
-              )}
-            </Card>
           )}
 
           {isPastShow ? (
