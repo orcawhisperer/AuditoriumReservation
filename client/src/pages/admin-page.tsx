@@ -1848,17 +1848,19 @@ function EditReservationDialog({
                     
                     {section.rows.map((rowData: any) => (
                       <div key={rowData.row} className="flex gap-3 justify-center">
+                        {/* Exit on left for row G in Downstairs */}
                         {section.section === "Downstairs" &&
                           rowData.row === "G" && <Exit position="left" />}
-
-                        {/* Exit on the left side */}
+                        
+                        {/* In row A of Balcony, keep a placeholder div for alignment */}
                         {section.section === "Balcony" && rowData.row === "A" && (
-                          <Exit position="top" />
+                          <div className="w-16"></div> 
                         )}
                         
                         <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                           {rowData.row}
                         </span>
+                        
                         <div className="flex gap-2 sm:gap-3">
                           {Array.from({ length: Math.max(...rowData.seats) }).map(
                             (_, seatIndex) => {
@@ -1883,13 +1885,19 @@ function EditReservationDialog({
                             }
                           )}
                         </div>
+                        
                         <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                           {rowData.row}
                         </span>
                         
-                        {/* Exit on the right side */}
+                        {/* Exit on right for row G in Downstairs */}
                         {section.section === "Downstairs" &&
                           rowData.row === "G" && <Exit position="right" />}
+                          
+                        {/* Exit on right side for row A in Balcony */}
+                        {section.section === "Balcony" && rowData.row === "A" && (
+                          <Exit position="top" />
+                        )}
                       </div>
                     ))}
                     
