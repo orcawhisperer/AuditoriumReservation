@@ -154,7 +154,7 @@ export default function HomePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[400px] overflow-y-auto pr-2">
+              <div className="h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
                 {reservations.length === 0 ? (
                   <p className="text-muted-foreground">No reservations yet</p>
                 ) : (

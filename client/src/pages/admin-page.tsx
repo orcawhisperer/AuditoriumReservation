@@ -81,7 +81,42 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Seat } from "@/components/seat-grid";
+// Define Seat component internally to avoid dependency on external component
+// This component is similar to the one in seat-grid.tsx but sized differently for admin panel
+
+// Seat component definition for admin panel
+function Seat({
+  seatId,
+  isReserved,
+  isBlocked,
+  isSelected,
+  onSelect,
+}: {
+  seatId: string;
+  isReserved: boolean;
+  isBlocked: boolean;
+  isSelected: boolean;
+  onSelect: (seatId: string) => void;
+}) {
+  // Extract just the seat number from the end of the seatId
+  const seatNumber = seatId.match(/\d+$/)?.[0] || seatId;
+
+  return (
+    <button
+      className={cn(
+        "w-6 h-6 rounded border-2 text-xs font-medium transition-colors shadow-sm",
+        isReserved && "bg-red-100 border-red-200 text-red-500 cursor-not-allowed",
+        isBlocked && "bg-yellow-100 border-yellow-200 text-yellow-500 cursor-not-allowed",
+        isSelected && "bg-primary border-primary text-primary-foreground",
+        !isReserved && !isBlocked && !isSelected && "hover:bg-accent hover:border-accent hover:text-accent-foreground active:scale-95",
+      )}
+      disabled={isReserved || isBlocked}
+      onClick={() => onSelect(seatId)}
+    >
+      {seatNumber}
+    </button>
+  );
+}
 
 interface Reservation {
   id: number;
@@ -1915,17 +1950,7 @@ export default function AdminPage() {
           </TabsContent>
 
           <TabsContent value="reservations">
-            <Card>
-              <CardHeader>
-                <CardTitle>Reservation Management</CardTitle>
-                <CardDescription>
-                  View and manage show reservations
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="max-h-[600px] overflow-y-auto pr-4">
-                <ReservationManagement />
-              </CardContent>
-            </Card>
+            <ReservationManagement />
           </TabsContent>
         </Tabs>
       </main>

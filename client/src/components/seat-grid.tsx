@@ -44,6 +44,30 @@ export function Seat({
   );
 }
 
+// Exit component for auditorium layout
+function Exit({ position }: { position: "left" | "right" | "top" | "bottom" }) {
+  const getPositionClasses = () => {
+    switch (position) {
+      case "left":
+        return "flex-row justify-start";
+      case "right":
+        return "flex-row justify-end";
+      case "top":
+        return "flex-col justify-start";
+      case "bottom":
+        return "flex-col justify-end";
+    }
+  };
+
+  return (
+    <div className={`flex items-center ${getPositionClasses()} mx-2 my-3`}>
+      <div className="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
+        EXIT
+      </div>
+    </div>
+  );
+}
+
 export function SeatGrid() {
   const [, setLocation] = useLocation();
   const { showId } = useParams<{ showId: string }>();
@@ -173,6 +197,7 @@ export function SeatGrid() {
       </div>
 
       <div className="space-y-6">
+        {/* Balcony Section */}
         {layout.map((section: any) => (
           <div key={section.section} className="space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -183,17 +208,35 @@ export function SeatGrid() {
             </h3>
             <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
               <div className="space-y-3 min-w-fit">
-                {section.rows.map((rowData: any) => (
+                {section.section === "Balcony" && (
+                  <div className="flex justify-center mb-4">
+                    <div className="text-sm text-muted-foreground">UPSTAIRS BALCONY</div>
+                  </div>
+                )}
+                
+                {section.rows.map((rowData: any, rowIndex: number) => (
                   <div key={rowData.row} className="flex gap-3 justify-center">
                     <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                       {rowData.row}
                     </span>
+                    
+                    {/* Exit on the left side */}
+                    {((section.section === "Balcony" && rowData.row === "A") || 
+                       (section.section === "Downstairs" && (rowData.row === "G" || rowData.row === "A"))) && (
+                      <Exit position="left" />
+                    )}
+                    
                     <div className="flex gap-3">
                       {Array.from({ length: Math.max(...rowData.seats) }).map(
                         (_, seatIndex) => {
                           const seatNumber = seatIndex + 1;
                           const prefix = section.section === "Balcony" ? "B" : "D";
                           const seatId = `${prefix}${rowData.row}${seatNumber}`;
+
+                          // Add EXIT sign in the middle (Balcony row N, seat 6)
+                          if (section.section === "Downstairs" && rowData.row === "N" && seatNumber === 6) {
+                            return <Exit key={`exit-${seatId}`} position="top" />;
+                          }
 
                           // Only render seats that exist in this row
                           if (!rowData.seats.includes(seatNumber)) {
@@ -213,18 +256,42 @@ export function SeatGrid() {
                         },
                       )}
                     </div>
+                    
+                    {/* Exit on the right side */}
+                    {((section.section === "Balcony" && rowData.row === "A") || 
+                       (section.section === "Downstairs" && (rowData.row === "G" || rowData.row === "A"))) && (
+                      <Exit position="right" />
+                    )}
+                    
                     <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                       {rowData.row}
                     </span>
                   </div>
                 ))}
+                
+                {section.section === "Downstairs" && (
+                  <div className="mt-8 flex justify-center items-center">
+                    <div className="w-2/3 h-1 bg-slate-300 rounded"></div>
+                    <div className="text-xs text-muted-foreground mx-2">SCREEN</div>
+                    <div className="w-2/3 h-1 bg-slate-300 rounded"></div>
+                  </div>
+                )}
+                
+                {/* Bottom exits for Downstairs section */}
+                {section.section === "Downstairs" && (
+                  <div className="flex justify-between mt-4">
+                    <Exit position="left" />
+                    <div className="flex-grow"></div>
+                    <Exit position="right" />
+                  </div>
+                )}
               </div>
             </div>
           </div>
         ))}
 
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex gap-6 items-center text-sm">
+          <div className="flex gap-6 items-center text-sm flex-wrap">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded border-2" />
               <span>Available</span>
@@ -240,6 +307,10 @@ export function SeatGrid() {
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-yellow-100 border-2 border-yellow-200" />
               <span>Blocked</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="bg-red-500 text-white px-1 py-0.5 rounded text-xs">EXIT</div>
+              <span>Exit</span>
             </div>
           </div>
 
