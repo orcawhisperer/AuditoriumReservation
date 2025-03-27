@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, hashPassword } from "./auth";
 import { insertShowSchema, insertReservationSchema } from "@shared/schema";
 import { randomBytes } from "crypto";
-import { eq } from 'drizzle-orm';
+import { eq, and, or, sql } from 'drizzle-orm';
 import { db } from './db';
 import { users, shows, reservations } from '@shared/schema';
 import { insertUserSchema } from "@shared/schema"; // Import missing schema
@@ -251,7 +251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log(`[Transaction ${retryCount}] Starting reservation for user ${req.user!.id} for show ${parsed.data.showId}`);
 
             const show = await tx.query.shows.findFirst({
-              where: eq(shows.id, parsed.data.showId)
+              where: sql`${shows.id} = ${parsed.data.showId}`
             });
 
             if (!show) {
@@ -269,7 +269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             // Check if user already has a reservation for this show
             const userReservations = await tx.query.reservations.findMany({
-              where: eq(reservations.userId, req.user!.id)
+              where: sql`${reservations.userId} = ${req.user!.id}`
             });
 
             const existingReservation = userReservations.find(
@@ -283,7 +283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             // Get all reservations for this show within the transaction
             const existingReservations = await tx.query.reservations.findMany({
-              where: eq(reservations.showId, show.id)
+              where: sql`${reservations.showId} = ${show.id}`
             });
 
             const reservedSeats = existingReservations.flatMap((r) =>
@@ -294,6 +294,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             const seatNumbers = JSON.parse(parsed.data.seatNumbers) as string[];
             console.log(`[Transaction ${retryCount}] Attempting to reserve seats:`, seatNumbers);
+
+            // Check if the number of seats exceeds the user's seat limit
+            // Handle the case where seatLimit column might not exist yet
+            let seatLimit = 4; // Default to 4
+            try {
+              // Try to use the user's seatLimit if it exists
+              seatLimit = req.user!.seatLimit ?? 4;
+            } catch (error) {
+              console.log(`[Transaction ${retryCount}] seatLimit not found, using default of 4`);
+            }
+            
+            if (seatNumbers.length > seatLimit) {
+              console.log(`[Transaction ${retryCount}] Seat limit exceeded: ${seatNumbers.length} > ${seatLimit}`);
+              throw new Error(`You can only reserve up to ${seatLimit} seats`);
+            }
 
             const hasConflict = seatNumbers.some((seat: string) =>
               reservedSeats.includes(seat)
@@ -400,7 +415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await db.transaction(async (tx) => {
         // Check if reservation exists
         const existingReservation = await tx.query.reservations.findFirst({
-          where: eq(reservations.id, reservationId)
+          where: sql`${reservations.id} = ${reservationId}`
         });
 
         if (!existingReservation) {
@@ -409,7 +424,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Check if show exists and is not in the past
         const show = await tx.query.shows.findFirst({
-          where: eq(shows.id, parsed.data.showId)
+          where: sql`${shows.id} = ${parsed.data.showId}`
         });
 
         if (!show) {
@@ -422,7 +437,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Get all reservations for this show except the current one
         const existingReservations = await tx.query.reservations.findMany({
-          where: eq(reservations.showId, show.id)
+          where: sql`${reservations.showId} = ${show.id}`
         });
 
         const otherReservations = existingReservations.filter(
@@ -435,6 +450,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Check for seat conflicts
         const seatNumbers = JSON.parse(parsed.data.seatNumbers) as string[];
+        
+        // Get the user who owns the reservation
+        const reservationUser = await tx.query.users.findFirst({
+          where: sql`${users.id} = ${existingReservation.userId}`
+        });
+        
+        if (!reservationUser) {
+          throw new Error("User not found");
+        }
+        
+        // Check if the number of seats exceeds the user's seat limit
+        // Handle the case where seatLimit column might not exist yet
+        let seatLimit = 4; // Default to 4
+        try {
+          // Try to use the user's seatLimit if it exists
+          seatLimit = reservationUser.seatLimit ?? 4;
+        } catch (error) {
+          console.log(`seatLimit not found for user ${reservationUser.id}, using default of 4`);
+        }
+        
+        if (seatNumbers.length > seatLimit) {
+          throw new Error(`User can only reserve up to ${seatLimit} seats`);
+        }
+        
         const hasConflict = seatNumbers.some((seat) =>
           reservedSeats.includes(seat)
         );
@@ -450,7 +489,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             showId: parsed.data.showId,
             seatNumbers: parsed.data.seatNumbers,
           })
-          .where(eq(reservations.id, reservationId))
+          .where(sql`${reservations.id} = ${reservationId}`)
           .returning();
 
         res.json(updatedReservation);

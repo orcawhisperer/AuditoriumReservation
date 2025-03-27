@@ -9,6 +9,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -823,6 +824,7 @@ function CreateUserDialog() {
       dateOfBirth: "",
       isAdmin: false,
       isEnabled: true,
+      seatLimit: 4,
     },
   });
 
@@ -957,6 +959,28 @@ function CreateUserDialog() {
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="seatLimit"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Booking Seat Limit</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      min="1"
+                      max="10"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Maximum number of seats this user can book per show
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <div className="pt-4 flex justify-end gap-2">
               <Button
                 type="button"
@@ -999,6 +1023,7 @@ function EditUserDialog({
       dateOfBirth: user.dateOfBirth || "",
       isAdmin: user.isAdmin,
       isEnabled: user.isEnabled,
+      seatLimit: user.seatLimit || 4,
     },
   });
 
@@ -1132,6 +1157,28 @@ function EditUserDialog({
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="seatLimit"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Booking Seat Limit</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      min="1"
+                      max="10"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Maximum number of seats this user can book per show
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <div className="pt-4 flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
@@ -1140,7 +1187,8 @@ function EditUserDialog({
                 {editUserMutation.isPending && (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 )}
-                Update User              </Button>
+                Update User
+              </Button>
             </div>
           </form>
         </Form>

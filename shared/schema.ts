@@ -9,6 +9,7 @@ export const users = sqliteTable("users", {
   password: text("password").notNull(),
   isAdmin: integer("is_admin", { mode: "boolean" }).notNull().default(false),
   isEnabled: integer("is_enabled", { mode: "boolean" }).notNull().default(true),
+  seatLimit: integer("seat_limit").notNull().default(4),
   name: text("name"),
   gender: text("gender"),
   dateOfBirth: text("date_of_birth"),
@@ -79,6 +80,7 @@ export const insertUserSchema = createInsertSchema(users, {
     },
     { message: "Must be at least 13 years old" }
   ),
+  seatLimit: z.number().int().min(1, "Minimum seat limit is 1").max(10, "Maximum seat limit is 10").default(4),
 });
 
 export const insertShowSchema = createInsertSchema(shows).extend({
@@ -145,7 +147,7 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
   showId: true,
   seatNumbers: true,
 }).extend({
-  seatNumbers: z.array(z.string().regex(/^[BD][A-N][0-9]{1,2}$/, "Invalid seat format")).max(4, "Maximum 4 seats per reservation")
+  seatNumbers: z.array(z.string().regex(/^[BD][A-N][0-9]{1,2}$/, "Invalid seat format"))
     .refine(
       (seats) => seats.every(seat => {
         const [section, row, number] = [seat[0], seat[1], parseInt(seat.slice(2))];

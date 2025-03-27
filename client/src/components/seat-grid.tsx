@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 type SeatProps = {
   seatId: string;
@@ -77,6 +78,7 @@ export function SeatGrid() {
   const [, setLocation] = useLocation();
   const { showId } = useParams<{ showId: string }>();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
 
   const { data: show, isLoading: showLoading } = useQuery<Show>({
@@ -168,10 +170,12 @@ export function SeatGrid() {
       if (current.includes(seatId)) {
         return current.filter((id) => id !== seatId);
       }
-      if (current.length >= 4) {
+      
+      const seatLimit = user?.seatLimit || 4;
+      if (current.length >= seatLimit) {
         toast({
           title: "Maximum seats reached",
-          description: "You can only reserve up to 4 seats",
+          description: `You can only reserve up to ${seatLimit} seats`,
           variant: "destructive",
         });
         return current;
@@ -180,6 +184,8 @@ export function SeatGrid() {
     });
   };
 
+  const seatLimit = user?.seatLimit || 4;
+
   return (
     <div className="space-y-8">
       <div>
@@ -187,6 +193,9 @@ export function SeatGrid() {
         <p className="text-muted-foreground">
           {format(new Date(show.date), "PPP")} at{" "}
           {format(new Date(show.date), "p")}
+        </p>
+        <p className="mt-2 text-sm border rounded-md p-2 bg-accent/20 inline-block">
+          You can book up to <strong>{seatLimit}</strong> seats for this show.
         </p>
         {show.poster && (
           <div className="mt-4 relative w-full max-w-md mx-auto overflow-hidden rounded-lg border">
