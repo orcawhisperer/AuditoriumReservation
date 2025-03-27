@@ -221,22 +221,29 @@ export function SeatGrid() {
                     </span>
                     
                     {/* Exit on the left side */}
-                    {((section.section === "Balcony" && rowData.row === "A") || 
-                       (section.section === "Downstairs" && (rowData.row === "G" || rowData.row === "A"))) && (
+                    {/* Based on the layout image - Add exits on the sides */}
+                    {(section.section === "Balcony" && rowData.row === "A") && (
                       <Exit position="left" />
                     )}
                     
-                    <div className="flex gap-3">
+                    {(section.section === "Downstairs" && 
+                      (rowData.row === "G" || rowData.row === "A" || rowData.row === "N")) && (
+                      <Exit position="left" />
+                    )}
+                    
+                    <div className="flex gap-3 relative">
+                      {/* For Balcony, add exit in the middle for row N, roughly around seat 7-8 */}
+                      {section.section === "Balcony" && rowData.row === "N" && (
+                        <div className="absolute -top-8 left-1/3 transform -translate-x-1/2">
+                          <Exit position="top" />
+                        </div>
+                      )}
+                      
                       {Array.from({ length: Math.max(...rowData.seats) }).map(
                         (_, seatIndex) => {
                           const seatNumber = seatIndex + 1;
                           const prefix = section.section === "Balcony" ? "B" : "D";
                           const seatId = `${prefix}${rowData.row}${seatNumber}`;
-
-                          // Add EXIT sign in the middle (Balcony row N, seat 6)
-                          if (section.section === "Downstairs" && rowData.row === "N" && seatNumber === 6) {
-                            return <Exit key={`exit-${seatId}`} position="top" />;
-                          }
 
                           // Only render seats that exist in this row
                           if (!rowData.seats.includes(seatNumber)) {
@@ -258,8 +265,12 @@ export function SeatGrid() {
                     </div>
                     
                     {/* Exit on the right side */}
-                    {((section.section === "Balcony" && rowData.row === "A") || 
-                       (section.section === "Downstairs" && (rowData.row === "G" || rowData.row === "A"))) && (
+                    {(section.section === "Balcony" && rowData.row === "A") && (
+                      <Exit position="right" />
+                    )}
+                    
+                    {(section.section === "Downstairs" && 
+                      (rowData.row === "G" || rowData.row === "A" || rowData.row === "N")) && (
                       <Exit position="right" />
                     )}
                     
@@ -271,9 +282,9 @@ export function SeatGrid() {
                 
                 {section.section === "Downstairs" && (
                   <div className="mt-8 flex justify-center items-center">
-                    <div className="w-2/3 h-1 bg-slate-300 rounded"></div>
-                    <div className="text-xs text-muted-foreground mx-2">SCREEN</div>
-                    <div className="w-2/3 h-1 bg-slate-300 rounded"></div>
+                    <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
+                    <div className="px-4 py-1 border-2 border-primary/50 rounded text-sm font-bold mx-2">SCREEN</div>
+                    <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
                   </div>
                 )}
                 
