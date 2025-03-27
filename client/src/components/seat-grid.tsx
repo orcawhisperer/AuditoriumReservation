@@ -31,10 +31,15 @@ export function Seat({
     <button
       className={cn(
         "w-8 h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm",
-        isReserved && "bg-red-100 border-red-200 text-red-500 cursor-not-allowed",
-        isBlocked && "bg-yellow-100 border-yellow-200 text-yellow-500 cursor-not-allowed",
+        isReserved &&
+          "bg-red-100 border-red-200 text-red-500 cursor-not-allowed",
+        isBlocked &&
+          "bg-yellow-100 border-yellow-200 text-yellow-500 cursor-not-allowed",
         isSelected && "bg-primary border-primary text-primary-foreground",
-        !isReserved && !isBlocked && !isSelected && "hover:bg-accent hover:border-accent hover:text-accent-foreground active:scale-95",
+        !isReserved &&
+          !isBlocked &&
+          !isSelected &&
+          "hover:bg-accent hover:border-accent hover:text-accent-foreground active:scale-95",
       )}
       disabled={isReserved || isBlocked}
       onClick={() => onSelect(seatId)}
@@ -210,39 +215,37 @@ export function SeatGrid() {
               <div className="space-y-3 min-w-fit">
                 {section.section === "Balcony" && (
                   <div className="flex justify-center mb-4">
-                    <div className="text-sm text-muted-foreground">UPSTAIRS BALCONY</div>
+                    <div className="text-sm text-muted-foreground">
+                      UPSTAIRS BALCONY
+                    </div>
                   </div>
                 )}
-                
+
                 {section.rows.map((rowData: any, rowIndex: number) => (
                   <div key={rowData.row} className="flex gap-3 justify-center">
                     <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                       {rowData.row}
                     </span>
-                    
+
                     {/* Exit on the left side */}
                     {/* Based on the layout image - Add exits on the sides */}
-                    {(section.section === "Balcony" && rowData.row === "A") && (
+                    {section.section === "Balcony" && rowData.row === "A" && (
                       <Exit position="left" />
                     )}
-                    
-                    {(section.section === "Downstairs" && 
-                      (rowData.row === "G" || rowData.row === "A" || rowData.row === "N")) && (
-                      <Exit position="left" />
-                    )}
-                    
-                    <div className="flex gap-3 relative">
-                      {/* For Balcony, add exit in the middle for row N, roughly around seat 7-8 */}
-                      {section.section === "Balcony" && rowData.row === "N" && (
-                        <div className="absolute -top-8 left-1/3 transform -translate-x-1/2">
-                          <Exit position="top" />
-                        </div>
+
+                    {section.section === "Downstairs" &&
+                      (rowData.row === "F" || rowData.row === "A") && (
+                        <Exit position="left" />
                       )}
-                      
+
+                    <div className="flex gap-3 relative">
+                      {/* Aisle/Exit markers will be added elsewhere */}
+
                       {Array.from({ length: Math.max(...rowData.seats) }).map(
                         (_, seatIndex) => {
                           const seatNumber = seatIndex + 1;
-                          const prefix = section.section === "Balcony" ? "B" : "D";
+                          const prefix =
+                            section.section === "Balcony" ? "B" : "D";
                           const seatId = `${prefix}${rowData.row}${seatNumber}`;
 
                           // Only render seats that exist in this row
@@ -263,31 +266,42 @@ export function SeatGrid() {
                         },
                       )}
                     </div>
-                    
-                    {/* Exit on the right side */}
-                    {(section.section === "Balcony" && rowData.row === "A") && (
-                      <Exit position="right" />
-                    )}
-                    
-                    {(section.section === "Downstairs" && 
-                      (rowData.row === "G" || rowData.row === "A" || rowData.row === "N")) && (
-                      <Exit position="right" />
-                    )}
-                    
+
                     <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                       {rowData.row}
                     </span>
+
+                    {/* Exit on the right side */}
+                    {section.section === "Balcony" && rowData.row === "A" && (
+                      <Exit position="right" />
+                    )}
+
+                    {section.section === "Downstairs" &&
+                      (rowData.row === "F" || rowData.row === "A") && (
+                        <Exit position="right" />
+                      )}
                   </div>
                 ))}
-                
+
                 {section.section === "Downstairs" && (
-                  <div className="mt-8 flex justify-center items-center">
-                    <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
-                    <div className="px-4 py-1 border-2 border-primary/50 rounded text-sm font-bold mx-2">SCREEN</div>
-                    <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
-                  </div>
+                  <>
+                    {/* Add exit markers between rows F and G */}
+                    <div className="my-2 flex justify-center">
+                      <div className="w-1/3 flex justify-center mx-2">
+                        <Exit position="top" />
+                      </div>
+                    </div>
+                    
+                    <div className="mt-8 flex justify-center items-center">
+                      <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
+                      <div className="px-4 py-1 border-2 border-primary/50 rounded text-sm font-bold mx-2">
+                        SCREEN
+                      </div>
+                      <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
+                    </div>
+                  </>
                 )}
-                
+
                 {/* Bottom exits for Downstairs section */}
                 {section.section === "Downstairs" && (
                   <div className="flex justify-between mt-4">
@@ -320,7 +334,9 @@ export function SeatGrid() {
               <span>Blocked</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="bg-red-500 text-white px-1 py-0.5 rounded text-xs">EXIT</div>
+              <div className="bg-red-500 text-white px-1 py-0.5 rounded text-xs">
+                EXIT
+              </div>
               <span>Exit</span>
             </div>
           </div>
