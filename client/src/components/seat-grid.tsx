@@ -233,8 +233,7 @@ export function SeatGrid() {
                       <Exit position="left" />
                     )}
 
-                    {section.section === "Downstairs" &&
-                      (rowData.row === "F" || rowData.row === "A") && (
+                    {section.section === "Downstairs" && rowData.row === "F" && (
                         <Exit position="left" />
                       )}
 
@@ -276,30 +275,21 @@ export function SeatGrid() {
                       <Exit position="right" />
                     )}
 
-                    {section.section === "Downstairs" &&
-                      (rowData.row === "F" || rowData.row === "A") && (
-                        <Exit position="right" />
-                      )}
+                    {/* Exits on left and right between rows F and G */}
+                    {section.section === "Downstairs" && rowData.row === "F" && (
+                      <Exit position="right" />
+                    )}
                   </div>
                 ))}
 
                 {section.section === "Downstairs" && (
-                  <>
-                    {/* Add exit markers between rows F and G */}
-                    <div className="my-2 flex justify-center">
-                      <div className="w-1/3 flex justify-center mx-2">
-                        <Exit position="top" />
-                      </div>
+                  <div className="mt-8 flex justify-center items-center">
+                    <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
+                    <div className="px-4 py-1 border-2 border-primary/50 rounded text-sm font-bold mx-2">
+                      SCREEN
                     </div>
-                    
-                    <div className="mt-8 flex justify-center items-center">
-                      <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
-                      <div className="px-4 py-1 border-2 border-primary/50 rounded text-sm font-bold mx-2">
-                        SCREEN
-                      </div>
-                      <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
-                    </div>
-                  </>
+                    <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
+                  </div>
                 )}
 
                 {/* Bottom exits for Downstairs section */}
