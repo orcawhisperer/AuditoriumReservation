@@ -86,6 +86,30 @@ import { cn } from "@/lib/utils";
 // This component is similar to the one in seat-grid.tsx but sized differently for admin panel
 
 // Seat component definition for admin panel
+// Exit component for auditorium layout
+function Exit({ position }: { position: "left" | "right" | "top" | "bottom" }) {
+  const getPositionClasses = () => {
+    switch (position) {
+      case "left":
+        return "flex-row justify-start";
+      case "right":
+        return "flex-row justify-end";
+      case "top":
+        return "flex-col justify-start";
+      case "bottom":
+        return "flex-col justify-end";
+    }
+  };
+
+  return (
+    <div className={`flex items-center ${getPositionClasses()} mx-2 my-3`}>
+      <div className="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
+        EXIT
+      </div>
+    </div>
+  );
+}
+
 function Seat({
   seatId,
   isReserved,
@@ -1814,8 +1838,24 @@ function EditReservationDialog({
                 </h3>
                 <div className="w-full bg-muted/30 p-4 sm:p-8 rounded-lg shadow-inner overflow-x-auto">
                   <div className="space-y-3 min-w-fit">
+                    {section.section === "Balcony" && (
+                      <div className="flex justify-center mb-4">
+                        <div className="text-sm text-muted-foreground">
+                          UPSTAIRS BALCONY
+                        </div>
+                      </div>
+                    )}
+                    
                     {section.rows.map((rowData: any) => (
                       <div key={rowData.row} className="flex gap-3 justify-center">
+                        {section.section === "Downstairs" &&
+                          rowData.row === "G" && <Exit position="left" />}
+
+                        {/* Exit on the left side */}
+                        {section.section === "Balcony" && rowData.row === "A" && (
+                          <Exit position="top" />
+                        )}
+                        
                         <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                           {rowData.row}
                         </span>
@@ -1846,8 +1886,31 @@ function EditReservationDialog({
                         <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                           {rowData.row}
                         </span>
+                        
+                        {/* Exit on the right side */}
+                        {section.section === "Downstairs" &&
+                          rowData.row === "G" && <Exit position="right" />}
                       </div>
                     ))}
+                    
+                    {/* Bottom exits for Downstairs section */}
+                    {section.section === "Downstairs" && (
+                      <div className="flex justify-between mt-4">
+                        <Exit position="left" />
+                        <div className="flex-grow"></div>
+                        <Exit position="right" />
+                      </div>
+                    )}
+
+                    {section.section === "Downstairs" && (
+                      <div className="mt-8 flex justify-center items-center">
+                        <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
+                        <div className="px-4 py-1 border-2 border-primary/50 rounded text-sm font-bold mx-2">
+                          SCREEN
+                        </div>
+                        <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1873,6 +1936,12 @@ function EditReservationDialog({
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded bg-yellow-100 border-2 border-yellow-200" />
                 <span>Blocked</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="bg-red-500 text-white px-1 py-0.5 rounded text-xs">
+                  EXIT
+                </div>
+                <span>Exit</span>
               </div>
             </div>
 
