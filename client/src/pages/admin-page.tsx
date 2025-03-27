@@ -1230,17 +1230,24 @@ function UserList() {
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       toast({
-        title: "Success",
-        description: "Password reset successfully",
+        title: "Password Reset Successful",
+        description: (
+          <div>
+            <p>Temporary password: <strong>{data.temporaryPassword}</strong></p>
+            <p className="text-xs mt-1">Please share this with the user.</p>
+          </div>
+        ),
+        duration: 10000, // Show for 10 seconds so admin has time to copy
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Failed to reset password",
-        description: error.message,        variant: "destructive",
+        description: error.message,
+        variant: "destructive",
       });
     },
   });
