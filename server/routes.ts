@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, hashPassword } from "./auth";
+import { setupAuth, hashPassword, comparePasswords } from "./auth";
 import { insertShowSchema, insertReservationSchema } from "@shared/schema";
 import { randomBytes } from "crypto";
 import { eq, and, or, sql } from 'drizzle-orm';
@@ -68,6 +68,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     await storage.resetUserPassword(userId, hashedPassword);
 
     res.json({ temporaryPassword });
+  });
+  
+  // New endpoint for users to change their own password
+  app.post("/api/change-password", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).send("Authentication required");
+    }
+    
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).send("Current password and new password are required");
+    }
+    
+    // Get the current user
+    const user = await storage.getUser(req.user!.id);
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+    
+    // Verify the current password
+    const passwordMatches = await comparePasswords(currentPassword, user.password);
+    if (!passwordMatches) {
+      return res.status(400).send("Current password is incorrect");
+    }
+    
+    // Hash the new password and update it
+    const hashedPassword = await hashPassword(newPassword);
+    await storage.resetUserPassword(user.id, hashedPassword);
+    
+    res.status(200).json({ success: true });
   });
 
   app.post("/api/users/:id/toggle-admin", async (req, res) => {

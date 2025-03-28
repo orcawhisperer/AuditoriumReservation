@@ -18,6 +18,10 @@ async function hashPassword(password: string): Promise<string> {
   return await hash(password, SALT_ROUNDS);
 }
 
+async function comparePasswords(plaintext: string, hashed: string): Promise<boolean> {
+  return await compare(plaintext, hashed);
+}
+
 export async function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET!,
@@ -106,4 +110,4 @@ export async function setupAuth(app: Express) {
   }
 }
 
-export { hashPassword };
+export { hashPassword, comparePasswords };

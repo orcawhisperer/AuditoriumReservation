@@ -1339,17 +1339,105 @@ function UserList() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      
+      // Create a dialog with a copyable password
+      const dialog = document.createElement('dialog');
+      dialog.style.padding = '24px';
+      dialog.style.borderRadius = '8px';
+      dialog.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+      dialog.style.border = '1px solid rgb(229, 231, 235)';
+      dialog.style.width = '90%';
+      dialog.style.maxWidth = '400px';
+      dialog.style.position = 'fixed';
+      dialog.style.zIndex = '9999';
+      dialog.style.top = '20%';
+      dialog.style.left = '50%';
+      dialog.style.transform = 'translateX(-50%)';
+      dialog.style.backgroundColor = 'white';
+      
+      const title = document.createElement('h3');
+      title.textContent = 'Password Reset Successful';
+      title.style.marginTop = '0';
+      title.style.marginBottom = '16px';
+      title.style.fontSize = '18px';
+      title.style.fontWeight = 'bold';
+      
+      const passContainer = document.createElement('div');
+      passContainer.style.marginBottom = '16px';
+      passContainer.style.display = 'flex';
+      passContainer.style.flexDirection = 'column';
+      passContainer.style.gap = '8px';
+      
+      const passTitle = document.createElement('p');
+      passTitle.textContent = 'Temporary password:';
+      passTitle.style.margin = '0';
+      
+      const passInput = document.createElement('input');
+      passInput.value = data.temporaryPassword;
+      passInput.readOnly = true;
+      passInput.style.padding = '8px 12px';
+      passInput.style.borderRadius = '4px';
+      passInput.style.border = '1px solid rgb(209, 213, 219)';
+      passInput.style.backgroundColor = 'rgb(243, 244, 246)';
+      passInput.style.fontSize = '16px';
+      passInput.style.fontFamily = 'monospace';
+      passInput.onclick = () => passInput.select();
+      
+      const copyButton = document.createElement('button');
+      copyButton.textContent = 'Copy Password';
+      copyButton.style.padding = '8px 16px';
+      copyButton.style.backgroundColor = 'rgb(59, 130, 246)';
+      copyButton.style.color = 'white';
+      copyButton.style.border = 'none';
+      copyButton.style.borderRadius = '4px';
+      copyButton.style.cursor = 'pointer';
+      copyButton.style.marginTop = '8px';
+      copyButton.onclick = () => {
+        passInput.select();
+        document.execCommand('copy');
+        copyButton.textContent = 'Copied!';
+        setTimeout(() => {
+          copyButton.textContent = 'Copy Password';
+        }, 2000);
+      };
+      
+      const note = document.createElement('p');
+      note.textContent = 'Please share this with the user.';
+      note.style.fontSize = '12px';
+      note.style.color = 'rgb(107, 114, 128)';
+      note.style.marginTop = '8px';
+      note.style.marginBottom = '16px';
+      
+      const closeButton = document.createElement('button');
+      closeButton.textContent = 'Close';
+      closeButton.style.padding = '8px 16px';
+      closeButton.style.backgroundColor = 'rgb(229, 231, 235)';
+      closeButton.style.color = 'rgb(17, 24, 39)';
+      closeButton.style.border = 'none';
+      closeButton.style.borderRadius = '4px';
+      closeButton.style.cursor = 'pointer';
+      closeButton.onclick = () => {
+        dialog.close();
+        document.body.removeChild(dialog);
+      };
+      
+      passContainer.appendChild(passTitle);
+      passContainer.appendChild(passInput);
+      passContainer.appendChild(copyButton);
+      
+      dialog.appendChild(title);
+      dialog.appendChild(passContainer);
+      dialog.appendChild(note);
+      dialog.appendChild(closeButton);
+      
+      document.body.appendChild(dialog);
+      dialog.showModal();
+      
+      // Also show regular toast for additional notification
       toast({
         title: "Password Reset Successful",
-        description: (
-          <div>
-            <p>
-              Temporary password: <strong>{data.temporaryPassword}</strong>
-            </p>
-            <p className="text-xs mt-1">Please share this with the user.</p>
-          </div>
-        ),
-        duration: 10000, // Show for 10 seconds so admin has time to copy
+        description: "A dialog with the temporary password has been opened.",
+        duration: 5000,
       });
     },
     onError: (error: Error) => {
