@@ -178,10 +178,24 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+// Profile update schema - a simplified version for user profile updates
+export const profileUpdateSchema = z.object({
+  name: z.string().optional(),
+  gender: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+});
+
+export const passwordChangeSchema = z.object({
+  currentPassword: z.string().min(6, "Current password is required"),
+  newPassword: z.string().min(6, "New password must be at least 6 characters"),
+});
+
 export type LoginData = z.infer<typeof loginSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertShow = z.infer<typeof insertShowSchema>;
 export type InsertReservation = z.infer<typeof insertReservationSchema>;
+export type ProfileUpdate = z.infer<typeof profileUpdateSchema>;
+export type PasswordChange = z.infer<typeof passwordChangeSchema>;
 export type User = typeof users.$inferSelect;
 export type Show = typeof shows.$inferSelect;
 export type Reservation = typeof reservations.$inferSelect;

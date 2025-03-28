@@ -165,8 +165,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.patch("/api/users/:id", async (req, res) => {
-    if (!req.user?.isAdmin) {
-      return res.status(403).send("Admin access required");
+    if (!req.user) {
+      return res.status(401).send("Authentication required");
     }
 
     const userId = parseInt(req.params.id);
@@ -176,19 +176,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).send("User not found");
     }
 
-    // Don't allow editing the primary admin
-    const users = await storage.getUsers();
-    const primaryAdmin = users.find(u => u.isAdmin);
-    if (user.id === primaryAdmin?.id) {
-      return res.status(403).send("Cannot modify primary admin account");
+    // Check if user is trying to update their own profile or is an admin
+    if (req.user.id !== userId && !req.user.isAdmin) {
+      return res.status(403).send("You can only update your own profile");
     }
 
-    // If password is empty, remove it from the update data
+    // Don't allow regular users to modify admin status
+    if (!req.user.isAdmin && (req.body.isAdmin !== undefined || req.body.isEnabled !== undefined)) {
+      return res.status(403).send("You cannot modify admin or enabled status");
+    }
+
+    // Special rules for admin users
+    if (req.user.isAdmin) {
+      // Don't allow editing the primary admin
+      const users = await storage.getUsers();
+      const primaryAdmin = users.find(u => u.isAdmin);
+      if (user.id === primaryAdmin?.id && req.user.id !== primaryAdmin.id) {
+        return res.status(403).send("Cannot modify primary admin account");
+      }
+    }
+
+    // If password is included in the update, hash it
     const updateData = { ...req.body };
-    if (!updateData.password) {
-      delete updateData.password;
-    } else {
+    if (updateData.password) {
       updateData.password = await hashPassword(updateData.password);
+    } else {
+      delete updateData.password;
     }
 
     const updatedUser = await storage.updateUser(userId, updateData);
