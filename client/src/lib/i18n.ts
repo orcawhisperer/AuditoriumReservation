@@ -253,7 +253,7 @@ const hiTranslations = {
 };
 
 // First, define extended translation types
-interface ExtendedCommonTranslation {
+interface ExtendedCommonTranslation extends Partial<typeof enTranslations.common> {
   appName: string;
   welcome: string;
   login: string;
@@ -280,6 +280,15 @@ interface ExtendedCommonTranslation {
   andTheir: string;
   configurations: string;
   system: string;
+  back: string;
+  next: string;
+  prev: string;
+  loading: string;
+  noDataFound: string;
+  search: string;
+  filter: string;
+  actions: string;
+  view: string;
 }
 
 // Now update the common translations with the new keys
@@ -303,19 +312,62 @@ const extendedHiCommon: ExtendedCommonTranslation = {
 enTranslations.common = extendedEnCommon;
 hiTranslations.common = extendedHiCommon;
 
+// Restructure all translations to be flat, to match how they are used in components
+const flattenTranslations = (translations: any, prefix = '') => {
+  let result: Record<string, string> = {};
+  
+  for (const key in translations) {
+    if (typeof translations[key] === 'object' && translations[key] !== null) {
+      const nestedKeys = flattenTranslations(translations[key], `${prefix}${key}.`);
+      result = { ...result, ...nestedKeys };
+    } else {
+      result[`${prefix}${key}`] = translations[key];
+    }
+  }
+  
+  return result;
+};
+
+// Create flattened resources
+const flatEnResources = {
+  translation: flattenTranslations({
+    translation: {
+      common: enTranslations.common,
+      auth: enTranslations.auth,
+      home: enTranslations.home,
+      show: enTranslations.show,
+      booking: enTranslations.booking,
+      admin: enTranslations.admin,
+      profile: enTranslations.profile
+    }
+  })
+};
+
+const flatHiResources = {
+  translation: flattenTranslations({
+    translation: {
+      common: hiTranslations.common,
+      auth: hiTranslations.auth,
+      home: hiTranslations.home,
+      show: hiTranslations.show,
+      booking: hiTranslations.booking,
+      admin: hiTranslations.admin,
+      profile: hiTranslations.profile
+    }
+  })
+};
+
+const resources = {
+  en: flatEnResources,
+  hi: flatHiResources
+};
+
 // Initialize i18next
 i18n
   .use(LanguageDetector) // Detect language
   .use(initReactI18next) // Initialize react-i18next
   .init({
-    resources: {
-      en: {
-        translation: enTranslations
-      },
-      hi: {
-        translation: hiTranslations
-      },
-    },
+    resources,
     fallbackLng: "en", // Default language
     debug: true, // Enable debugging to see what's happening
     interpolation: {

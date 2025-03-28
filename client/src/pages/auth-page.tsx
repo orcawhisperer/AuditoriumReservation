@@ -49,24 +49,24 @@ export default function AuthPage() {
             <div className="flex items-center gap-2">
               <Shield className="h-8 w-8 text-primary" />
               <h1 className="text-4xl font-bold tracking-tight">
-                {t('translation.common.appName')}
+                Shahbaaz Auditorium
               </h1>
             </div>
             <p className="text-muted-foreground text-lg">
-              {t('translation.common.welcome')}
+              Welcome to Shahbaaz Auditorium
             </p>
           </div>
           <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg bg-card/50">
             <div className="space-y-2">
-              <div className="font-semibold">{t('translation.auth.loginTitle')}</div>
+              <div className="font-semibold">Login to your account</div>
               <p className="text-sm text-muted-foreground">
-                {t('translation.auth.loginCta')}
+                Don't have an account? Register
               </p>
             </div>
             <div className="space-y-2">
-              <div className="font-semibold">{t('translation.booking.confirmBooking')}</div>
+              <div className="font-semibold">Confirm Booking</div>
               <p className="text-sm text-muted-foreground">
-                {t('translation.show.selectSeats')}
+                Select Seats
               </p>
             </div>
           </div>
@@ -76,10 +76,10 @@ export default function AuthPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Lock className="h-5 w-5 text-primary" />
-              <CardTitle>{t('translation.auth.loginTitle')}</CardTitle>
+              <CardTitle>Login to your account</CardTitle>
             </div>
             <CardDescription>
-              {t('translation.auth.registerCta')}
+              Don't have an account? Register
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -113,9 +113,9 @@ function LoginForm() {
           name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('translation.auth.username')}</FormLabel>
+              <FormLabel>Username</FormLabel>
               <FormControl>
-                <Input placeholder={t('translation.auth.username')} {...field} />
+                <Input placeholder="Username" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -126,11 +126,11 @@ function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('translation.auth.password')}</FormLabel>
+              <FormLabel>Password</FormLabel>
               <FormControl>
                 <Input
                   type="password"
-                  placeholder={t('translation.auth.password')}
+                  placeholder="Password"
                   {...field}
                 />
               </FormControl>
@@ -143,7 +143,7 @@ function LoginForm() {
           className="w-full"
           disabled={loginMutation.isPending}
         >
-          {loginMutation.isPending ? t('translation.common.loading') : t('translation.auth.loginButton')}
+          {loginMutation.isPending ? "Loading..." : "Login"}
         </Button>
       </form>
     </Form>

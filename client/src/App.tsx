@@ -20,10 +20,10 @@ import i18n from "./lib/i18n";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={() => <ProtectedRoute path="/" component={HomePage} />} />
-      <Route path="/admin" component={() => <ProtectedRoute path="/admin" component={AdminPage} />} />
-      <Route path="/profile" component={() => <ProtectedRoute path="/profile" component={ProfilePage} />} />
-      <Route path="/show/:showId" component={({params}) => <ProtectedRoute path={`/show/${params.showId}`} component={ShowPage} />} />
+      <Route path="/" component={HomePage} />
+      <Route path="/admin" component={AdminPage} />
+      <Route path="/profile" component={ProfilePage} />
+      <Route path="/show/:showId" component={ShowPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
