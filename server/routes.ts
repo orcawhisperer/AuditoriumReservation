@@ -297,17 +297,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             // Check if the number of seats exceeds the user's seat limit
             // Handle the case where seatLimit column might not exist yet
-            let seatLimit = 4; // Default to 4
-            try {
-              // Try to use the user's seatLimit if it exists
-              seatLimit = req.user!.seatLimit ?? 4;
-            } catch (error) {
-              console.log(`[Transaction ${retryCount}] seatLimit not found, using default of 4`);
-            }
-            
-            if (seatNumbers.length > seatLimit) {
-              console.log(`[Transaction ${retryCount}] Seat limit exceeded: ${seatNumbers.length} > ${seatLimit}`);
-              throw new Error(`You can only reserve up to ${seatLimit} seats`);
+            // Skip seat limit check for admin users
+            if (!req.user!.isAdmin) {
+              let seatLimit = 4; // Default to 4
+              try {
+                // Try to use the user's seatLimit if it exists
+                seatLimit = req.user!.seatLimit ?? 4;
+              } catch (error) {
+                console.log(`[Transaction ${retryCount}] seatLimit not found, using default of 4`);
+              }
+              
+              if (seatNumbers.length > seatLimit) {
+                console.log(`[Transaction ${retryCount}] Seat limit exceeded: ${seatNumbers.length} > ${seatLimit}`);
+                throw new Error(`You can only reserve up to ${seatLimit} seats`);
+              }
+            } else {
+              console.log(`[Transaction ${retryCount}] Skipping seat limit check for admin user`);
             }
 
             const hasConflict = seatNumbers.some((seat: string) =>
@@ -461,17 +466,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Check if the number of seats exceeds the user's seat limit
-        // Handle the case where seatLimit column might not exist yet
-        let seatLimit = 4; // Default to 4
-        try {
-          // Try to use the user's seatLimit if it exists
-          seatLimit = reservationUser.seatLimit ?? 4;
-        } catch (error) {
-          console.log(`seatLimit not found for user ${reservationUser.id}, using default of 4`);
-        }
-        
-        if (seatNumbers.length > seatLimit) {
-          throw new Error(`User can only reserve up to ${seatLimit} seats`);
+        // Skip seat limit check for admin users (who are making the edit)
+        if (!req.user!.isAdmin) {
+          // Handle the case where seatLimit column might not exist yet
+          let seatLimit = 4; // Default to 4
+          try {
+            // Try to use the user's seatLimit if it exists
+            seatLimit = reservationUser.seatLimit ?? 4;
+          } catch (error) {
+            console.log(`seatLimit not found for user ${reservationUser.id}, using default of 4`);
+          }
+          
+          if (seatNumbers.length > seatLimit) {
+            throw new Error(`User can only reserve up to ${seatLimit} seats`);
+          }
+        } else {
+          console.log(`Skipping seat limit check for admin user editing reservation`);
         }
         
         const hasConflict = seatNumbers.some((seat) =>
