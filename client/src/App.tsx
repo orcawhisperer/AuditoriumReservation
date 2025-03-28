@@ -12,29 +12,46 @@ import ProfilePage from "@/pages/profile-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import ShowPage from "@/pages/show-page";
 
+// i18n
+import "./lib/i18n";
+import { I18nextProvider } from "react-i18next";
+import i18n from "./lib/i18n";
+
 function Router() {
   return (
     <Switch>
-      <ProtectedRoute path="/" component={HomePage} />
-      <ProtectedRoute path="/admin" component={AdminPage} />
-      <ProtectedRoute path="/profile" component={ProfilePage} />
-      <ProtectedRoute path="/show/:showId" component={ShowPage} />
+      <Route path="/">
+        <ProtectedRoute path="/" component={HomePage} />
+      </Route>
+      <Route path="/admin">
+        <ProtectedRoute path="/admin" component={AdminPage} />
+      </Route>
+      <Route path="/profile">
+        <ProtectedRoute path="/profile" component={ProfilePage} />
+      </Route>
+      <Route path="/show/:showId">
+        <ProtectedRoute path="/show/:showId" component={ShowPage} />
+      </Route>
       <Route path="/auth" component={AuthPage} />
-      <Route component={NotFound} />
+      <Route>
+        <NotFound />
+      </Route>
     </Switch>
   );
 }
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light" storageKey="theme">
-        <AuthProvider>
-          <Router />
-          <Toaster />
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <I18nextProvider i18n={i18n}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="light" storageKey="theme">
+          <AuthProvider>
+            <Router />
+            <Toaster />
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </I18nextProvider>
   );
 }
 
