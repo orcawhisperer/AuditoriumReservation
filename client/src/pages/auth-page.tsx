@@ -50,14 +50,13 @@ export default function AuthPage() {
             </div>
             <p className="text-muted-foreground text-lg">
               Your secure portal for auditorium seat reservations.
-              Book up to 4 seats with real-time availability tracking.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg bg-card/50">
             <div className="space-y-2">
               <div className="font-semibold">Secure Access</div>
               <p className="text-sm text-muted-foreground">
-                Military-grade authentication system
+                High-security authentication system
               </p>
             </div>
             <div className="space-y-2">
@@ -124,7 +123,11 @@ function LoginForm() {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="Enter your password" {...field} />
+                <Input
+                  type="password"
+                  placeholder="Enter your password"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
