@@ -58,15 +58,15 @@ export default function AuthPage() {
           </div>
           <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg bg-card/50">
             <div className="space-y-2">
-              <div className="font-semibold">{t('translation.auth.loginTitle')}</div>
+              <div className="font-semibold">{t('translation.auth.secureAccess')}</div>
               <p className="text-sm text-muted-foreground">
-                {t('translation.auth.registerCta')}
+                {t('translation.auth.secureAccessDescription')}
               </p>
             </div>
             <div className="space-y-2">
-              <div className="font-semibold">{t('translation.booking.confirmBooking')}</div>
+              <div className="font-semibold">{t('translation.auth.realTimeUpdate')}</div>
               <p className="text-sm text-muted-foreground">
-                {t('translation.booking.selectSeats')}
+                {t('translation.auth.realTimeUpdateDescription')}
               </p>
             </div>
           </div>

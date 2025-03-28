@@ -11,7 +11,7 @@ const enTranslations = {
     register: "Register",
     logout: "Logout",
     profile: "Profile",
-    admin: "Admin",
+    admin: "Admin ",
     home: "Home",
     error: "Error",
     success: "Success",
@@ -39,7 +39,7 @@ const enTranslations = {
     name: "Name",
     loginTitle: "Login to your account",
     registerTitle: "Create a new account",
-    registerCta: "Don't have an account? Register",
+    registerCta: "Don't have an account? Contact admin",
     loginCta: "Already have an account? Login",
     loginButton: "Login",
     registerButton: "Register",
@@ -48,6 +48,10 @@ const enTranslations = {
     loginError: "Invalid username or password",
     registerError: "Username already exists",
     passwordMismatch: "Passwords do not match",
+    secureAccess: "Secure access",
+    secureAccessDescription: "High-security authentication system",
+    realTimeUpdate: "Real-time updates",
+    realTimeUpdateDescription: "Instant seat availability status",
   },
   home: {
     upcomingShows: "Upcoming Shows",
@@ -164,7 +168,7 @@ const hiTranslations = {
     name: "नाम",
     loginTitle: "अपने खाते में लॉगिन करें",
     registerTitle: "नया खाता बनाएं",
-    registerCta: "खाता नहीं है? रजिस्टर करें",
+    registerCta: "क्या आपके पास अकाउंट नहीं है? एडमिन से संपर्क करें",
     loginCta: "पहले से खाता है? लॉगिन करें",
     loginButton: "लॉगिन",
     registerButton: "रजिस्टर",
@@ -173,6 +177,10 @@ const hiTranslations = {
     loginError: "अमान्य उपयोगकर्ता नाम या पासवर्ड",
     registerError: "उपयोगकर्ता नाम पहले से मौजूद है",
     passwordMismatch: "पासवर्ड मेल नहीं खाते",
+    secureAccess: "सुरक्षित पहुंच",
+    secureAccessDescription: "उच्च सुरक्षा प्रमाणीकरण प्रणाली",
+    realTimeUpdate: "वास्तविक समय अपडेट",
+    realTimeUpdateDescription: "तत्काल सीट उपलब्धता स्थिति",
   },
   home: {
     upcomingShows: "आगामी शो",
@@ -253,7 +261,8 @@ const hiTranslations = {
 };
 
 // First, define extended translation types
-interface ExtendedCommonTranslation extends Partial<typeof enTranslations.common> {
+interface ExtendedCommonTranslation
+  extends Partial<typeof enTranslations.common> {
   appName: string;
   welcome: string;
   login: string;
@@ -293,19 +302,19 @@ interface ExtendedCommonTranslation extends Partial<typeof enTranslations.common
 
 // Now update the common translations with the new keys
 const extendedEnCommon: ExtendedCommonTranslation = {
-  ...enTranslations.common as any,
+  ...(enTranslations.common as any),
   toThe: "to the",
   andTheir: "and their",
   configurations: "configurations",
-  system: "system"
+  system: "system",
 };
 
 const extendedHiCommon: ExtendedCommonTranslation = {
-  ...hiTranslations.common as any,
+  ...(hiTranslations.common as any),
   toThe: "के लिए",
   andTheir: "और उनके",
   configurations: "विन्यास",
-  system: "सिस्टम"
+  system: "सिस्टम",
 };
 
 // Replace the common objects with the extended versions
@@ -313,18 +322,21 @@ enTranslations.common = extendedEnCommon;
 hiTranslations.common = extendedHiCommon;
 
 // Restructure all translations to be flat, to match how they are used in components
-const flattenTranslations = (translations: any, prefix = '') => {
+const flattenTranslations = (translations: any, prefix = "") => {
   let result: Record<string, string> = {};
-  
+
   for (const key in translations) {
-    if (typeof translations[key] === 'object' && translations[key] !== null) {
-      const nestedKeys = flattenTranslations(translations[key], `${prefix}${key}.`);
+    if (typeof translations[key] === "object" && translations[key] !== null) {
+      const nestedKeys = flattenTranslations(
+        translations[key],
+        `${prefix}${key}.`,
+      );
       result = { ...result, ...nestedKeys };
     } else {
       result[`${prefix}${key}`] = translations[key];
     }
   }
-  
+
   return result;
 };
 
@@ -338,9 +350,9 @@ const flatEnResources = {
       show: enTranslations.show,
       booking: enTranslations.booking,
       admin: enTranslations.admin,
-      profile: enTranslations.profile
-    }
-  })
+      profile: enTranslations.profile,
+    },
+  }),
 };
 
 const flatHiResources = {
@@ -352,14 +364,14 @@ const flatHiResources = {
       show: hiTranslations.show,
       booking: hiTranslations.booking,
       admin: hiTranslations.admin,
-      profile: hiTranslations.profile
-    }
-  })
+      profile: hiTranslations.profile,
+    },
+  }),
 };
 
 const resources = {
   en: flatEnResources,
-  hi: flatHiResources
+  hi: flatHiResources,
 };
 
 // Initialize i18next
