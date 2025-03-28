@@ -171,14 +171,17 @@ export function SeatGrid() {
         return current.filter((id) => id !== seatId);
       }
       
-      const seatLimit = user?.seatLimit || 4;
-      if (current.length >= seatLimit) {
-        toast({
-          title: "Maximum seats reached",
-          description: `You can only reserve up to ${seatLimit} seats`,
-          variant: "destructive",
-        });
-        return current;
+      // Admins have no seat limit
+      if (!user?.isAdmin) {
+        const seatLimit = user?.seatLimit || 4;
+        if (current.length >= seatLimit) {
+          toast({
+            title: "Maximum seats reached",
+            description: `You can only reserve up to ${seatLimit} seats`,
+            variant: "destructive",
+          });
+          return current;
+        }
       }
       return [...current, seatId].sort();
     });
@@ -198,7 +201,11 @@ export function SeatGrid() {
           {format(new Date(show.date), "p")}
         </p>
         <p className="mt-2 text-sm border rounded-md p-2 bg-accent/20 inline-block">
-          You can book up to <strong>{seatLimit}</strong> seats for this show.
+          {user?.isAdmin ? (
+            <>As an admin, you can book <strong>unlimited</strong> seats.</>
+          ) : (
+            <>You can book up to <strong>{seatLimit}</strong> seats for this show.</>
+          )}
         </p>
         {show.poster && (
           <div className="mt-4 relative w-full max-w-md mx-auto overflow-hidden rounded-lg border">

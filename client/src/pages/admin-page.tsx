@@ -1793,19 +1793,27 @@ function EditReservationDialog({
     );
   }, [showReservations, reservation.id]);
 
+  // Use the Auth hook to get the current admin user
+  const { user: currentAdmin } = useAuth();
+  
   const handleSeatSelect = (seatId: string) => {
     setSelectedSeats((current) => {
       if (current.includes(seatId)) {
         return current.filter((id) => id !== seatId);
       }
-      if (current.length >= userSeatLimit) {
-        toast({
-          title: "Maximum seats reached",
-          description: `You can only reserve up to ${userSeatLimit} seats for this user`,
-          variant: "destructive",
-        });
-        return current;
+      
+      // Admin has no seat limit when editing reservations
+      if (!currentAdmin?.isAdmin) {
+        if (current.length >= userSeatLimit) {
+          toast({
+            title: "Maximum seats reached",
+            description: `You can only reserve up to ${userSeatLimit} seats for this user`,
+            variant: "destructive",
+          });
+          return current;
+        }
       }
+      
       return [...current, seatId].sort();
     });
   };
@@ -1868,7 +1876,7 @@ function EditReservationDialog({
               <span className="font-medium">User:</span>{" "}
               {reservationUser?.username || "Unknown"}
               <span className="ml-4 font-medium">Seat Limit:</span>{" "}
-              {userSeatLimit}
+              {currentAdmin?.isAdmin ? "Unlimited (Admin)" : userSeatLimit}
             </div>
           </DialogDescription>
         </DialogHeader>
