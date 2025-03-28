@@ -15,12 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Pagination,
   PaginationContent,
@@ -32,7 +27,13 @@ import {
 } from "@/components/ui/pagination";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
-import { Show, insertShowSchema, User, insertUserSchema, insertReservationSchema } from "@shared/schema";
+import {
+  Show,
+  insertShowSchema,
+  User,
+  insertUserSchema,
+  insertReservationSchema,
+} from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useLocation } from "wouter";
@@ -130,10 +131,15 @@ function Seat({
     <button
       className={cn(
         "w-6 h-6 rounded border-2 text-xs font-medium transition-colors shadow-sm",
-        isReserved && "bg-red-100 border-red-200 text-red-500 cursor-not-allowed",
-        isBlocked && "bg-yellow-100 border-yellow-200 text-yellow-500 cursor-not-allowed",
+        isReserved &&
+          "bg-red-100 border-red-200 text-red-500 cursor-not-allowed",
+        isBlocked &&
+          "bg-yellow-100 border-yellow-200 text-yellow-500 cursor-not-allowed",
         isSelected && "bg-primary border-primary text-primary-foreground",
-        !isReserved && !isBlocked && !isSelected && "hover:bg-accent hover:border-accent hover:text-accent-foreground active:scale-95",
+        !isReserved &&
+          !isBlocked &&
+          !isSelected &&
+          "hover:bg-accent hover:border-accent hover:text-accent-foreground active:scale-95",
       )}
       disabled={isReserved || isBlocked}
       onClick={() => onSelect(seatId)}
@@ -222,7 +228,11 @@ function ShowForm() {
               <FormLabel>Title</FormLabel>
               <FormControl>
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <Input placeholder="Enter show title" {...field} className="flex-1" />
+                  <Input
+                    placeholder="Enter show title"
+                    {...field}
+                    className="flex-1"
+                  />
                   <FormField
                     control={form.control}
                     name="emoji"
@@ -232,9 +242,21 @@ function ShowForm() {
                         variant="outline"
                         className="w-full sm:w-12"
                         onClick={() => {
-                          const emojis = ["🎭", "🎪", "🎫", "🎬", "🎸", "🎹", "🎺", "🎻"];
-                          const currentIndex = emojis.indexOf(field.value || "🎭");
-                          const nextEmoji = emojis[(currentIndex + 1) % emojis.length];
+                          const emojis = [
+                            "🎭",
+                            "🎪",
+                            "🎫",
+                            "🎬",
+                            "🎸",
+                            "🎹",
+                            "🎺",
+                            "🎻",
+                          ];
+                          const currentIndex = emojis.indexOf(
+                            field.value || "🎭",
+                          );
+                          const nextEmoji =
+                            emojis[(currentIndex + 1) % emojis.length];
                           field.onChange(nextEmoji);
                         }}
                       >
@@ -310,7 +332,11 @@ function ShowForm() {
                 <FormControl>
                   <div className="flex gap-2">
                     <Input type="color" {...field} className="h-10 w-20 p-1" />
-                    <Input {...field} placeholder="#4B5320" className="font-mono flex-1" />
+                    <Input
+                      {...field}
+                      placeholder="#4B5320"
+                      className="font-mono flex-1"
+                    />
                   </div>
                 </FormControl>
                 <FormMessage />
@@ -692,7 +718,7 @@ function ShowList() {
           return (
             <div
               key={show.id}
-              className={`flex flex-col sm:flex-row justify-between gap-4 p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors ${isPastShow ? 'opacity-75' : ''}`}
+              className={`flex flex-col sm:flex-row justify-between gap-4 p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors ${isPastShow ? "opacity-75" : ""}`}
               style={{
                 borderColor: show.themeColor || "#4B5320",
                 backgroundColor: `${show.themeColor}10` || "#4B532010",
@@ -716,7 +742,9 @@ function ShowList() {
                       {show.emoji} {show.title}
                     </p>
                     {isPastShow && (
-                      <Badge variant="outline" className="text-xs">Past Show</Badge>
+                      <Badge variant="outline" className="text-xs">
+                        Past Show
+                      </Badge>
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">
@@ -771,17 +799,21 @@ function ShowList() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete Show</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Are you sure you want to delete this show? This action cannot be undone.
+                        Are you sure you want to delete this show? This action
+                        cannot be undone.
                         {showReservations.length > 0 && (
                           <p className="mt-2 text-red-500">
-                            Warning: This show has {showReservations.length} active reservations.
+                            Warning: This show has {showReservations.length}{" "}
+                            active reservations.
                           </p>
                         )}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => deleteShowMutation.mutate(show.id)}>
+                      <AlertDialogAction
+                        onClick={() => deleteShowMutation.mutate(show.id)}
+                      >
                         Delete
                       </AlertDialogAction>
                     </AlertDialogFooter>
@@ -808,16 +840,18 @@ function ShowList() {
                 disabled={page === 1}
               />
             </PaginationItem>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-              <PaginationItem key={pageNum}>
-                <PaginationLink
-                  onClick={() => setPage(pageNum)}
-                  isActive={page === pageNum}
-                >
-                  {pageNum}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+              (pageNum) => (
+                <PaginationItem key={pageNum}>
+                  <PaginationLink
+                    onClick={() => setPage(pageNum)}
+                    isActive={page === pageNum}
+                  >
+                    {pageNum}
+                  </PaginationLink>
+                </PaginationItem>
+              ),
+            )}
             <PaginationItem>
               <PaginationNext
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
@@ -828,7 +862,10 @@ function ShowList() {
         </Pagination>
       )}
       {editingShow && (
-        <EditShowDialog show={editingShow} onClose={() => setEditingShow(null)} />
+        <EditShowDialog
+          show={editingShow}
+          onClose={() => setEditingShow(null)}
+        />
       )}
     </div>
   );
@@ -990,8 +1027,8 @@ function CreateUserDialog() {
                 <FormItem>
                   <FormLabel>Booking Seat Limit</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="number" 
+                    <Input
+                      type="number"
                       min="1"
                       max="10"
                       {...field}
@@ -1188,8 +1225,8 @@ function EditUserDialog({
                 <FormItem>
                   <FormLabel>Booking Seat Limit</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="number" 
+                    <Input
+                      type="number"
                       min="1"
                       max="10"
                       {...field}
@@ -1260,7 +1297,9 @@ function UserList() {
         title: "Password Reset Successful",
         description: (
           <div>
-            <p>Temporary password: <strong>{data.temporaryPassword}</strong></p>
+            <p>
+              Temporary password: <strong>{data.temporaryPassword}</strong>
+            </p>
             <p className="text-xs mt-1">Please share this with the user.</p>
           </div>
         ),
@@ -1453,16 +1492,18 @@ function UserList() {
                 disabled={page === 1}
               />
             </PaginationItem>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-              <PaginationItem key={pageNum}>
-                <PaginationLink
-                  onClick={() => setPage(pageNum)}
-                  isActive={page === pageNum}
-                >
-                  {pageNum}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+              (pageNum) => (
+                <PaginationItem key={pageNum}>
+                  <PaginationLink
+                    onClick={() => setPage(pageNum)}
+                    isActive={page === pageNum}
+                  >
+                    {pageNum}
+                  </PaginationLink>
+                </PaginationItem>
+              ),
+            )}
             <PaginationItem>
               <PaginationNext
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
@@ -1473,7 +1514,10 @@ function UserList() {
         </Pagination>
       )}
       {editingUser && (
-        <EditUserDialog user={editingUser} onClose={() => setEditingUser(null)} />
+        <EditUserDialog
+          user={editingUser}
+          onClose={() => setEditingUser(null)}
+        />
       )}
     </div>
   );
@@ -1722,13 +1766,13 @@ function EditReservationDialog({
     queryKey: [`/api/reservations/show/${reservation.showId}`],
     staleTime: 0,
   });
-  
+
   // Fetch the user associated with this reservation to get their seat limit
   const { data: users = [] } = useQuery<User[]>({
     queryKey: ["/api/users"],
   });
-  
-  const reservationUser = users.find(u => u.id === reservation.userId);
+
+  const reservationUser = users.find((u) => u.id === reservation.userId);
   const userSeatLimit = reservationUser?.seatLimit || 4; // Default to 4 if not found
 
   const currentShow = shows.find((s) => s.id === reservation.showId);
@@ -1818,10 +1862,13 @@ function EditReservationDialog({
         <DialogHeader className="p-6 pb-0">
           <DialogTitle>Edit Reservation</DialogTitle>
           <DialogDescription>
-            Update reservation details and seat assignments for {currentShow.title}
+            Update reservation details and seat assignments for{" "}
+            {currentShow.title}
             <div className="mt-2 text-sm">
-              <span className="font-medium">User:</span> {reservationUser?.username || 'Unknown'}
-              <span className="ml-4 font-medium">Seat Limit:</span> {userSeatLimit}
+              <span className="font-medium">User:</span>{" "}
+              {reservationUser?.username || "Unknown"}
+              <span className="ml-4 font-medium">Seat Limit:</span>{" "}
+              {userSeatLimit}
             </div>
           </DialogDescription>
         </DialogHeader>
@@ -1833,7 +1880,9 @@ function EditReservationDialog({
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                   {section.section}
                   <span className="text-sm text-muted-foreground font-normal">
-                    {section.section === "Balcony" ? "(Prefix: B)" : "(Prefix: D)"}
+                    {section.section === "Balcony"
+                      ? "(Prefix: B)"
+                      : "(Prefix: D)"}
                   </span>
                 </h3>
                 <div className="w-full bg-muted/30 p-4 sm:p-8 rounded-lg shadow-inner overflow-x-auto">
@@ -1845,62 +1894,70 @@ function EditReservationDialog({
                         </div>
                       </div>
                     )}
-                    
+
                     {section.rows.map((rowData: any) => (
-                      <div key={rowData.row} className="flex gap-3 justify-center">
+                      <div
+                        key={rowData.row}
+                        className="flex gap-3 justify-center"
+                      >
                         {/* Exit on left for row G in Downstairs */}
                         {section.section === "Downstairs" &&
-                          rowData.row === "G" && <Exit position="left" />}
-                        
-                        {/* In row A of Balcony, keep a placeholder div for alignment */}
-                        {section.section === "Balcony" && rowData.row === "A" && (
-                          <div className="w-16"></div> 
+                          rowData.row === "G" ? (
+                          <Exit position="left" />
+                        ) : (
+                          /* For all other rows, add a placeholder for alignment */
+                          <div className="w-[62px]"></div>
                         )}
-                        
+
                         <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                           {rowData.row}
                         </span>
-                        
+
                         <div className="flex gap-2 sm:gap-3">
-                          {Array.from({ length: Math.max(...rowData.seats) }).map(
-                            (_, seatIndex) => {
-                              const seatNumber = seatIndex + 1;
-                              const prefix = section.section === "Balcony" ? "B" : "D";
-                              const seatId = `${prefix}${rowData.row}${seatNumber}`;
+                          {Array.from({
+                            length: Math.max(...rowData.seats),
+                          }).map((_, seatIndex) => {
+                            const seatNumber = seatIndex + 1;
+                            const prefix =
+                              section.section === "Balcony" ? "B" : "D";
+                            const seatId = `${prefix}${rowData.row}${seatNumber}`;
 
-                              if (!rowData.seats.includes(seatNumber)) {
-                                return <div key={seatId} className="w-6 sm:w-8" />;
-                              }
-
+                            if (!rowData.seats.includes(seatNumber)) {
                               return (
-                                <Seat
-                                  key={seatId}
-                                  seatId={seatId}
-                                  isReserved={reservedSeats.has(seatId)}
-                                  isBlocked={blockedSeats.has(seatId)}
-                                  isSelected={selectedSeats.includes(seatId)}
-                                  onSelect={handleSeatSelect}
-                                />
+                                <div key={seatId} className="w-6 sm:w-8" />
                               );
                             }
-                          )}
+
+                            return (
+                              <Seat
+                                key={seatId}
+                                seatId={seatId}
+                                isReserved={reservedSeats.has(seatId)}
+                                isBlocked={blockedSeats.has(seatId)}
+                                isSelected={selectedSeats.includes(seatId)}
+                                onSelect={handleSeatSelect}
+                              />
+                            );
+                          })}
                         </div>
-                        
+
                         <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                           {rowData.row}
                         </span>
-                        
+
                         {/* Exit on right for row G in Downstairs */}
                         {section.section === "Downstairs" &&
-                          rowData.row === "G" && <Exit position="right" />}
-                          
-                        {/* Exit on right side for row A in Balcony */}
-                        {section.section === "Balcony" && rowData.row === "A" && (
+                          rowData.row === "G" ? (
+                          <Exit position="right" />
+                        ) : section.section === "Balcony" && rowData.row === "A" ? (
                           <Exit position="top" />
+                        ) : (
+                          /* For all other rows, add a placeholder for alignment */
+                          <div className="w-[62px]"></div>
                         )}
                       </div>
                     ))}
-                    
+
                     {/* Bottom exits for Downstairs section */}
                     {section.section === "Downstairs" && (
                       <div className="flex justify-between mt-4">
@@ -1969,7 +2026,10 @@ function EditReservationDialog({
                 <Button
                   variant="default"
                   onClick={() => setShowConfirm(true)}
-                  disabled={editReservationMutation.isPending || selectedSeats.length === 0}
+                  disabled={
+                    editReservationMutation.isPending ||
+                    selectedSeats.length === 0
+                  }
                   className="flex-1 sm:flex-none"
                 >
                   Update Reservation
@@ -1985,7 +2045,8 @@ function EditReservationDialog({
           <AlertDialogHeader>
             <AlertDialogTitle>Update Reservation</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to update this reservation? The following seats will be assigned:
+              Are you sure you want to update this reservation? The following
+              seats will be assigned:
               <br />
               <span className="font-medium">{selectedSeats.join(", ")}</span>
             </AlertDialogDescription>
@@ -2052,7 +2113,11 @@ export default function AdminPage() {
       </header>
 
       <main className="container mx-auto py-4 sm:py-8 px-4 sm:px-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-4"
+        >
           <div className="flex items-center justify-between">
             <TabsList className="grid w-full sm:w-auto grid-cols-3 sm:grid-cols-none sm:flex gap-2">
               <TabsTrigger value="shows" className="flex items-center gap-2">
@@ -2063,7 +2128,10 @@ export default function AdminPage() {
                 <Users className="h-4 w-4" />
                 <span className="hidden sm:inline">Users</span>
               </TabsTrigger>
-              <TabsTrigger value="reservations" className="flex items-center gap-2">
+              <TabsTrigger
+                value="reservations"
+                className="flex items-center gap-2"
+              >
                 <Ticket className="h-4 w-4" />
                 <span className="hidden sm:inline">Reservations</span>
               </TabsTrigger>
@@ -2075,7 +2143,9 @@ export default function AdminPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Create Show</CardTitle>
-                  <CardDescription>Add a new show to the system</CardDescription>
+                  <CardDescription>
+                    Add a new show to the system
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ShowForm />
