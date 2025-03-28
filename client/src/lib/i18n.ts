@@ -252,6 +252,57 @@ const hiTranslations = {
   },
 };
 
+// First, define extended translation types
+interface ExtendedCommonTranslation {
+  appName: string;
+  welcome: string;
+  login: string;
+  register: string;
+  logout: string;
+  profile: string;
+  admin: string;
+  home: string;
+  error: string;
+  success: string;
+  cancel: string;
+  confirm: string;
+  delete: string;
+  edit: string;
+  save: string;
+  add: string;
+  required: string;
+  submit: string;
+  date: string;
+  time: string;
+  price: string;
+  seats: string;
+  toThe: string;
+  andTheir: string;
+  configurations: string;
+  system: string;
+}
+
+// Now update the common translations with the new keys
+const extendedEnCommon: ExtendedCommonTranslation = {
+  ...enTranslations.common as any,
+  toThe: "to the",
+  andTheir: "and their",
+  configurations: "configurations",
+  system: "system"
+};
+
+const extendedHiCommon: ExtendedCommonTranslation = {
+  ...hiTranslations.common as any,
+  toThe: "के लिए",
+  andTheir: "और उनके",
+  configurations: "विन्यास",
+  system: "सिस्टम"
+};
+
+// Replace the common objects with the extended versions
+enTranslations.common = extendedEnCommon;
+hiTranslations.common = extendedHiCommon;
+
 // Initialize i18next
 i18n
   .use(LanguageDetector) // Detect language
@@ -259,14 +310,14 @@ i18n
   .init({
     resources: {
       en: {
-        translation: enTranslations,
+        translation: enTranslations
       },
       hi: {
-        translation: hiTranslations,
+        translation: hiTranslations
       },
     },
     fallbackLng: "en", // Default language
-    debug: process.env.NODE_ENV === "development", // Debug in development
+    debug: true, // Enable debugging to see what's happening
     interpolation: {
       escapeValue: false, // React already escapes values
     },

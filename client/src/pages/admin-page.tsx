@@ -54,6 +54,9 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1658,6 +1661,7 @@ function UserList() {
 }
 
 function ReservationManagement() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [selectedShowId, setSelectedShowId] = useState<string>("all");
   const [editingReservation, setEditingReservation] =
@@ -1737,8 +1741,8 @@ function ReservationManagement() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Manage Reservations</CardTitle>
-          <CardDescription>Loading...</CardDescription>
+          <CardTitle>{t('translation.admin.manageReservations')}</CardTitle>
+          <CardDescription>{t('translation.common.loading')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center h-32">
@@ -1752,8 +1756,8 @@ function ReservationManagement() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Manage Reservations</CardTitle>
-        <CardDescription>View and manage all show reservations</CardDescription>
+        <CardTitle>{t('translation.admin.manageReservations')}</CardTitle>
+        <CardDescription>{t('translation.admin.viewAndManageReservations')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -2270,6 +2274,7 @@ export default function AdminPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("shows");
+  const { t } = useTranslation();
 
   if (!user?.isAdmin) {
     setLocation("/");
@@ -2282,15 +2287,19 @@ export default function AdminPage() {
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between h-auto sm:h-16 py-4 sm:py-0 px-4 sm:px-8">
           <div className="flex items-center gap-2 mb-4 sm:mb-0">
             <Shield className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">Shahbaaz Auditorium Admin</h1>
+            <h1 className="text-2xl font-bold">{t('translation.common.appName')} {t('translation.common.admin')}</h1>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => setLocation("/")}
-            className="w-full sm:w-auto"
-          >
-            Back to Home
-          </Button>
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <LanguageSwitcher />
+            <Button
+              variant="outline"
+              onClick={() => setLocation("/")}
+              className="w-full sm:w-auto"
+            >
+              {t('translation.admin.backToHome')}
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -2304,18 +2313,18 @@ export default function AdminPage() {
             <TabsList className="grid w-full sm:w-auto grid-cols-3 sm:grid-cols-none sm:flex gap-2">
               <TabsTrigger value="shows" className="flex items-center gap-2">
                 <CalendarPlus className="h-4 w-4" />
-                <span className="hidden sm:inline">Shows</span>
+                <span className="hidden sm:inline">{t('translation.show.showDetails')}</span>
               </TabsTrigger>
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                <span className="hidden sm:inline">Users</span>
+                <span className="hidden sm:inline">{t('translation.admin.manageUsers')}</span>
               </TabsTrigger>
               <TabsTrigger
                 value="reservations"
                 className="flex items-center gap-2"
               >
                 <Ticket className="h-4 w-4" />
-                <span className="hidden sm:inline">Reservations</span>
+                <span className="hidden sm:inline">{t('translation.admin.manageReservations')}</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -2324,9 +2333,9 @@ export default function AdminPage() {
             <div className="grid gap-4 lg:grid-cols-2">
               <Card>
                 <CardHeader>
-                  <CardTitle>Create Show</CardTitle>
+                  <CardTitle>{t('translation.admin.addShow')}</CardTitle>
                   <CardDescription>
-                    Add a new show to the system
+                    {t('translation.admin.addShow')} {t('translation.common.toThe')} {t('translation.common.system')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -2336,9 +2345,9 @@ export default function AdminPage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Show Management</CardTitle>
+                  <CardTitle>{t('translation.admin.manageShows')}</CardTitle>
                   <CardDescription>
-                    Manage existing shows and their configurations
+                    {t('translation.admin.manageShows')} {t('translation.common.andTheir')} {t('translation.common.configurations')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="max-h-[600px] overflow-y-auto pr-4">
@@ -2351,9 +2360,9 @@ export default function AdminPage() {
           <TabsContent value="users">
             <Card>
               <CardHeader>
-                <CardTitle>User Management</CardTitle>
+                <CardTitle>{t('translation.admin.manageUsers')}</CardTitle>
                 <CardDescription>
-                  Manage user accounts and permissions
+                  {t('translation.admin.manageUsers')} {t('translation.common.andTheir')} {t('translation.admin.permissions')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="max-h-[600px] overflow-y-auto pr-4">
