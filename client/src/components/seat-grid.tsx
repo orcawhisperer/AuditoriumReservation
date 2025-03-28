@@ -256,8 +256,11 @@ export function SeatGrid() {
 
                           // Only render seats that exist in this row
                           if (!rowData.seats.includes(seatNumber)) {
-                            return <div key={seatId} className="w-8" />;
+                            return   <div key={seatId} className="w-6" > 
+
+                              </div>;
                           }
+
 
                           return (
                             <Seat
@@ -272,6 +275,8 @@ export function SeatGrid() {
                         },
                       )}
                     </div>
+
+                    
 
                     <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                       {rowData.row}

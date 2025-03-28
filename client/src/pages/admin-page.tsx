@@ -1925,7 +1925,9 @@ function EditReservationDialog({
 
                             if (!rowData.seats.includes(seatNumber)) {
                               return (
-                                <div key={seatId} className="w-8" />
+                                <div key={seatId} className="w-6" > 
+                                
+                                </div>
                               );
                             }
 
