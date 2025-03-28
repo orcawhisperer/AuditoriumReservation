@@ -45,7 +45,7 @@ export default function AuthPage() {
             <div className="flex items-center gap-2">
               <Shield className="h-8 w-8 text-primary" />
               <h1 className="text-4xl font-bold tracking-tight">
-                Military Auditorium
+                Shahbaaz Auditorium
               </h1>
             </div>
             <p className="text-muted-foreground text-lg">

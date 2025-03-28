@@ -189,7 +189,10 @@ export function SeatGrid() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold">{show.title}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-bold">{show.title}</h2>
+          <span className="text-sm text-muted-foreground bg-primary/10 px-2 py-1 rounded">Shahbaaz Auditorium</span>
+        </div>
         <p className="text-muted-foreground">
           {format(new Date(show.date), "PPP")} at{" "}
           {format(new Date(show.date), "p")}
@@ -232,13 +235,14 @@ export function SeatGrid() {
 
                 {section.rows.map((rowData: any, rowIndex: number) => (
                   <div key={rowData.row} className="flex gap-3 justify-center">
-                    {section.section === "Downstairs" &&
-                      rowData.row === "G" && <Exit position="left" />}
-
-                    {/* Exit on the left side */}
-                    {/* Based on the layout image - Add exits on the sides */}
-                    {section.section === "Balcony" && rowData.row === "A" && (
-                      <Exit position="top" />
+                    {/* Exit on left for specific rows */}
+                    {section.section === "Downstairs" && rowData.row === "G" ? (
+                      <Exit position="left" />
+                    ) : section.section === "Balcony" && rowData.row === "A" ? (
+                      <Exit position="left" />
+                    ) : (
+                      /* For all other rows, add a placeholder for alignment */
+                      <div className="w-[62px]"></div>
                     )}
                     <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                       {rowData.row}
@@ -256,9 +260,7 @@ export function SeatGrid() {
 
                           // Only render seats that exist in this row
                           if (!rowData.seats.includes(seatNumber)) {
-                            return   <div key={seatId} className="w-6" > 
-
-                              </div>;
+                            return <div key={seatId} className="w-8" />;
                           }
 
 
@@ -282,9 +284,12 @@ export function SeatGrid() {
                       {rowData.row}
                     </span>
 
-                    {/* Exits on left and right between rows F and G */}
-                    {section.section === "Downstairs" &&
-                      rowData.row === "G" && <Exit position="right" />}
+                    {/* Exits on the right side */}
+                    {section.section === "Downstairs" && rowData.row === "G" ? (
+                      <Exit position="right" />
+                    ) : (
+                      <div className="w-[62px]"></div>
+                    )}
                   </div>
                 ))}
 

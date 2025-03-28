@@ -99,7 +99,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between h-auto sm:h-16 py-4 sm:py-0 px-4 sm:px-8">
-          <h1 className="text-2xl font-bold mb-4 sm:mb-0">Auditorium</h1>
+          <h1 className="text-2xl font-bold mb-4 sm:mb-0">Shahbaaz Auditorium</h1>
           <div className="flex items-center gap-4">
             <ThemeToggle />
             {user?.isAdmin && (
