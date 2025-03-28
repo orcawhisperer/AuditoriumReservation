@@ -1713,6 +1713,12 @@ function ReservationManagement() {
     return user ? user.name || user.username : "Unknown User";
   };
 
+  const isShowInPast = (showId: number) => {
+    const show = shows.find(s => s.id === showId);
+    if (!show) return false;
+    return new Date(show.date) < new Date();
+  };
+
   const filteredReservations = useMemo(() => {
     if (selectedShowId === "all") return reservations;
     const showId = parseInt(selectedShowId, 10);
@@ -1768,63 +1774,96 @@ function ReservationManagement() {
           </div>
 
           <div className="space-y-4 h-[400px] overflow-y-auto pr-2">
-            {paginatedReservations.map((reservation) => (
-              <div
-                key={reservation.id}
-                className="flex items-center justify-between p-4 border rounded-lg"
-              >
-                <div>
-                  <p className="font-medium">
-                    {getShowTitle(reservation.showId)}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Reserved by: {getUserName(reservation.userId)}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Seats: {JSON.parse(reservation.seatNumbers).join(", ")}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setEditingReservation(reservation)}
-                  >
-                    Edit
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        disabled={deleteReservationMutation.isPending}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Reservation</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this reservation? This
-                          action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() =>
-                            deleteReservationMutation.mutate(reservation.id)
-                          }
+            {paginatedReservations.map((reservation) => {
+              const isPastShow = isShowInPast(reservation.showId);
+              
+              return (
+                <div
+                  key={reservation.id}
+                  className="flex items-center justify-between p-4 border rounded-lg"
+                >
+                  <div>
+                    <p className="font-medium">
+                      {getShowTitle(reservation.showId)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Reserved by: {getUserName(reservation.userId)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Seats: {JSON.parse(reservation.seatNumbers).join(", ")}
+                    </p>
+                    {isPastShow && (
+                      <p className="text-xs text-destructive mt-1">
+                        Past show - modifications disabled
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {!isPastShow ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingReservation(reservation)}
                         >
+                          Edit
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              disabled={deleteReservationMutation.isPending}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Reservation</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete this reservation? This
+                                action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteReservationMutation.mutate(reservation.id)}
+                              >
+                                {deleteReservationMutation.isPending && (
+                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                )}
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          disabled
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
                           Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {filteredReservations.length === 0 && (
               <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
                 <Ticket className="h-8 w-8 mb-2" />
