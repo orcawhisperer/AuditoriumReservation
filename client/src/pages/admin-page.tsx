@@ -1900,9 +1900,10 @@ function EditReservationDialog({
                         key={rowData.row}
                         className="flex gap-3 justify-center"
                       >
-                        {/* Exit on left for row G in Downstairs */}
-                        {section.section === "Downstairs" &&
-                          rowData.row === "G" ? (
+                        {/* Exit on left for specific rows */}
+                        {section.section === "Downstairs" && rowData.row === "G" ? (
+                          <Exit position="left" />
+                        ) : section.section === "Balcony" && rowData.row === "A" ? (
                           <Exit position="left" />
                         ) : (
                           /* For all other rows, add a placeholder for alignment */
@@ -1924,7 +1925,7 @@ function EditReservationDialog({
 
                             if (!rowData.seats.includes(seatNumber)) {
                               return (
-                                <div key={seatId} className="w-6 sm:w-8" />
+                                <div key={seatId} className="w-8" />
                               );
                             }
 
@@ -1949,8 +1950,6 @@ function EditReservationDialog({
                         {section.section === "Downstairs" &&
                           rowData.row === "G" ? (
                           <Exit position="right" />
-                        ) : section.section === "Balcony" && rowData.row === "A" ? (
-                          <Exit position="top" />
                         ) : (
                           /* For all other rows, add a placeholder for alignment */
                           <div className="w-[62px]"></div>
