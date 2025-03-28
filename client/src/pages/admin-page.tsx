@@ -401,6 +401,7 @@ function EditShowDialog({
 }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(true);
+  const [previewUrl, setPreviewUrl] = useState<string>(show.poster || "");
   const isPastShow = new Date(show.date) < new Date();
 
   // Show warning if trying to edit a past show
@@ -426,6 +427,19 @@ function EditShowDialog({
       blockedSeats: JSON.parse(show.blockedSeats || "[]").join(","),
     },
   });
+  
+  const handlePosterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        form.setValue("poster", base64String);
+        setPreviewUrl(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const editShowMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -595,6 +609,38 @@ function EditShowDialog({
                         placeholder="#4B5320"
                         className="font-mono"
                       />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="poster"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Poster Image</FormLabel>
+                  <FormControl>
+                    <div className="space-y-4">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePosterChange}
+                        className="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium"
+                      />
+                      {previewUrl && (
+                        <div className="relative w-full max-w-lg overflow-hidden rounded-lg border">
+                          <div className="relative aspect-video">
+                            <img
+                              src={previewUrl}
+                              alt="Poster preview"
+                              className="absolute inset-0 w-full h-full object-cover"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </FormControl>
                   <FormMessage />
