@@ -13,7 +13,12 @@ const homePageSteps: Step[] = [
   {
     target: '.theme-toggle',
     content: 'Toggle between light and dark mode for your comfort.',
-    placement: 'bottom',
+    placement: 'left',
+  },
+  {
+    target: '.tour-guide-button',
+    content: 'Click this button anytime to restart the tour.',
+    placement: 'left',
   },
   {
     target: '.language-switcher',
