@@ -196,25 +196,30 @@ export function SeatGrid() {
   );
 
   const handleSeatSelect = (seatId: string) => {
-    setSelectedSeats((current) => {
-      if (current.includes(seatId)) {
-        return current.filter((id) => id !== seatId);
+    // If the seat is already selected, remove it (toggle off)
+    if (selectedSeats.includes(seatId)) {
+      setSelectedSeats(selectedSeats.filter((id) => id !== seatId));
+      return;
+    }
+    
+    // Trying to add a new seat
+    
+    // Admins have no seat limit
+    if (!user?.isAdmin) {
+      const seatLimit = user?.seatLimit || 4;
+      if (selectedSeats.length >= seatLimit) {
+        toast({
+          title: "Maximum seats reached",
+          description: `You can only reserve up to ${seatLimit} seats`,
+          variant: "destructive",
+        });
+        // Don't modify the selection
+        return;
       }
-      
-      // Admins have no seat limit
-      if (!user?.isAdmin) {
-        const seatLimit = user?.seatLimit || 4;
-        if (current.length >= seatLimit) {
-          toast({
-            title: "Maximum seats reached",
-            description: `You can only reserve up to ${seatLimit} seats`,
-            variant: "destructive",
-          });
-          return current;
-        }
-      }
-      return [...current, seatId].sort();
-    });
+    }
+    
+    // Add the new seat and sort the array
+    setSelectedSeats([...selectedSeats, seatId].sort());
   };
 
   const seatLimit = user?.seatLimit || 4;
