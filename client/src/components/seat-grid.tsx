@@ -15,6 +15,7 @@ type SeatProps = {
   isReserved: boolean;
   isBlocked: boolean;
   isSelected: boolean;
+  isUserReservation: boolean; // Add this to indicate seats reserved by the current user
   onSelect: (seatId: string) => void;
 };
 
@@ -23,6 +24,7 @@ export function Seat({
   isReserved,
   isBlocked,
   isSelected,
+  isUserReservation,
   onSelect,
 }: SeatProps) {
   // Extract just the seat number from the end of the seatId (remove section prefix and row)
@@ -32,7 +34,9 @@ export function Seat({
     <button
       className={cn(
         "w-8 h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm",
-        isReserved &&
+        isUserReservation && 
+          "bg-blue-100 border-blue-300 text-blue-700 cursor-not-allowed",
+        isReserved && !isUserReservation &&
           "bg-red-100 border-red-200 text-red-500 cursor-not-allowed",
         isBlocked &&
           "bg-yellow-100 border-yellow-200 text-yellow-500 cursor-not-allowed",
@@ -44,6 +48,7 @@ export function Seat({
       )}
       disabled={isReserved || isBlocked}
       onClick={() => onSelect(seatId)}
+      title={isUserReservation ? "Your reservation" : ""}
     >
       {seatNumber}
     </button>
@@ -296,6 +301,22 @@ export function SeatGrid() {
                           }
 
 
+                          // Check if this seat is in the user's own reservation
+                          const isUserReservation = userReservations.some(reservation => {
+                            try {
+                              const seats = typeof reservation.seatNumbers === 'string'
+                                ? (reservation.seatNumbers.startsWith('[')
+                                  ? JSON.parse(reservation.seatNumbers)
+                                  : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                : reservation.seatNumbers || [];
+                              
+                              return Array.isArray(seats) && seats.includes(seatId);
+                            } catch (e) {
+                              console.error("Error parsing user reservation seats:", e);
+                              return false;
+                            }
+                          });
+
                           return (
                             <Seat
                               key={seatId}
@@ -303,6 +324,7 @@ export function SeatGrid() {
                               isReserved={reservedSeats.has(seatId)}
                               isBlocked={blockedSeats.has(seatId)}
                               isSelected={selectedSeats.includes(seatId)}
+                              isUserReservation={isUserReservation}
                               onSelect={handleSeatSelect}
                             />
                           );
@@ -359,8 +381,12 @@ export function SeatGrid() {
               <span>Selected</span>
             </div>
             <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-blue-100 border-2 border-blue-300" />
+              <span>Your Reservation</span>
+            </div>
+            <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-red-100 border-2 border-red-200" />
-              <span>Reserved</span>
+              <span>Others' Reservation</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-yellow-100 border-2 border-yellow-200" />
