@@ -2,8 +2,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install PostgreSQL client tools which are needed for database initialization
-RUN apk add --no-cache postgresql-client
+# Install SQLite and build dependencies needed for better-sqlite3
+RUN apk add --no-cache sqlite python3 make g++ build-base
 
 # Copy package files and install dependencies
 COPY package*.json ./
@@ -23,11 +23,15 @@ RUN chmod +x /app/scripts/migrations/*.sh || true
 # Build the application
 RUN npm run build
 
+# Create directory for SQLite database
+RUN mkdir -p /app/data
+
 # Expose the application port
 EXPOSE 5000
 
-# Set environment variable
+# Set environment variables
 ENV NODE_ENV=production
+ENV SQLITE_FILE=/app/data/shahbaaz.db
 
 # Start the application
 CMD ["npm", "run", "start"]

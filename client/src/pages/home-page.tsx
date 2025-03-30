@@ -14,8 +14,6 @@ import { Loader2, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { LanguageSwitcher } from "@/components/language-switcher";
 import { useTranslation } from "react-i18next";
 import { DataPagination } from "@/components/data-pagination";
 import React, { useState, useRef, useEffect } from "react";

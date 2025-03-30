@@ -1,4 +1,4 @@
-import { migrate } from 'drizzle-orm/postgres-js/migrator';
+import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import { db } from '../server/db';
 import * as path from 'path';
 import * as url from 'url';
@@ -9,11 +9,11 @@ import { sql } from 'drizzle-orm';
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 /**
- * This script handles database migrations using Drizzle ORM's built-in migrator.
+ * This script handles database migrations for SQLite using Drizzle ORM.
  * It should be run after generating migration files with `drizzle-kit generate`.
  */
 async function main() {
-  console.log('Starting database migration...');
+  console.log('Starting SQLite database migration...');
   
   try {
     // Check if tables already exist by querying for users table
@@ -23,23 +23,27 @@ async function main() {
       console.log('Tables already exist, applying only incremental migrations...');
       await applyIncrementalMigrations();
     } else {
-      // Run full migrations from the generated migration files
-      const migrationsFolder = path.join(__dirname, '../migrations');
-      console.log(`Using migrations from: ${migrationsFolder}`);
+      // Run initial schema first
+      const initialSchemaPath = path.join(__dirname, '../migrations-sqlite/0000_initial_schema.sql');
       
-      try {
-        await migrate(db, { migrationsFolder });
-        console.log('Full migration completed successfully!');
-      } catch (error) {
-        console.error('Full migration failed, trying incremental approach:', error);
-        await applyIncrementalMigrations();
+      if (fs.existsSync(initialSchemaPath)) {
+        console.log('Applying initial schema...');
+        const sqlContent = fs.readFileSync(initialSchemaPath, 'utf8');
+        await applySqlStatements(sqlContent);
+        console.log('Initial schema applied successfully!');
+      } else {
+        console.error('Initial schema file not found at:', initialSchemaPath);
+        process.exit(1);
       }
+      
+      // Apply any incremental migrations
+      await applyIncrementalMigrations();
     }
   } catch (error) {
     console.error('Migration failed:', error);
     process.exit(1);
   } finally {
-    // Close database connection
+    // Exit successfully
     process.exit(0);
   }
 }
@@ -49,17 +53,34 @@ async function main() {
  */
 async function checkIfTablesExist(): Promise<boolean> {
   try {
-    const result = await db.execute(sql`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = 'users'
-      );
-    `);
-    return result[0]?.exists === true;
+    // In SQLite we can check for table existence directly with sqlite_master
+    const result = await db.query.users.findFirst();
+    return result !== undefined;
   } catch (error) {
-    console.error('Error checking tables existence:', error);
+    // If we get an error, the table likely doesn't exist
+    console.log('Checking tables existence - tables do not exist.');
     return false;
+  }
+}
+
+/**
+ * Applies SQL statements from a string
+ */
+async function applySqlStatements(sqlContent: string): Promise<void> {
+  // Split SQL content by statement-breakpoint comments or semicolons
+  const statements = sqlContent.split(/(?:-->statement-breakpoint|;)/)
+    .map(s => s.trim())
+    .filter(s => s.length > 0);
+  
+  for (const statement of statements) {
+    if (statement.trim()) {
+      try {
+        await db.run(sql.raw(statement + ';'));
+      } catch (error) {
+        console.error(`Error executing SQL statement: ${statement}`);
+        throw error;
+      }
+    }
   }
 }
 
@@ -67,7 +88,12 @@ async function checkIfTablesExist(): Promise<boolean> {
  * Applies incremental migrations by executing SQL files numbered after 0000
  */
 async function applyIncrementalMigrations(): Promise<void> {
-  const migrationsFolder = path.join(__dirname, '../migrations');
+  const migrationsFolder = path.join(__dirname, '../migrations-sqlite');
+  
+  if (!fs.existsSync(migrationsFolder)) {
+    console.log(`Migrations folder ${migrationsFolder} does not exist. Skipping incremental migrations.`);
+    return;
+  }
   
   // Read all SQL files from migrations folder
   const migrationFiles = fs.readdirSync(migrationsFolder)
@@ -87,16 +113,7 @@ async function applyIncrementalMigrations(): Promise<void> {
       const filePath = path.join(migrationsFolder, file);
       const sqlContent = fs.readFileSync(filePath, 'utf8');
       
-      // Split SQL content by statement-breakpoint comments
-      const statements = sqlContent.split('-->')
-        .map(s => s.replace('statement-breakpoint', '').trim())
-        .filter(s => s.length > 0);
-      
-      for (const statement of statements) {
-        if (statement.trim()) {
-          await db.execute(sql.raw(statement));
-        }
-      }
+      await applySqlStatements(sqlContent);
       
       console.log(`Successfully applied migration: ${file}`);
     } catch (error) {

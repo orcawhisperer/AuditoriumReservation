@@ -7,51 +7,23 @@ services:
       dockerfile: Dockerfile.prod
     ports:
       - "80:5000"  # Map to standard HTTP port
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       - NODE_ENV=production
       - PORT=5000
       - SESSION_SECRET=${SESSION_SECRET}
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      - PGUSER=${POSTGRES_USER}
-      - PGPASSWORD=${POSTGRES_PASSWORD}
-      - PGDATABASE=${POSTGRES_DB}
-      - PGHOST=postgres
-      - PGPORT=5432
+      - SQLITE_FILE=/app/data/shahbaaz.db
     restart: always
     volumes:
       - ./scripts:/app/scripts
-    entrypoint: ["/bin/sh", "-c", "mkdir -p /tmp/scripts /tmp/scripts/migrations && cp -r /app/scripts/* /tmp/scripts/ && chmod +x /tmp/scripts/*.sh /tmp/scripts/migrations/*.sh && ls -la /tmp/scripts && cd /app && if [ -f /tmp/scripts/init-db.sh ]; then /tmp/scripts/init-db.sh || exit 1; fi && if [ -f /tmp/scripts/migrate-db.sh ]; then /tmp/scripts/migrate-db.sh || true; fi && node server/index.js"]
+      - sqlite-data:/app/data
+      - ./backups:/app/backups
+    entrypoint: ["/bin/sh", "-c", "mkdir -p /tmp/scripts && cp -r /app/scripts/* /tmp/scripts/ && chmod +x /tmp/scripts/*.sh || true && cd /app && if [ -f /tmp/scripts/init-db.js ]; then node /tmp/scripts/init-db.js || exit 1; fi && if [ -f /tmp/scripts/migrate-sqlite.ts ]; then npx tsx /tmp/scripts/migrate-sqlite.ts || true; fi && node server/index.js"]
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/health"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 40s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  postgres:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./backups:/backups
-    restart: always
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
     logging:
       driver: "json-file"
       options:
@@ -72,4 +44,4 @@ services:
     restart: always
 
 volumes:
-  postgres-data:
+  sqlite-data:

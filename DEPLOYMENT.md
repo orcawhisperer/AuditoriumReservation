@@ -2,6 +2,8 @@
 
 This document provides comprehensive instructions for deploying the Shahbaaz Auditorium Seat Reservation System using Docker and Docker Compose.
 
+**Note:** The system has been migrated from PostgreSQL to SQLite for simplified deployment. This guide has been updated to reflect these changes.
+
 ## Table of Contents
 
 1. [Prerequisites](#prerequisites)
@@ -49,6 +51,19 @@ The application includes a comprehensive management script (`manage.sh`) that si
 # View available commands
 ./manage.sh help
 
+# Initialize the database with schema and admin user
+./manage.sh init-db
+
+# Push schema changes to SQLite database
+./manage.sh push-schema
+
+# Run SQLite migrations
+./manage.sh migrate
+
+# Start the application (in development mode)
+npm run dev
+
+# When using Docker:
 # Start in development mode
 ./manage.sh start
 
@@ -64,25 +79,7 @@ The application includes a comprehensive management script (`manage.sh`) that si
 # Stop the application
 ./manage.sh stop
 
-# Create a database backup
-./manage.sh backup
-
-# List available backups
-./manage.sh list-backups
-
-# Restore from a backup
-./manage.sh restore backups/shahbaaz_backup_20250330_123456.sql.gz
-
-# Create a new database migration
-./manage.sh create-migration add_user_preferences
-
-# Run database migrations
-./manage.sh migrate
-
-# Open PostgreSQL terminal
-./manage.sh psql
-
-# Open a shell in a container
+# Docker shell access
 ./manage.sh shell:app
 ```
 
@@ -91,68 +88,82 @@ The application includes a comprehensive management script (`manage.sh`) that si
 ### Development Deployment
 
 ```bash
+# Using Node.js directly
+npm run dev
+
+# Using Docker (if available)
 ./manage.sh start
 ```
 
-This deploys the application with:
+This runs the application with:
 - Hot reloading for development
 - Application accessible at `http://localhost:5000`
-- PostgreSQL database with persistent storage
+- SQLite database with file persistence
 
 ### Production Deployment
 
 ```bash
+# Build the production version
+npm run build
+
+# Run the production server
+npm run start
+
+# Using Docker (if available)
 ./manage.sh start:prod
 ```
 
 This deploys the application with:
 - Optimized production build
-- Nginx as a reverse proxy
-- Proper container health checks
-- Log rotation
-- Application accessible at `http://localhost` (or configured domain)
+- SQLite database for simplified deployment
+- Application accessible at `http://localhost:5000` or with Nginx as a reverse proxy at `http://localhost` when using Docker
 
 ## Database Backup and Restore
+
+SQLite databases are self-contained in a single file, making backups simple and portable.
 
 ### Creating Backups
 
 ```bash
-# Using the management script (recommended)
+# Using the management script (if implemented)
 ./manage.sh backup
 
-# Manual backup
-docker compose exec postgres pg_dump -U postgres -d shahbaaz_auditorium | gzip > backups/manual_backup.sql.gz
+# Manual backup (simpler and more reliable)
+cp sqlite.db backups/sqlite_backup_$(date +%Y%m%d_%H%M%S).db
 ```
 
-Backups are stored in the `backups/` directory with timestamps.
+Backups should be stored in the `backups/` directory with timestamps.
 
 ### Listing Backups
 
 ```bash
-./manage.sh list-backups
+# List all SQLite backups
+ls -la backups/*.db
 ```
 
 ### Restoring from Backup
 
 ```bash
-# Using the management script (recommended)
-./manage.sh restore backups/shahbaaz_backup_20250330_123456.sql.gz
+# Using the management script (if implemented)
+./manage.sh restore backups/sqlite_backup_20250330_123456.db
 
-# Manual restore
-gunzip -c backups/backup_file.sql.gz | docker compose exec -T postgres psql -U postgres -d shahbaaz_auditorium
+# Manual restore (simpler and more reliable)
+cp backups/sqlite_backup_20250330_123456.db sqlite.db
 ```
+
+Note: Before restoring, ensure the application is stopped to prevent data corruption.
 
 ## Production Configuration
 
 For production deployment, update the `.env` file with secure credentials:
 
 ```
-# Production Database Configuration
-POSTGRES_USER=production_user
-POSTGRES_PASSWORD=secure_password_here
-POSTGRES_DB=shahbaaz_auditorium_prod
+# Production Configuration
 SESSION_SECRET=long_random_secure_string
+SQLITE_FILE=./data/production.db    # Store database in a protected directory
 ```
+
+Since we're using SQLite, database credentials are no longer needed. However, ensure the database file is stored in a secure location with proper file permissions and regular backups.
 
 ## SSL Configuration
 
@@ -190,109 +201,122 @@ SESSION_SECRET=long_random_secure_string
 
 ### Database connection issues
 
-1. Verify database is running:
+1. Verify the SQLite database file exists:
    ```bash
-   ./manage.sh status
+   ls -la sqlite.db
    ```
 
-2. Check database logs:
+2. Check file permissions:
    ```bash
-   ./manage.sh logs postgres
+   ls -l sqlite.db
    ```
 
-3. Verify database environment variables in `.env` file
+3. Verify SQLite file path in `.env` file
+
+4. Check application logs for database-related errors:
+   ```bash
+   ./manage.sh logs
+   ```
 
 ### Restoring a corrupt database
 
-If the database becomes corrupted, you can:
+If the SQLite database becomes corrupted, you can:
 
 1. Stop the application:
    ```bash
    ./manage.sh stop
    ```
 
-2. Clean all containers and volumes (WARNING: This will delete all data):
+2. Rename or remove the corrupted database file:
    ```bash
-   ./manage.sh clean
+   mv sqlite.db sqlite.db.corrupted
    ```
 
-3. Start fresh:
+3. Either restore from a backup:
+   ```bash
+   cp backups/sqlite_backup_20250330_123456.db sqlite.db
+   ```
+
+4. Or initialize a fresh database:
+   ```bash
+   ./manage.sh init-db
+   ```
+
+5. Start the application:
    ```bash
    ./manage.sh start
    ```
 
-4. Restore from a backup if available:
-   ```bash
-   ./manage.sh restore backups/shahbaaz_backup_20250330_123456.sql.gz
-   ```
-
 ## Schema Migrations
 
-The application uses Drizzle ORM for type-safe database schema management and migrations.
+The application uses Drizzle ORM for type-safe database schema management and migrations, adapted for SQLite.
 
 ### Database Schema Management
 
-The database schema is defined in `shared/schema.ts` using Drizzle's type-safe schema definition syntax:
+The database schema is defined in `shared/schema.ts` using Drizzle's type-safe schema definition syntax for SQLite:
 
 ```typescript
 // Example schema definition
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: varchar("username", { length: 50 }).notNull().unique(),
-  password: varchar("password", { length: 100 }).notNull(),
-  is_admin: boolean("is_admin").default(false).notNull(),
+export const users = sqliteTable("users", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  is_admin: integer("is_admin", { mode: "boolean" }).default(false).notNull(),
   // ... other fields
 });
 ```
 
-### Creating a New Migration
+### Initializing the Database
 
-When you need to make schema changes, update the schema in `shared/schema.ts`, then generate a migration:
+To initialize the SQLite database with the schema and create the admin user:
 
 ```bash
-./scripts/drizzle-generate.sh
+./manage.sh init-db
 ```
 
-This creates a new SQL migration file in the `migrations/` directory with an incremental prefix (e.g., `0001_descriptive_name.sql`).
+This script:
+1. Creates the SQLite database file if it doesn't exist
+2. Applies the initial schema from `migrations-sqlite/0000_initial_schema.sql`
+3. Creates the admin user if one doesn't exist
 
-### Migration File Structure
+### Pushing Schema Changes
 
-Drizzle generates SQL migration files containing the necessary ALTER TABLE statements:
+When you need to make schema changes, update the schema in `shared/schema.ts`, then push the changes to the database:
 
-```sql
--- Example migration file: migrations/0001_add_price_column.sql
-ALTER TABLE "shows" ADD COLUMN "price" integer;
+```bash
+./manage.sh push-schema
 ```
+
+This directly updates the SQLite database schema without creating migration files, which is suitable for development environments.
 
 ### Running Migrations
 
-To apply all pending migrations:
+For more controlled schema changes, you can use the migration system:
 
 ```bash
-./scripts/drizzle-run-migrations.sh
+./manage.sh migrate
 ```
 
-The system will:
-1. Check if tables already exist in the database
-2. For new databases, apply all migrations from scratch
-3. For existing databases, apply only incremental migrations (files prefixed after 0000_)
-4. Track applied migrations in a Drizzle-managed migrations table
+This applies SQL migration files from the `migrations-sqlite/` directory, maintaining version history.
 
-### Alternative: Direct Schema Push
+### SQLite Migration System
 
-During development, you can also push schema changes directly without generating migration files:
+The SQLite migration system works differently from PostgreSQL:
+- The initial schema is defined in `migrations-sqlite/0000_initial_schema.sql`
+- Incremental migrations can be added as new numbered SQL files in the same directory
+- The system applies migrations in numerical order
+- Migration state is tracked directly in SQLite
+
+### Backup and Restore
+
+SQLite databases are just single files, so you can back them up with simple file operations:
 
 ```bash
-./scripts/drizzle-db-push.sh
+# Backup the SQLite database
+cp sqlite.db backups/sqlite_backup_$(date +%Y%m%d_%H%M%S).db
+
+# Restore from backup
+cp backups/sqlite_backup_20250330_123456.db sqlite.db
 ```
 
-This is useful for rapid development, but migrations are recommended for production deployments.
-
-### Migration in Docker Deployment
-
-The Drizzle migration system is integrated with Docker deployment:
-- When containers start, migrations are automatically applied
-- The system intelligently detects existing tables and only applies needed changes
-- Drizzle maintains a version history in the database
-
-This ensures consistent database schema across all environments while providing type safety through TypeScript integration.
+The backup process is much simpler than with PostgreSQL since the entire database is contained in one file.

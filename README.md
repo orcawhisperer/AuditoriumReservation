@@ -15,47 +15,46 @@ A military-themed auditorium reservation system providing a comprehensive, user-
 
 - **Frontend**: React with TypeScript, Tailwind CSS, Shadcn UI components
 - **Backend**: Express.js
-- **Database**: PostgreSQL with Drizzle ORM
+- **Database**: SQLite with Drizzle ORM (with PostgreSQL compatibility)
 - **Authentication**: Passport.js with session-based authentication
 - **State Management**: TanStack Query (React Query)
 - **Deployment**: Docker containers for development and production
 
 ## Database Management
 
-The project uses Drizzle ORM for database interactions and migrations. The following tools are available for database management:
+The project uses Drizzle ORM for database interactions and migrations. While the system was originally designed with PostgreSQL, it has been migrated to use SQLite for simpler deployment and portability.
 
 ### Schema Management
 
 - The database schema is defined in `shared/schema.ts`
 - When updating schemas, use Drizzle's type-safe schema definition
 
-### Migration Scripts
+### Database Management Scripts
 
-Several scripts are available to help manage database migrations:
+Several scripts are available to help manage the SQLite database. You can use our `manage.sh` utility:
 
-1. **Generate migrations** from schema changes:
+1. **Initialize the database** with schema and admin user:
    ```
-   ./scripts/drizzle-generate.sh
+   ./manage.sh init-db
    ```
-   This creates SQL migration files in the `migrations` folder.
+   This creates the database file, applies the initial schema, and creates an admin user if one doesn't exist.
 
-2. **Apply migrations** to the database:
+2. **Push schema changes** directly to the database (for development):
    ```
-   ./scripts/drizzle-run-migrations.sh
-   ```
-   This script intelligently detects if tables already exist and applies only incremental migrations.
-
-3. **Push schema changes** directly to the database (for development):
-   ```
-   ./scripts/drizzle-db-push.sh
+   ./manage.sh push-schema
    ```
    This bypasses migration files and directly updates the database schema.
 
-4. **View database** with Drizzle Studio:
+3. **Run migrations** on the SQLite database:
    ```
-   ./scripts/drizzle-studio.sh
+   ./manage.sh migrate
    ```
-   This launches a GUI tool for database management.
+   This applies SQL migration files from the `migrations-sqlite` folder.
+
+4. **View all available commands**:
+   ```
+   ./manage.sh help
+   ```
 
 ### Migration System Architecture
 
@@ -94,7 +93,7 @@ docker-compose -f docker-compose.prod.yml up
 1. Clone the repository
 2. Install dependencies: `npm install`
 3. Set up environment variables (see `.env.example`)
-4. Run migrations: `./scripts/drizzle-run-migrations.sh`
+4. Initialize the database: `./manage.sh init-db`
 5. Start the application: `npm run dev`
 
 ## Admin Access

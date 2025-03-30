@@ -25,18 +25,29 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ProfileUpdate, PasswordChange } from "@shared/schema";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Password change form schema
-const passwordChangeSchema = z.object({
-  currentPassword: z.string().min(6, "Password must be at least 6 characters"),
-  newPassword: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const passwordChangeSchema = z
+  .object({
+    currentPassword: z
+      .string()
+      .min(6, "Password must be at least 6 characters"),
+    newPassword: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z
+      .string()
+      .min(6, "Password must be at least 6 characters"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 type PasswordChangeFormValues = z.infer<typeof passwordChangeSchema>;
 
@@ -54,7 +65,7 @@ function ChangePasswordCard() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const form = useForm<PasswordChangeFormValues>({
     resolver: zodResolver(passwordChangeSchema),
     defaultValues: {
@@ -63,7 +74,7 @@ function ChangePasswordCard() {
       confirmPassword: "",
     },
   });
-  
+
   const changePasswordMutation = useMutation({
     mutationFn: async (data: PasswordChangeFormValues) => {
       const res = await fetch("/api/change-password", {
@@ -74,12 +85,12 @@ function ChangePasswordCard() {
           newPassword: data.newPassword,
         }),
       });
-      
+
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(errorText || "Failed to change password");
       }
-      
+
       return res.json();
     },
     onSuccess: () => {
@@ -97,11 +108,11 @@ function ChangePasswordCard() {
       });
     },
   });
-  
+
   function onSubmit(data: PasswordChangeFormValues) {
     changePasswordMutation.mutate(data);
   }
-  
+
   return (
     <Card>
       <CardHeader>
@@ -109,9 +120,7 @@ function ChangePasswordCard() {
           <KeyRound className="h-5 w-5" />
           Change Password
         </CardTitle>
-        <CardDescription>
-          Update your account password
-        </CardDescription>
+        <CardDescription>Update your account password</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -135,7 +144,9 @@ function ChangePasswordCard() {
                       variant="ghost"
                       size="sm"
                       className="absolute right-0 top-0 h-full px-3"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      onClick={() =>
+                        setShowCurrentPassword(!showCurrentPassword)
+                      }
                     >
                       {showCurrentPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -148,7 +159,7 @@ function ChangePasswordCard() {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="newPassword"
@@ -181,7 +192,7 @@ function ChangePasswordCard() {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="confirmPassword"
@@ -201,7 +212,9 @@ function ChangePasswordCard() {
                       variant="ghost"
                       size="sm"
                       className="absolute right-0 top-0 h-full px-3"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                     >
                       {showConfirmPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -214,9 +227,9 @@ function ChangePasswordCard() {
                 </FormItem>
               )}
             />
-            
-            <Button 
-              type="submit" 
+
+            <Button
+              type="submit"
               className="w-full"
               disabled={changePasswordMutation.isPending}
             >
@@ -235,7 +248,7 @@ function ChangePasswordCard() {
 function ProfileUpdateCard() {
   const { toast } = useToast();
   const { user } = useAuth();
-  
+
   const form = useForm<ProfileUpdateFormValues>({
     resolver: zodResolver(profileUpdateSchema),
     defaultValues: {
@@ -244,7 +257,7 @@ function ProfileUpdateCard() {
       dateOfBirth: user?.dateOfBirth || "",
     },
   });
-  
+
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileUpdateFormValues) => {
       const res = await fetch(`/api/users/${user?.id}`, {
@@ -252,12 +265,12 @@ function ProfileUpdateCard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      
+
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(errorText || "Failed to update profile");
       }
-      
+
       return res.json();
     },
     onSuccess: () => {
@@ -275,11 +288,11 @@ function ProfileUpdateCard() {
       });
     },
   });
-  
+
   function onSubmit(data: ProfileUpdateFormValues) {
     updateProfileMutation.mutate(data);
   }
-  
+
   return (
     <Card>
       <CardHeader>
@@ -287,9 +300,7 @@ function ProfileUpdateCard() {
           <User className="h-5 w-5" />
           Personal Information
         </CardTitle>
-        <CardDescription>
-          Update your profile information
-        </CardDescription>
+        <CardDescription>Update your profile information</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -307,7 +318,7 @@ function ProfileUpdateCard() {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="gender"
@@ -333,7 +344,7 @@ function ProfileUpdateCard() {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="dateOfBirth"
@@ -347,9 +358,9 @@ function ProfileUpdateCard() {
                 </FormItem>
               )}
             />
-            
-            <Button 
-              type="submit" 
+
+            <Button
+              type="submit"
               className="w-full"
               disabled={updateProfileMutation.isPending}
             >
@@ -368,7 +379,7 @@ function ProfileUpdateCard() {
 export default function ProfilePage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  
+
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -376,13 +387,13 @@ export default function ProfilePage() {
       </div>
     );
   }
-  
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="container mx-auto h-16 px-4 sm:px-8 flex items-center">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             onClick={() => setLocation("/")}
             className="flex items-center gap-2"
           >
@@ -394,7 +405,7 @@ export default function ProfilePage() {
 
       <main className="container mx-auto py-8 px-4 sm:px-8">
         <h1 className="text-2xl font-bold mb-8">User Profile</h1>
-        
+
         <div className="max-w-md mx-auto space-y-8">
           <ProfileUpdateCard />
           <ChangePasswordCard />
