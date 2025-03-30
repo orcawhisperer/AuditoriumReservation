@@ -39,11 +39,11 @@ export function DataPagination<T>({
     
     setCurrentItems(slicedData);
     
-    // Call the callback with the current page items
-    if (onPageChange) {
+    // Call the callback with the current page items, but only if it changes
+    if (onPageChange && JSON.stringify(slicedData) !== JSON.stringify(currentItems)) {
       onPageChange(slicedData);
     }
-  }, [data, currentPage, itemsPerPage, onPageChange]);
+  }, [data, currentPage, itemsPerPage]);
 
   // Sync with external current page if provided
   useEffect(() => {

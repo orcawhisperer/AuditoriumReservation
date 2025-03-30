@@ -18,14 +18,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useTranslation } from "react-i18next";
 import { DataPagination } from "@/components/data-pagination";
-import { useState } from "react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import React, { useState, useRef, useEffect } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -130,6 +123,22 @@ export default function HomePage() {
   const [paginatedReservations, setPaginatedReservations] = useState<
     Reservation[]
   >([]);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const { data: shows = [], isLoading: showsLoading } = useQuery<Show[]>({
     queryKey: ["/api/shows"],
@@ -215,24 +224,43 @@ export default function HomePage() {
               </Button>
             )}
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <UserCircle className="h-4 w-4" />
-                  {user?.username}
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setLocation("/profile")}>
-                  {t("translation.common.profile")}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
-                  {t("translation.common.logout")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="relative" ref={userMenuRef}>
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+              >
+                <UserCircle className="h-4 w-4" />
+                {user?.username}
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+              
+              {userMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-popover border border-border z-50">
+                  <div className="py-1 rounded-md">
+                    <button
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        setLocation("/profile");
+                      }}
+                      className="flex w-full items-center px-4 py-2 text-sm hover:bg-accent"
+                    >
+                      {t("translation.common.profile")}
+                    </button>
+                    <div className="h-px my-1 bg-muted" />
+                    <button
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        logoutMutation.mutate();
+                      }}
+                      className="flex w-full items-center px-4 py-2 text-sm hover:bg-accent"
+                    >
+                      {t("translation.common.logout")}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
