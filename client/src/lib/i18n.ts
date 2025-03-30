@@ -32,6 +32,110 @@ const enTranslations = {
     seats: "Seats",
     morePages: "More pages",
   },
+  guide: {
+    helpButton: "Interactive Guide",
+    buttons: {
+      back: "Back",
+      close: "Close",
+      finish: "Finish",
+      next: "Next",
+      skip: "Skip Tour"
+    },
+    menu: {
+      title: "Interactive Guides",
+      userGuide: "User Guide",
+      adminGuide: "Admin Guide",
+      seatGuide: "Seat Selection Guide",
+      profileGuide: "Profile Guide",
+      resetGuides: "Reset All Guides"
+    },
+    admin: {
+      welcome: {
+        title: "Admin Dashboard",
+        content: "Welcome to the admin dashboard! Here you can manage shows, users, and reservations for Shahbaaz Auditorium."
+      },
+      tabs: {
+        title: "Management Tabs",
+        content: "Use these tabs to switch between different management areas. You can manage shows, users, and reservations."
+      },
+      shows: {
+        title: "Show Management",
+        content: "Create, edit, or delete upcoming shows. You can set show details including title, date, and customize seat layouts."
+      },
+      users: {
+        title: "User Management",
+        content: "Create and manage user accounts. You can set user permissions, seat limits, and enable/disable accounts."
+      },
+      reservations: {
+        title: "Reservation Management",
+        content: "View and manage all reservations. You can filter by show, edit seat assignments, or cancel reservations if needed."
+      }
+    },
+    user: {
+      welcome: {
+        title: "Welcome to Shahbaaz Auditorium",
+        content: "This is your home page where you can view upcoming shows and manage your seat reservations."
+      },
+      shows: {
+        title: "Upcoming Shows",
+        content: "Browse and view all upcoming shows. Click on a show to reserve seats."
+      },
+      reservations: {
+        title: "Your Reservations",
+        content: "View all your current seat reservations. You can see details about each reservation here."
+      },
+      actions: {
+        title: "User Actions",
+        content: "Access your profile settings, change language, toggle theme, or log out using these options."
+      }
+    },
+    auth: {
+      welcome: {
+        title: "Authentication",
+        content: "Welcome to the authentication page. You can login to your existing account or register a new account (if you're an admin)."
+      },
+      login: {
+        title: "Login Form",
+        content: "Enter your username and password to access your account and reserve seats for upcoming shows."
+      },
+      register: {
+        title: "Registration",
+        content: "Note: Only administrators can create new user accounts. If you need an account, please contact an administrator."
+      }
+    },
+    seats: {
+      welcome: {
+        title: "Seat Selection",
+        content: "Welcome to the seat selection page. Here you can select seats for your reservation."
+      },
+      grid: {
+        title: "Seat Grid",
+        content: "This is the interactive seat grid. Click on available seats to select them. The grid shows both Balcony (prefix B) and Downstairs (prefix D) sections."
+      },
+      legend: {
+        title: "Seat Legend",
+        content: "This legend explains the different seat states: available, selected, reserved by others, and blocked seats."
+      },
+      actions: {
+        title: "Reservation Actions",
+        content: "When you're done selecting seats, use these buttons to confirm your reservation or cancel and return to the home page."
+      }
+    },
+    profile: {
+      welcome: {
+        title: "Your Profile",
+        content: "Welcome to your profile page. Here you can view and update your account information."
+      },
+      info: {
+        title: "Account Information",
+        content: "View and edit your basic account information including email address and username."
+      },
+      password: {
+        title: "Password Management",
+        content: "Change your password here. You'll need to enter your current password for verification."
+      }
+    }
+  },
   auth: {
     username: "Username",
     password: "Password",
@@ -166,6 +270,110 @@ const hiTranslations = {
     view: "देखें",
     seats: "सीटें",
     morePages: "अधिक पृष्ठ",
+  },
+  guide: {
+    helpButton: "इंटरैक्टिव गाइड",
+    buttons: {
+      back: "पीछे",
+      close: "बंद करें",
+      finish: "समाप्त",
+      next: "अगला",
+      skip: "टूर छोड़ें"
+    },
+    menu: {
+      title: "इंटरैक्टिव गाइड",
+      userGuide: "उपयोगकर्ता गाइड",
+      adminGuide: "एडमिन गाइड",
+      seatGuide: "सीट चयन गाइड",
+      profileGuide: "प्रोफाइल गाइड",
+      resetGuides: "सभी गाइड रीसेट करें"
+    },
+    admin: {
+      welcome: {
+        title: "एडमिन डैशबोर्ड",
+        content: "एडमिन डैशबोर्ड में आपका स्वागत है! यहां आप शहबाज़ ऑडिटोरियम के शो, उपयोगकर्ता और आरक्षण का प्रबंधन कर सकते हैं।"
+      },
+      tabs: {
+        title: "प्रबंधन टैब",
+        content: "विभिन्न प्रबंधन क्षेत्रों के बीच स्विच करने के लिए इन टैब का उपयोग करें। आप शो, उपयोगकर्ता और आरक्षण का प्रबंधन कर सकते हैं।"
+      },
+      shows: {
+        title: "शो प्रबंधन",
+        content: "आगामी शो बनाएं, संपादित करें या हटाएं। आप शो विवरण, तिथि और सीट लेआउट को अनुकूलित कर सकते हैं।"
+      },
+      users: {
+        title: "उपयोगकर्ता प्रबंधन",
+        content: "उपयोगकर्ता खाते बनाएं और प्रबंधित करें। आप उपयोगकर्ता अनुमतियां, सीट सीमाएं और खाते को सक्षम/अक्षम कर सकते हैं।"
+      },
+      reservations: {
+        title: "आरक्षण प्रबंधन",
+        content: "सभी आरक्षण देखें और प्रबंधित करें। आप शो के अनुसार फ़िल्टर कर सकते हैं, सीट असाइनमेंट संपादित कर सकते हैं, या यदि आवश्यक हो तो आरक्षण रद्द कर सकते हैं।"
+      }
+    },
+    user: {
+      welcome: {
+        title: "शहबाज़ ऑडिटोरियम में आपका स्वागत है",
+        content: "यह आपका होम पेज है जहां आप आगामी शो देख सकते हैं और अपने सीट आरक्षण का प्रबंधन कर सकते हैं।"
+      },
+      shows: {
+        title: "आगामी शो",
+        content: "सभी आगामी शो ब्राउज़ करें और देखें। सीट आरक्षित करने के लिए किसी शो पर क्लिक करें।"
+      },
+      reservations: {
+        title: "आपके आरक्षण",
+        content: "अपने सभी वर्तमान सीट आरक्षण देखें। आप यहां प्रत्येक आरक्षण के बारे में विवरण देख सकते हैं।"
+      },
+      actions: {
+        title: "उपयोगकर्ता कार्य",
+        content: "इन विकल्पों का उपयोग करके अपनी प्रोफ़ाइल सेटिंग्स तक पहुंचें, भाषा बदलें, थीम टॉगल करें, या लॉग आउट करें।"
+      }
+    },
+    auth: {
+      welcome: {
+        title: "प्रमाणीकरण",
+        content: "प्रमाणीकरण पेज में आपका स्वागत है। आप अपने मौजूदा खाते में लॉगिन कर सकते हैं या नया खाता पंजीकृत कर सकते हैं (यदि आप एडमिन हैं)।"
+      },
+      login: {
+        title: "लॉगिन फॉर्म",
+        content: "अपने खाते तक पहुंचने और आगामी शो के लिए सीटें आरक्षित करने के लिए अपना उपयोगकर्ता नाम और पासवर्ड दर्ज करें।"
+      },
+      register: {
+        title: "पंजीकरण",
+        content: "नोट: केवल व्यवस्थापक ही नए उपयोगकर्ता खाते बना सकते हैं। यदि आपको खाते की आवश्यकता है, तो कृपया किसी व्यवस्थापक से संपर्क करें।"
+      }
+    },
+    seats: {
+      welcome: {
+        title: "सीट चयन",
+        content: "सीट चयन पृष्ठ में आपका स्वागत है। यहां आप अपने आरक्षण के लिए सीटें चुन सकते हैं।"
+      },
+      grid: {
+        title: "सीट ग्रिड",
+        content: "यह इंटरैक्टिव सीट ग्रिड है। उन्हें चुनने के लिए उपलब्ध सीटों पर क्लिक करें। ग्रिड बालकनी (उपसर्ग B) और नीचे की मंजिल (उपसर्ग D) दोनों अनुभागों को दिखाता है।"
+      },
+      legend: {
+        title: "सीट प्रतीक",
+        content: "यह प्रतीक विभिन्न सीट स्थितियों की व्याख्या करता है: उपलब्ध, चयनित, दूसरों द्वारा आरक्षित और अवरुद्ध सीटें।"
+      },
+      actions: {
+        title: "आरक्षण कार्य",
+        content: "जब आप सीटें चुनना समाप्त कर लें, तो अपने आरक्षण की पुष्टि करने या रद्द करने और होम पेज पर वापस जाने के लिए इन बटनों का उपयोग करें।"
+      }
+    },
+    profile: {
+      welcome: {
+        title: "आपकी प्रोफ़ाइल",
+        content: "आपकी प्रोफ़ाइल पृष्ठ में आपका स्वागत है। यहां आप अपनी खाता जानकारी देख और अपडेट कर सकते हैं।"
+      },
+      info: {
+        title: "खाता जानकारी",
+        content: "अपनी बुनियादी खाता जानकारी देखें और संपादित करें, जिसमें ईमेल पता और उपयोगकर्ता नाम शामिल हैं।"
+      },
+      password: {
+        title: "पासवर्ड प्रबंधन",
+        content: "यहां अपना पासवर्ड बदलें। सत्यापन के लिए आपको अपना वर्तमान पासवर्ड दर्ज करना होगा।"
+      }
+    }
   },
   auth: {
     username: "उपयोगकर्ता नाम",
@@ -378,6 +586,7 @@ const flatEnResources = {
       booking: enTranslations.booking,
       admin: enTranslations.admin,
       profile: enTranslations.profile,
+      guide: enTranslations.guide,
     },
   }),
 };
@@ -392,6 +601,7 @@ const flatHiResources = {
       booking: hiTranslations.booking,
       admin: hiTranslations.admin,
       profile: hiTranslations.profile,
+      guide: hiTranslations.guide,
     },
   }),
 };
