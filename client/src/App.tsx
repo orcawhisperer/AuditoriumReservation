@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./hooks/use-theme";
+import { TourGuideProvider } from "./hooks/use-tour-guide";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import HomePage from "@/pages/home-page";
@@ -44,8 +45,10 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="light" storageKey="theme">
           <AuthProvider>
-            <Router />
-            <Toaster />
+            <TourGuideProvider>
+              <Router />
+              <Toaster />
+            </TourGuideProvider>
           </AuthProvider>
         </ThemeProvider>
       </QueryClientProvider>

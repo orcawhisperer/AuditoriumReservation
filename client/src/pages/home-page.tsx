@@ -16,6 +16,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { TourGuideButton } from "@/components/tour-guide-button";
 import { useTranslation } from "react-i18next";
 import { DataPagination } from "@/components/data-pagination";
 import React, { useState, useRef, useEffect } from "react";
@@ -159,6 +160,7 @@ export default function HomePage() {
             <div className="flex items-center gap-4">
               <ThemeToggle />
               <LanguageSwitcher />
+              <TourGuideButton />
               <Skeleton className="h-10 w-24" />
             </div>
           </div>
@@ -209,7 +211,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
+      <header className="border-b app-header">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between h-auto sm:h-16 py-4 sm:py-0 px-4 sm:px-8">
           <h1 className="text-2xl font-bold mb-4 sm:mb-0">
             {t("translation.common.appName")}
@@ -217,6 +219,7 @@ export default function HomePage() {
           <div className="flex items-center gap-4">
             <ThemeToggle />
             <LanguageSwitcher />
+            <TourGuideButton />
 
             {user?.isAdmin && (
               <Button variant="outline" onClick={() => setLocation("/admin")}>
@@ -224,7 +227,7 @@ export default function HomePage() {
               </Button>
             )}
 
-            <div className="relative" ref={userMenuRef}>
+            <div className="relative user-menu" ref={userMenuRef}>
               <Button 
                 variant="outline" 
                 className="flex items-center gap-2"
@@ -267,7 +270,7 @@ export default function HomePage() {
 
       <main className="container mx-auto py-8 px-4 sm:px-8 space-y-8">
         <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
+          <Card className="upcoming-shows">
             <CardHeader>
               <CardTitle>{t("translation.home.upcomingShows")}</CardTitle>
               <CardDescription>
@@ -305,7 +308,7 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="your-reservations">
             <CardHeader>
               <CardTitle>{t("translation.home.yourReservations")}</CardTitle>
               <CardDescription>
