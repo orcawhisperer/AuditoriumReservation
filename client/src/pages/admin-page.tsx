@@ -53,7 +53,8 @@ import {
   Ticket,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { DataPagination } from "@/components/data-pagination";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -1748,11 +1749,12 @@ function ReservationManagement() {
 
   const itemsPerPage = 5;
   const [page, setPage] = useState(1);
-  const totalPages = Math.ceil(filteredReservations.length / itemsPerPage);
-  const paginatedReservations = filteredReservations.slice(
-    (page - 1) * itemsPerPage,
-    page * itemsPerPage,
-  );
+  const [currentItems, setCurrentItems] = useState<Reservation[]>([]);
+
+  // Reset page when filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [selectedShowId]);
 
   if (showsLoading || reservationsLoading || usersLoading) {
     return (
@@ -1794,104 +1796,111 @@ function ReservationManagement() {
             </Select>
           </div>
 
-          <div className="space-y-4 h-[400px] overflow-y-auto pr-2">
-            {paginatedReservations.map((reservation) => {
-              const isPastShow = isShowInPast(reservation.showId);
-              
-              return (
-                <div
-                  key={reservation.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium">
-                      {getShowTitle(reservation.showId)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Reserved by: {getUserName(reservation.userId)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Seats: {typeof reservation.seatNumbers === 'string' 
-                        ? (reservation.seatNumbers.includes('[') 
-                          ? JSON.parse(reservation.seatNumbers).join(", ")
-                          : reservation.seatNumbers)
-                        : Array.isArray(reservation.seatNumbers) 
-                          ? reservation.seatNumbers.join(", ")
-                          : "No seats"}
-                    </p>
-                    {isPastShow && (
-                      <p className="text-xs text-destructive mt-1">
-                        Past show - modifications disabled
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    {!isPastShow ? (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setEditingReservation(reservation)}
-                        >
-                          Edit
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
+          <div className="h-[400px] overflow-y-auto pr-2">
+            {currentItems.length > 0 ? (
+              <div className="space-y-4">
+                {currentItems.map((reservation: Reservation) => {
+                  const isPastShow = isShowInPast(reservation.showId);
+                  
+                  return (
+                    <div
+                      key={reservation.id}
+                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-4"
+                    >
+                      <div>
+                        <p className="font-medium">
+                          {getShowTitle(reservation.showId)}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Reserved by: {getUserName(reservation.userId)}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Seats: {typeof reservation.seatNumbers === 'string' 
+                            ? (reservation.seatNumbers.includes('[') 
+                              ? JSON.parse(reservation.seatNumbers).join(", ")
+                              : reservation.seatNumbers)
+                            : Array.isArray(reservation.seatNumbers) 
+                              ? reservation.seatNumbers.join(", ")
+                              : "No seats"}
+                        </p>
+                        {isPastShow && (
+                          <p className="text-xs text-destructive mt-1">
+                            Past show - modifications disabled
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        {!isPastShow ? (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setEditingReservation(reservation)}
+                              className="flex-1 sm:flex-none"
+                            >
+                              Edit
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  disabled={deleteReservationMutation.isPending}
+                                  className="flex-1 sm:flex-none"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Reservation</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this reservation? This
+                                    action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => deleteReservationMutation.mutate(reservation.id)}
+                                  >
+                                    {deleteReservationMutation.isPending && (
+                                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                    )}
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled
+                              className="flex-1 sm:flex-none"
+                            >
+                              Edit
+                            </Button>
                             <Button
                               variant="destructive"
                               size="sm"
-                              disabled={deleteReservationMutation.isPending}
+                              disabled
+                              className="flex-1 sm:flex-none"
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
                               Delete
                             </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Reservation</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete this reservation? This
-                                action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => deleteReservationMutation.mutate(reservation.id)}
-                              >
-                                {deleteReservationMutation.isPending && (
-                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                )}
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </>
-                    ) : (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          disabled
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-            {filteredReservations.length === 0 && (
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
               <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
                 <Ticket className="h-8 w-8 mb-2" />
                 <p>
@@ -1903,36 +1912,13 @@ function ReservationManagement() {
             )}
           </div>
 
-          {filteredReservations.length > itemsPerPage && (
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                  />
-                </PaginationItem>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (pageNum) => (
-                    <PaginationItem key={pageNum}>
-                      <PaginationLink
-                        onClick={() => setPage(pageNum)}
-                        isActive={page === pageNum}
-                      >
-                        {pageNum}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ),
-                )}
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          )}
+          <DataPagination
+            data={filteredReservations}
+            itemsPerPage={itemsPerPage}
+            currentPage={page}
+            onCurrentPageChange={setPage}
+            onPageChange={setCurrentItems}
+          />
         </div>
       </CardContent>
       {editingReservation && (
