@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Show, Reservation } from "@shared/schema";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Loader2, UserCircle, ChevronDown } from "lucide-react";
+import { Loader2, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +35,7 @@ import {
   ShowCardSkeleton,
   ReservationCardSkeleton,
 } from "@/components/ui/skeleton-loaders";
+import { UserAvatar } from "@/components/user-avatar";
 
 function ShowCard({
   show,
@@ -157,8 +158,6 @@ export default function HomePage() {
               {t("translation.common.appName")}
             </h1>
             <div className="flex items-center gap-4">
-              <ThemeToggle />
-              <LanguageSwitcher />
               <Skeleton className="h-10 w-24" />
             </div>
           </div>
@@ -215,9 +214,6 @@ export default function HomePage() {
             {t("translation.common.appName")}
           </h1>
           <div className="flex items-center gap-4">
-            <ThemeToggle />
-            <LanguageSwitcher />
-
             {user?.isAdmin && (
               <Button variant="outline" onClick={() => setLocation("/admin")}>
                 {t("translation.admin.dashboard")}
@@ -230,8 +226,8 @@ export default function HomePage() {
                 className="flex items-center gap-2"
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
               >
-                <UserCircle className="h-4 w-4" />
-                {user?.username}
+                <UserAvatar user={user} className="h-6 w-6" />
+                <span className="ml-1">{user?.username}</span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
               
