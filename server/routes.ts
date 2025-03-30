@@ -334,9 +334,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const reservedSeats = existingReservations.flatMap((r) => {
               try {
                 if (typeof r.seatNumbers === 'string') {
-                  return r.seatNumbers.startsWith('[') 
-                    ? JSON.parse(r.seatNumbers) 
-                    : r.seatNumbers.split(',').map(s => s.trim());
+                  return (r.seatNumbers as string).startsWith('[') 
+                    ? JSON.parse(r.seatNumbers as string) 
+                    : (r.seatNumbers as string).split(',').map((s: string) => s.trim());
                 } else if (Array.isArray(r.seatNumbers)) {
                   return r.seatNumbers;
                 }
@@ -352,9 +352,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const seatNumbers = Array.isArray(parsed.data.seatNumbers) 
               ? parsed.data.seatNumbers 
               : (typeof parsed.data.seatNumbers === 'string'
-                ? (parsed.data.seatNumbers.startsWith('[') 
-                  ? JSON.parse(parsed.data.seatNumbers) 
-                  : parsed.data.seatNumbers.split(',').map(s => s.trim()))
+                ? ((parsed.data.seatNumbers as string).startsWith('[') 
+                  ? JSON.parse(parsed.data.seatNumbers as string) 
+                  : (parsed.data.seatNumbers as string).split(',').map((s: string) => s.trim()))
                 : []);
             console.log(`[Transaction ${retryCount}] Attempting to reserve seats:`, seatNumbers);
 
@@ -515,9 +515,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const reservedSeats = otherReservations.flatMap((r) => {
           try {
             if (typeof r.seatNumbers === 'string') {
-              return r.seatNumbers.startsWith('[') 
-                ? JSON.parse(r.seatNumbers) 
-                : r.seatNumbers.split(',').map(s => s.trim());
+              return (r.seatNumbers as string).startsWith('[') 
+                ? JSON.parse(r.seatNumbers as string) 
+                : (r.seatNumbers as string).split(',').map((s: string) => s.trim());
             } else if (Array.isArray(r.seatNumbers)) {
               return r.seatNumbers;
             }
@@ -532,9 +532,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const seatNumbers = Array.isArray(parsed.data.seatNumbers) 
           ? parsed.data.seatNumbers 
           : (typeof parsed.data.seatNumbers === 'string'
-            ? (parsed.data.seatNumbers.startsWith('[') 
-              ? JSON.parse(parsed.data.seatNumbers) 
-              : parsed.data.seatNumbers.split(',').map(s => s.trim()))
+            ? ((parsed.data.seatNumbers as string).startsWith('[') 
+              ? JSON.parse(parsed.data.seatNumbers as string) 
+              : (parsed.data.seatNumbers as string).split(',').map((s: string) => s.trim()))
             : []);
         
         // Get the user who owns the reservation
@@ -565,7 +565,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Skipping seat limit check for admin user editing reservation`);
         }
         
-        const hasConflict = seatNumbers.some((seat) =>
+        const hasConflict = seatNumbers.some((seat: string) =>
           reservedSeats.includes(seat)
         );
 

@@ -74,9 +74,18 @@ function ShowCard({
             </div>
           </div>
           <Button
-            onClick={() => setLocation(`/show/${show.id}`)}
-            disabled={isPastShow || hasReservation}
-            variant={isPastShow || hasReservation ? "outline" : "default"}
+            onClick={() => {
+              if (hasReservation) {
+                // If the user has a reservation, we should still go to the show page
+                // but the page will show their reservation details instead of the booking form
+                setLocation(`/show/${show.id}`);
+              } else {
+                // Normal booking flow
+                setLocation(`/show/${show.id}`);
+              }
+            }}
+            disabled={isPastShow}
+            variant={isPastShow ? "outline" : hasReservation ? "secondary" : "default"}
             className="w-full sm:w-auto"
           >
             {isPastShow
