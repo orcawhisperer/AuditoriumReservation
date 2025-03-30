@@ -34,8 +34,15 @@ export const config = {
     password: getEnv('ADMIN_PASSWORD', 'admin'),
   },
   
-  // Database configuration - for future use when migrating to PostgreSQL
-  databaseUrl: getEnv('DATABASE_URL', ''),
+  // Database configuration
+  database: {
+    url: getEnv('DATABASE_URL', '', true),
+    host: getEnv('PGHOST', ''),
+    port: parseInt(getEnv('PGPORT', '5432')),
+    user: getEnv('PGUSER', ''),
+    password: getEnv('PGPASSWORD', ''),
+    name: getEnv('PGDATABASE', ''),
+  },
   
   // Initialize the config and validate required variables
   validate(): void {

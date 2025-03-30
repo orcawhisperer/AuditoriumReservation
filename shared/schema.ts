@@ -1,31 +1,31 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { pgTable, text, integer, serial, timestamp, boolean, varchar, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { sql } from "drizzle-orm";
 
-export const users = sqliteTable("users", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-  isAdmin: integer("is_admin", { mode: "boolean" }).notNull().default(false),
-  isEnabled: integer("is_enabled", { mode: "boolean" }).notNull().default(true),
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: varchar("username", { length: 100 }).notNull().unique(),
+  password: varchar("password", { length: 255 }).notNull(),
+  isAdmin: boolean("is_admin").notNull().default(false),
+  isEnabled: boolean("is_enabled").notNull().default(true),
   seatLimit: integer("seat_limit").notNull().default(4),
-  name: text("name"),
-  gender: text("gender"),
-  dateOfBirth: text("date_of_birth"),
-  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  name: varchar("name", { length: 255 }),
+  gender: varchar("gender", { length: 50 }),
+  dateOfBirth: varchar("date_of_birth", { length: 50 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const shows = sqliteTable("shows", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  title: text("title").notNull(),
-  date: text("date").notNull(),
+export const shows = pgTable("shows", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  date: timestamp("date").notNull(),
   poster: text("poster"),
   description: text("description"),
-  themeColor: text("theme_color").default("#4B5320"),
-  emoji: text("emoji"),
-  blockedSeats: text("blocked_seats").notNull().default("[]"),
-  seatLayout: text("seat_layout").notNull().default(JSON.stringify([
+  themeColor: varchar("theme_color", { length: 7 }).default("#4B5320"),
+  emoji: varchar("emoji", { length: 50 }),
+  blockedSeats: json("blocked_seats").notNull().default([]),
+  seatLayout: json("seat_layout").notNull().default([
     {
       section: "Balcony",
       rows: [
@@ -52,15 +52,15 @@ export const shows = sqliteTable("shows", {
       ],
       total_section_seats: 232
     }
-  ])),
+  ]),
 });
 
-export const reservations = sqliteTable("reservations", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const reservations = pgTable("reservations", {
+  id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
   showId: integer("show_id").references(() => shows.id),
-  seatNumbers: text("seat_numbers").notNull(), 
-  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  seatNumbers: json("seat_numbers").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users, {
@@ -94,17 +94,51 @@ export const insertShowSchema = createInsertSchema(shows).extend({
   description: z.string().optional(),
   themeColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color").optional(),
   emoji: z.string().optional(),
-  blockedSeats: z.string().transform(str => {
+  blockedSeats: z.union([z.string(), z.array(z.string())]).transform(val => {
+    // If it's already an array, validate it
+    if (Array.isArray(val)) {
+      // Validate each blocked seat
+      val.forEach(seat => {
+        if (!/^[BD][A-N][0-9]{1,2}$/.test(seat)) {
+          throw new Error(`Invalid seat format: ${seat}. Format should be like BA1, DB2, etc.`);
+        }
+        const [section, row, number] = [seat[0], seat[1], parseInt(seat.slice(2))];
+        const isValid = (
+          // Balcony
+          (section === 'B' && 
+            ((row === 'C' || row === 'B') && number >= 1 && number <= 12) || // Balcony B, C rows
+            (row === 'A' && number >= 9 && number <= 12) // Balcony A row (only 9-12)
+          ) ||
+          // Downstairs
+          (section === 'D' && (
+            // Row N specific seats
+            (row === 'N' && [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)) ||
+            // Middle section (G-M)
+            (row >= 'G' && row <= 'M' && number >= 1 && number <= 16) ||
+            // Lower section (A-F)
+            (row >= 'A' && row <= 'F' && number >= 1 && number <= 18)
+          ))
+        );
+        if (!isValid) {
+          throw new Error(`Invalid seat number: ${seat}. This seat does not exist in the layout.`);
+        }
+      });
+      return val;
+    }
+
+    // Otherwise treat as string
+    const str = val as string;
+    
     // If the string is empty or undefined, return empty array
     if (!str || str.trim() === '') {
-      return JSON.stringify([]);
+      return [];
     }
 
     try {
       // Try parsing as JSON first (in case it's already JSON)
       const parsed = JSON.parse(str);
       if (Array.isArray(parsed)) {
-        return JSON.stringify(parsed);
+        return parsed;
       }
     } catch (e) {
       // If not valid JSON, treat as comma-separated string
@@ -139,7 +173,7 @@ export const insertShowSchema = createInsertSchema(shows).extend({
         throw new Error(`Invalid seat number: ${seat}. This seat does not exist in the layout.`);
       }
     });
-    return JSON.stringify(seats);
+    return seats;
   }),
 });
 
@@ -169,8 +203,7 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
         return false;
       }),
       { message: "Invalid seat selection" }
-    )
-    .transform(seats => JSON.stringify(seats)),
+    ),
 });
 
 export const loginSchema = z.object({

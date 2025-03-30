@@ -1,13 +1,17 @@
 import { InsertUser, InsertShow, InsertReservation, User, Show, Reservation } from "@shared/schema";
 import session from "express-session";
-import createMemoryStore from "memorystore";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { users, shows, reservations } from '@shared/schema';
 import { hashPassword } from "./utils/password";
 import { config } from "./config";
+import connectPg from "connect-pg-simple";
+import pg from "pg";
 
-const MemoryStore = createMemoryStore(session);
+const PostgresStore = connectPg(session);
+const pool = new pg.Pool({
+  connectionString: config.database.url,
+});
 
 export interface IStorage {
   // User operations
@@ -39,12 +43,13 @@ export interface IStorage {
   sessionStore: session.Store;
 }
 
-export class SQLiteStorage implements IStorage {
+export class PostgresStorage implements IStorage {
   sessionStore: session.Store;
 
   constructor() {
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000,
+    this.sessionStore = new PostgresStore({
+      pool,
+      createTableIfMissing: true,
     });
     
     // Admin user initialization is now handled by the seed.ts module
@@ -103,7 +108,13 @@ export class SQLiteStorage implements IStorage {
   }
 
   async createShow(insertShow: InsertShow): Promise<Show> {
-    const result = await db.insert(shows).values(insertShow).returning();
+    // Handle date conversion for PostgreSQL
+    const showData = {
+      ...insertShow,
+      date: new Date(insertShow.date) // Convert string date to Date object
+    };
+    
+    const result = await db.insert(shows).values(showData).returning();
     return result[0];
   }
 
@@ -121,8 +132,14 @@ export class SQLiteStorage implements IStorage {
   }
 
   async updateShow(id: number, show: InsertShow): Promise<Show> {
+    // Handle date conversion for PostgreSQL
+    const showData = {
+      ...show,
+      date: new Date(show.date) // Convert string date to Date object
+    };
+    
     const result = await db.update(shows)
-      .set(show)
+      .set(showData)
       .where(eq(shows.id, id))
       .returning();
     return result[0];
@@ -164,4 +181,4 @@ export class SQLiteStorage implements IStorage {
   }
 }
 
-export const storage = new SQLiteStorage();
+export const storage = new PostgresStorage();
