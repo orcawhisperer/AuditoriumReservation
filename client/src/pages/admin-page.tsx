@@ -427,7 +427,11 @@ function EditShowDialog({
       description: show.description || "",
       themeColor: show.themeColor || "#4B5320",
       emoji: show.emoji || "🎭",
-      blockedSeats: JSON.parse(show.blockedSeats || "[]").join(","),
+      blockedSeats: Array.isArray(show.blockedSeats) 
+        ? show.blockedSeats.join(",") 
+        : (typeof show.blockedSeats === 'string' 
+            ? (show.blockedSeats.includes('[') ? JSON.parse(show.blockedSeats).join(",") : show.blockedSeats) 
+            : ""),
     },
   });
   
@@ -713,10 +717,17 @@ function ShowList() {
   };
   const getBookedSeats = (showId: number) => {
     const showReservations = getShowReservations(showId);
-    return showReservations.flatMap((r) => JSON.parse(r.seatNumbers));
+    return showReservations.flatMap((r) => {
+      try {
+        return typeof r.seatNumbers === 'string' ? JSON.parse(r.seatNumbers) : r.seatNumbers;
+      } catch (e) {
+        console.error("Error parsing seat numbers:", e);
+        return [];
+      }
+    });
   };
   const calculateTotalSeats = (show: Show) => {
-    const layout = JSON.parse(show.seatLayout);
+    const layout = typeof show.seatLayout === 'string' ? JSON.parse(show.seatLayout) : show.seatLayout;
     return layout.reduce((total: number, section: any) => {
       return (
         total +
@@ -759,7 +770,13 @@ function ShowList() {
         {paginatedShows.map((show) => {
           const showReservations = getShowReservations(show.id);
           const bookedSeats = getBookedSeats(show.id);
-          const blockedSeats = JSON.parse(show.blockedSeats || "[]");
+          const blockedSeats = Array.isArray(show.blockedSeats) 
+            ? show.blockedSeats 
+            : (typeof show.blockedSeats === 'string' 
+              ? (show.blockedSeats.includes(",") 
+                ? show.blockedSeats.split(",").map(s => s.trim()) 
+                : (show.blockedSeats ? [show.blockedSeats] : []))
+              : []);
           const totalSeats = calculateTotalSeats(show);
           const availableSeats =
             totalSeats - bookedSeats.length - blockedSeats.length;
@@ -1794,7 +1811,13 @@ function ReservationManagement() {
                       Reserved by: {getUserName(reservation.userId)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Seats: {JSON.parse(reservation.seatNumbers).join(", ")}
+                      Seats: {typeof reservation.seatNumbers === 'string' 
+                        ? (reservation.seatNumbers.includes('[') 
+                          ? JSON.parse(reservation.seatNumbers).join(", ")
+                          : reservation.seatNumbers)
+                        : Array.isArray(reservation.seatNumbers) 
+                          ? reservation.seatNumbers.join(", ")
+                          : "No seats"}
                     </p>
                     {isPastShow && (
                       <p className="text-xs text-destructive mt-1">
@@ -1935,7 +1958,13 @@ function EditReservationDialog({
   const { toast } = useToast();
   const [open, setOpen] = useState(true);
   const [selectedSeats, setSelectedSeats] = useState<string[]>(
-    JSON.parse(reservation.seatNumbers),
+    typeof reservation.seatNumbers === 'string' 
+      ? (reservation.seatNumbers.startsWith('[') 
+          ? JSON.parse(reservation.seatNumbers) 
+          : reservation.seatNumbers.split(',').map(s => s.trim()))
+      : Array.isArray(reservation.seatNumbers) 
+          ? reservation.seatNumbers 
+          : [],
   );
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -1958,7 +1987,13 @@ function EditReservationDialog({
     resolver: zodResolver(insertReservationSchema),
     defaultValues: {
       showId: reservation.showId,
-      seatNumbers: JSON.parse(reservation.seatNumbers),
+      seatNumbers: typeof reservation.seatNumbers === 'string' 
+        ? (reservation.seatNumbers.startsWith('[') 
+            ? JSON.parse(reservation.seatNumbers) 
+            : reservation.seatNumbers.split(',').map(s => s.trim()))
+        : Array.isArray(reservation.seatNumbers) 
+            ? reservation.seatNumbers 
+            : [],
     },
   });
 
@@ -1966,7 +2001,20 @@ function EditReservationDialog({
     return new Set(
       showReservations
         .filter((r) => r.id !== reservation.id)
-        .flatMap((r) => JSON.parse(r.seatNumbers)),
+        .flatMap((r) => {
+          try {
+            return typeof r.seatNumbers === 'string' 
+              ? (r.seatNumbers.startsWith('[') 
+                  ? JSON.parse(r.seatNumbers) 
+                  : r.seatNumbers.split(',').map(s => s.trim()))
+              : Array.isArray(r.seatNumbers) 
+                  ? r.seatNumbers 
+                  : [];
+          } catch (e) {
+            console.error("Error parsing seat numbers:", e);
+            return [];
+          }
+        }),
     );
   }, [showReservations, reservation.id]);
 
@@ -2038,8 +2086,19 @@ function EditReservationDialog({
 
   if (!currentShow) return null;
 
-  const layout = JSON.parse(currentShow.seatLayout);
-  const blockedSeats = new Set(JSON.parse(currentShow.blockedSeats || "[]"));
+  const layout = typeof currentShow.seatLayout === 'string' 
+    ? JSON.parse(currentShow.seatLayout) 
+    : currentShow.seatLayout;
+    
+  const blockedSeats = new Set(
+    Array.isArray(currentShow.blockedSeats)
+      ? currentShow.blockedSeats
+      : (typeof currentShow.blockedSeats === 'string'
+          ? (currentShow.blockedSeats.startsWith('[') 
+              ? JSON.parse(currentShow.blockedSeats)
+              : currentShow.blockedSeats.split(',').map(s => s.trim()))
+          : [])
+  );
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
