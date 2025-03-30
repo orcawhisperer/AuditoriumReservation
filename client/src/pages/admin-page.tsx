@@ -1815,13 +1815,21 @@ function ReservationManagement() {
                           Reserved by: {getUserName(reservation.userId)}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Seats: {typeof reservation.seatNumbers === 'string' 
-                            ? (reservation.seatNumbers.includes('[') 
-                              ? JSON.parse(reservation.seatNumbers).join(", ")
-                              : reservation.seatNumbers)
-                            : Array.isArray(reservation.seatNumbers) 
-                              ? reservation.seatNumbers.join(", ")
-                              : "No seats"}
+                          Seats: {(() => {
+                            try {
+                              if (typeof reservation.seatNumbers === 'string') {
+                                return reservation.seatNumbers.startsWith('[')
+                                  ? JSON.parse(reservation.seatNumbers).join(", ")
+                                  : reservation.seatNumbers;
+                              } else if (Array.isArray(reservation.seatNumbers)) {
+                                return reservation.seatNumbers.join(", ");
+                              }
+                              return 'No seats';
+                            } catch (e) {
+                              console.error("Error parsing seat numbers:", e);
+                              return 'No seats';
+                            }
+                          })()}
                         </p>
                         {isPastShow && (
                           <p className="text-xs text-destructive mt-1">

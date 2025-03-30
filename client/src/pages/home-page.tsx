@@ -93,10 +93,10 @@ function ShowCard({
             onClick={() => {
               if (hasReservation) {
                 // If the user has a reservation, we should still go to the show page
-                // but the page will show their reservation details instead of the booking form
+                // but the page will show their reservation details instead of the reservation form
                 setLocation(`/show/${show.id}`);
               } else {
-                // Normal booking flow
+                // Normal reservation flow
                 setLocation(`/show/${show.id}`);
               }
             }}
@@ -108,7 +108,7 @@ function ShowCard({
               ? t("translation.show.soldOut")
               : hasReservation
                 ? t("translation.home.viewReservation")
-                : t("translation.home.bookTickets")}
+                : t("translation.home.bookTickets") /* Already updated in i18n */}
           </Button>
         </div>
       </CardContent>
