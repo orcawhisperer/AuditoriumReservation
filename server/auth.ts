@@ -5,6 +5,7 @@ import session from "express-session";
 import { hash, compare } from "bcrypt";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
+import { config } from "./config";
 
 declare global {
   namespace Express {
@@ -24,10 +25,14 @@ async function comparePasswords(plaintext: string, hashed: string): Promise<bool
 
 export async function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET!,
+    secret: config.sessionSecret,
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
+    cookie: {
+      secure: !config.isDevelopment, // Use secure cookies in production
+      maxAge: 1000 * 60 * 60 * 24, // 24 hours
+    }
   };
 
   app.set("trust proxy", 1);
@@ -102,12 +107,6 @@ export async function setupAuth(app: Express) {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
   });
-
-  try {
-    await storage.initializeAdmin(); //This line replaces the duplicate admin creation
-  } catch (error) {
-    console.error("Error initializing admin user:", error);
-  }
 }
 
 export { hashPassword, comparePasswords };

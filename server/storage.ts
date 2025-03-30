@@ -5,6 +5,7 @@ import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { users, shows, reservations } from '@shared/schema';
 import { hashPassword } from "./auth";
+import { config } from "./config";
 
 const MemoryStore = createMemoryStore(session);
 
@@ -45,12 +46,16 @@ export class SQLiteStorage implements IStorage {
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
-    this.initializeAdmin();
+    
+    // Initialize the admin user asynchronously
+    this.initializeAdmin().catch(error => {
+      console.error('Failed to initialize admin user during startup:', error);
+    });
   }
 
   async initializeAdmin(): Promise<void> {
-    const adminUsername = process.env.ADMIN_USERNAME || 'admin';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'admin';
+    const adminUsername = config.adminUsername;
+    const adminPassword = config.adminPassword;
 
     try {
       // Check if admin exists
@@ -71,6 +76,12 @@ export class SQLiteStorage implements IStorage {
 
         if (result[0]) {
           console.log(`Admin user '${adminUsername}' created successfully`);
+          
+          // Security warning for default credentials
+          if (adminUsername === 'admin' && adminPassword === 'admin') {
+            console.warn('⚠️ WARNING: Using default admin credentials is a security risk!');
+            console.warn('Set ADMIN_USERNAME and ADMIN_PASSWORD environment variables.');
+          }
         } else {
           console.error('Failed to create admin user');
         }
@@ -124,7 +135,7 @@ export class SQLiteStorage implements IStorage {
   }
 
   async deleteAdmin(): Promise<void> {
-    const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+    const adminUsername = config.adminUsername;
     await db.delete(users).where(eq(users.username, adminUsername));
   }
 
