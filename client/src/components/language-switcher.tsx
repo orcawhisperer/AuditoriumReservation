@@ -11,10 +11,18 @@ import { Globe } from "lucide-react";
 
 export function LanguageSwitcher() {
   const { i18n } = useTranslation();
+  const [currentLang, setCurrentLang] = React.useState(i18n.language);
 
-  const changeLanguage = (lng: string) => {
+  // Use a memoized callback to prevent recreation on each render
+  const changeLanguage = React.useCallback((lng: string) => {
     i18n.changeLanguage(lng);
-  };
+    setCurrentLang(lng);
+  }, [i18n]);
+
+  // Update local state if i18n.language changes externally
+  React.useEffect(() => {
+    setCurrentLang(i18n.language);
+  }, [i18n.language]);
 
   return (
     <DropdownMenu>
@@ -26,13 +34,13 @@ export function LanguageSwitcher() {
       <DropdownMenuContent align="end">
         <DropdownMenuItem 
           onClick={() => changeLanguage("en")}
-          className={i18n.language === "en" ? "bg-muted" : ""}
+          className={currentLang === "en" ? "bg-muted" : ""}
         >
           English
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={() => changeLanguage("hi")}
-          className={i18n.language === "hi" ? "bg-muted" : ""}
+          className={currentLang === "hi" ? "bg-muted" : ""}
         >
           हिंदी (Hindi)
         </DropdownMenuItem>

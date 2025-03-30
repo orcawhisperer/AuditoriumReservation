@@ -1,0 +1,27 @@
+566chunk-RPCDYKBN.js?v=69c35a5e:521 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+    at https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JOBZDRYW.js?v=69c35a5e:1980:13
+    at https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js?v=045f1049:139:13
+    at https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js?v=045f1049:937:13
+    at Provider (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NPI43BMZ.js?v=69c35a5e:38:15)
+    at Provider (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NPI43BMZ.js?v=69c35a5e:38:15)
+    at Provider (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JOBZDRYW.js?v=69c35a5e:1915:15)
+    at Popper (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JOBZDRYW.js?v=69c35a5e:1972:11)
+    at Menu (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js?v=045f1049:93:11)
+    at Provider (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NPI43BMZ.js?v=69c35a5e:38:15)
+    at DropdownMenu (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js?v=045f1049:903:5)
+    at LanguageSwitcher (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/src/components/language-switcher.tsx:29:20)
+    at div
+    at div
+    at header
+    at div
+    at HomePage (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/src/pages/home-page.tsx?t=1743326537827:182:36)
+    at Route (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=11badf64:323:16)
+    at ProtectedRoute (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/src/lib/protected-route.tsx:22:3)
+    at Route (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=11badf64:323:16)
+    at Switch (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=11badf64:379:17)
+    at Router
+    at AuthProvider (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/src/hooks/use-auth.tsx:26:32)
+    at ThemeProvider (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/src/hooks/use-theme.tsx:25:3)
+    at QueryClientProvider (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=fb875f20:2805:3)
+    at I18nextProvider (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-i18next.js?v=cbb9273d:781:3)
+    at App

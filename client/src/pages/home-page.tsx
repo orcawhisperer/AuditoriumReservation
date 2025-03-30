@@ -38,9 +38,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  ShowCardSkeleton, 
-  ReservationCardSkeleton 
+import {
+  ShowCardSkeleton,
+  ReservationCardSkeleton,
 } from "@/components/ui/skeleton-loaders";
 
 function ShowCard({
@@ -101,14 +101,20 @@ function ShowCard({
               }
             }}
             disabled={isPastShow}
-            variant={isPastShow ? "outline" : hasReservation ? "secondary" : "default"}
+            variant={
+              isPastShow ? "outline" : hasReservation ? "secondary" : "default"
+            }
             className="w-full sm:w-auto"
           >
-            {isPastShow
-              ? t("translation.show.soldOut")
-              : hasReservation
-                ? t("translation.home.viewReservation")
-                : t("translation.home.bookTickets") /* Already updated in i18n */}
+            {
+              isPastShow
+                ? t("translation.show.soldOut")
+                : hasReservation
+                  ? t("translation.home.viewReservation")
+                  : t(
+                      "translation.home.bookTickets",
+                    ) /* Already updated in i18n */
+            }
           </Button>
         </div>
       </CardContent>
@@ -121,7 +127,9 @@ export default function HomePage() {
   const [, setLocation] = useLocation();
   const { t } = useTranslation();
   const [paginatedShows, setPaginatedShows] = useState<Show[]>([]);
-  const [paginatedReservations, setPaginatedReservations] = useState<Reservation[]>([]);
+  const [paginatedReservations, setPaginatedReservations] = useState<
+    Reservation[]
+  >([]);
 
   const { data: shows = [], isLoading: showsLoading } = useQuery<Show[]>({
     queryKey: ["/api/shows"],
@@ -257,7 +265,9 @@ export default function HomePage() {
                       ))}
                     </div>
                     <DataPagination
-                      data={shows.filter((show) => new Date(show.date) >= new Date())}
+                      data={shows.filter(
+                        (show) => new Date(show.date) >= new Date(),
+                      )}
                       itemsPerPage={4}
                       onPageChange={setPaginatedShows}
                     />
@@ -359,17 +369,17 @@ function ReservationCard({
               {t("translation.common.seats")}:{" "}
               {(() => {
                 try {
-                  if (typeof reservation.seatNumbers === 'string') {
-                    return reservation.seatNumbers.startsWith('[')
+                  if (typeof reservation.seatNumbers === "string") {
+                    return reservation.seatNumbers.startsWith("[")
                       ? JSON.parse(reservation.seatNumbers).join(", ")
                       : reservation.seatNumbers;
                   } else if (Array.isArray(reservation.seatNumbers)) {
                     return reservation.seatNumbers.join(", ");
                   }
-                  return '';
+                  return "";
                 } catch (e) {
                   console.error("Error parsing seat numbers:", e);
-                  return '';
+                  return "";
                 }
               })()}
             </p>
@@ -394,13 +404,19 @@ function ReservationCard({
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>{t("translation.home.cancelReservationTitle")}</AlertDialogTitle>
+                <AlertDialogTitle>
+                  {t("translation.home.cancelReservationTitle")}
+                </AlertDialogTitle>
                 <AlertDialogDescription>
-                  {t("translation.home.cancelReservationConfirmation", { showTitle: show.title })}
+                  {t("translation.home.cancelReservationConfirmation", {
+                    showTitle: show.title,
+                  })}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>{t("translation.common.back")}</AlertDialogCancel>
+                <AlertDialogCancel>
+                  {t("translation.common.back")}
+                </AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => cancelMutation.mutate()}
                   disabled={cancelMutation.isPending}
