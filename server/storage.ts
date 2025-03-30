@@ -83,10 +83,9 @@ export class PostgresStorage implements IStorage {
   }
 
   async resetUserPassword(userId: number, newPassword: string): Promise<void> {
-    // Hash the password before storing it
-    const hashedPassword = await hashPassword(newPassword);
+    // The password should already be hashed when passed to this method
     await db.update(users)
-      .set({ password: hashedPassword })
+      .set({ password: newPassword })
       .where(eq(users.id, userId));
   }
 

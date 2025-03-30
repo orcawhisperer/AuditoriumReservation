@@ -97,6 +97,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // Hash the new password and update it
     const hashedPassword = await hashPassword(newPassword);
+    
+    // Log the operation for debugging
+    console.log(`Changing password for user ${user.username} (ID: ${user.id})`);
+    
     await storage.resetUserPassword(user.id, hashedPassword);
     
     res.status(200).json({ success: true });
