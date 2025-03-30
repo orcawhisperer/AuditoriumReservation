@@ -794,10 +794,17 @@ function EditShowDialog({
 function ShowList() {
   const { toast } = useToast();
   const [editingShow, setEditingShow] = useState<Show | null>(null);
-  const { data: shows = [], isLoading } = useQuery<Show[]>({
+  const { data: showsData = [], isLoading } = useQuery<Show[]>({
     queryKey: ["/api/shows"],
     staleTime: 0,
   });
+  
+  // Sort shows by date (latest first)
+  const shows = useMemo(() => {
+    return [...showsData].sort((a, b) => {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+  }, [showsData]);
   const { data: reservations = [], isLoading: reservationsLoading } = useQuery<
     Reservation[]
   >({
@@ -910,14 +917,12 @@ function ShowList() {
             >
               <div className="flex flex-col sm:flex-row gap-4">
                 {show.poster && (
-                  <div className="relative w-full sm:w-24 overflow-hidden rounded-lg border">
-                    <div className="relative aspect-video">
-                      <img
-                        src={show.poster}
-                        alt={`Poster for ${show.title}`}
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
-                    </div>
+                  <div className="relative w-full sm:w-24 h-24 overflow-hidden rounded-lg border">
+                    <img
+                      src={show.poster}
+                      alt={`Poster for ${show.title}`}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 )}
                 <div>
@@ -926,7 +931,7 @@ function ShowList() {
                       {show.emoji} {show.title}
                     </p>
                     {isPastShow && (
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-800 border-orange-300">
                         Past Show
                       </Badge>
                     )}
