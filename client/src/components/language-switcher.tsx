@@ -1,59 +1,70 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Globe } from "lucide-react";
+import { cn } from "@/lib/utils";
 
+// Simple custom dropdown to avoid the complex Radix UI component that's causing issues
 export function LanguageSwitcher() {
   const { i18n } = useTranslation();
-  // Store language selection in a ref to avoid re-renders
-  const currentLangRef = React.useRef(i18n.language);
+  const [isOpen, setIsOpen] = React.useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
   
-  // Properly handle state changes with dependency arrays
-  const changeLanguage = React.useCallback((lng: string) => {
-    if (currentLangRef.current !== lng) {
-      currentLangRef.current = lng;
-      i18n.changeLanguage(lng);
-    }
-  }, []); // No dependencies to prevent recreation
+  // Use a single callback for changing language
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+    setIsOpen(false);
+  };
 
-  // Use a side effect hook with proper dependency tracking
+  // Close dropdown when clicking outside
   React.useEffect(() => {
-    // Synchronize ref with i18n only on mount
-    currentLangRef.current = i18n.language;
-  }, []); // Empty dependency array = only run once on mount
-
-  // Create a stable reference for checking the current language
-  const isSelected = React.useCallback((lang: string) => {
-    return currentLangRef.current === lang;
-  }, []); // No dependencies to prevent recreation
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Switch Language">
-          <Globe className="h-5 w-5" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem 
-          onClick={() => changeLanguage("en")}
-          className={isSelected("en") ? "bg-muted" : ""}
-        >
-          English
-        </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => changeLanguage("hi")}
-          className={isSelected("hi") ? "bg-muted" : ""}
-        >
-          हिंदी (Hindi)
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="relative" ref={dropdownRef}>
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        aria-label="Switch Language"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <Globe className="h-5 w-5" />
+      </Button>
+      
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-36 rounded-md shadow-lg bg-popover border border-border z-50">
+          <div className="py-1 rounded-md">
+            <button
+              onClick={() => changeLanguage("en")}
+              className={cn(
+                "flex w-full items-center px-4 py-2 text-sm hover:bg-accent",
+                i18n.language === "en" ? "bg-muted" : ""
+              )}
+            >
+              English
+            </button>
+            <button
+              onClick={() => changeLanguage("hi")}
+              className={cn(
+                "flex w-full items-center px-4 py-2 text-sm hover:bg-accent",
+                i18n.language === "hi" ? "bg-muted" : ""
+              )}
+            >
+              हिंदी (Hindi)
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
