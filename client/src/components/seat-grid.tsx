@@ -301,8 +301,13 @@ export function SeatGrid() {
                           }
 
 
-                          // Check if this seat is in the user's own reservation
+                          // Check if this seat is in the user's own reservation FOR THIS SHOW
                           const isUserReservation = userReservations.some(reservation => {
+                            // First check if the reservation is for this specific show
+                            if (reservation.showId !== parseInt(showId)) {
+                              return false;
+                            }
+                            
                             try {
                               const seats = typeof reservation.seatNumbers === 'string'
                                 ? (reservation.seatNumbers.startsWith('[')
