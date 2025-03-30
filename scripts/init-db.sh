@@ -77,6 +77,25 @@ if ! execute_query "SELECT 1 FROM users LIMIT 1" &>/dev/null; then
     );
   " || exit 1
   echo "- Reservations table created"
+  
+  # Create schema versions table to track migrations
+  execute_query "
+    CREATE TABLE IF NOT EXISTS schema_versions (
+      version INTEGER PRIMARY KEY,
+      applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      description TEXT
+    );
+  " || exit 1
+  echo "- Schema versions table created"
+  
+  # Insert initial schema version if not exists
+  if [ "$(execute_query "SELECT COUNT(*) FROM schema_versions;" | grep -Eo '[0-9]+')" = "0" ]; then
+    execute_query "
+      INSERT INTO schema_versions (version, description)
+      VALUES (1, 'Initial schema');
+    " || exit 1
+    echo "- Schema version set to 1"
+  fi
 else
   echo "Tables already exist."
 fi
