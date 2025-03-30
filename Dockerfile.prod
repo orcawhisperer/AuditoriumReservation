@@ -29,7 +29,7 @@ RUN chmod +x /app/scripts/*.sh || true
 RUN chmod +x /app/scripts/migrations/*.sh || true
 
 # Add DB initialization script
-RUN echo '#!/bin/sh\necho "Waiting for database to be ready..."\nsleep 5\necho "Checking for init scripts..."\nif [ -f /app/scripts/init-db.sh ]; then\n  echo "Running database initialization script..."\n  chmod +x /app/scripts/init-db.sh\n  /app/scripts/init-db.sh || exit 1\nfi\n\nif [ -f /app/scripts/migrate-db.sh ]; then\n  echo "Running database migration script..."\n  chmod +x /app/scripts/migrate-db.sh\n  /app/scripts/migrate-db.sh || true\nfi\n\necho "Starting application..."\nnode server/index.js' > /app/docker-entrypoint.sh && \
+RUN echo '#!/bin/sh\necho "Waiting for database to be ready..."\nsleep 5\necho "Checking for init scripts..."\nif [ -f /app/scripts/init-db.sh ]; then\n  echo "Running database initialization script..."\n  cp /app/scripts/init-db.sh /tmp/init-db.sh\n  chmod +x /tmp/init-db.sh\n  /tmp/init-db.sh || exit 1\nfi\n\nif [ -f /app/scripts/migrate-db.sh ]; then\n  echo "Running database migration script..."\n  cp /app/scripts/migrate-db.sh /tmp/migrate-db.sh\n  chmod +x /tmp/migrate-db.sh\n  /tmp/migrate-db.sh || true\nfi\n\necho "Starting application..."\nnode server/index.js' > /app/docker-entrypoint.sh && \
     chmod +x /app/docker-entrypoint.sh
 
 # Create a non-root user

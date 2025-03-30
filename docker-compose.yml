@@ -20,8 +20,8 @@ services:
       - PGPORT=5432
     restart: unless-stopped
     volumes:
-      - ./scripts:/app/scripts:ro
-    entrypoint: ["/bin/sh", "-c", "mkdir -p /app/scripts && ls -la /app/scripts && if [ -f /app/scripts/init-db.sh ]; then chmod +x /app/scripts/init-db.sh && /app/scripts/init-db.sh; fi && if [ -f /app/scripts/migrate-db.sh ]; then chmod +x /app/scripts/migrate-db.sh && /app/scripts/migrate-db.sh; fi && npm start"]
+      - ./scripts:/app/scripts
+    entrypoint: ["/bin/sh", "-c", "mkdir -p /app/scripts && ls -la /app/scripts && if [ -f /app/scripts/init-db.sh ]; then cp /app/scripts/init-db.sh /tmp/init-db.sh && chmod +x /tmp/init-db.sh && /tmp/init-db.sh; fi && if [ -f /app/scripts/migrate-db.sh ]; then cp /app/scripts/migrate-db.sh /tmp/migrate-db.sh && chmod +x /tmp/migrate-db.sh && /tmp/migrate-db.sh; fi && npm start"]
 
   postgres:
     image: postgres:15-alpine

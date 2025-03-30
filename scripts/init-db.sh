@@ -7,24 +7,39 @@ echo "Initializing Shahbaaz Auditorium database..."
 if [ -z "$PGHOST" ] || [ -z "$PGUSER" ] || [ -z "$PGDATABASE" ]; then
   echo "Error: Database environment variables not set."
   echo "Required variables: PGHOST, PGUSER, PGDATABASE, PGPASSWORD"
-  exit 1
+  echo "Current values:"
+  echo "PGHOST=$PGHOST"
+  echo "PGUSER=$PGUSER"
+  echo "PGDATABASE=$PGDATABASE"
+  echo "PGPASSWORD=****"
+  
+  # Try to infer values if in Docker Compose environment
+  if [ -n "$POSTGRES_USER" ] && [ -n "$POSTGRES_PASSWORD" ] && [ -n "$POSTGRES_DB" ]; then
+    echo "Found Docker Compose environment variables, using those instead."
+    export PGUSER=$POSTGRES_USER
+    export PGPASSWORD=$POSTGRES_PASSWORD
+    export PGDATABASE=$POSTGRES_DB
+    export PGHOST=postgres
+  else
+    exit 1
+  fi
 fi
 
 # Wait for PostgreSQL to be ready
-echo "Waiting for PostgreSQL to be ready..."
-for i in {1..30}; do
-  if pg_isready -h "$PGHOST" -U "$PGUSER" -d "$PGDATABASE"; then
+echo "Checking PostgreSQL connection to $PGHOST:$PGPORT as $PGUSER..."
+for i in {1..60}; do
+  if PGPASSWORD="$PGPASSWORD" psql -h "$PGHOST" -U "$PGUSER" -d "$PGDATABASE" -c "SELECT 1" &>/dev/null; then
     echo "PostgreSQL is ready!"
     break
   fi
   
-  if [ $i -eq 30 ]; then
-    echo "Error: PostgreSQL is not ready after 30 attempts. Giving up."
+  if [ $i -eq 60 ]; then
+    echo "Error: PostgreSQL is not ready after 60 attempts. Giving up."
     exit 1
   fi
   
-  echo "Waiting for PostgreSQL to be ready... (attempt $i/30)"
-  sleep 1
+  echo "Waiting for PostgreSQL to be ready... (attempt $i/60)"
+  sleep 2
 done
 
 # Function to execute SQL query

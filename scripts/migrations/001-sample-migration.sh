@@ -9,8 +9,34 @@ execute_query() {
   return $?
 }
 
+# Check if required environment variables are set
+if [ -z "$PGHOST" ] || [ -z "$PGUSER" ] || [ -z "$PGDATABASE" ]; then
+  echo "Error: Database environment variables not set."
+  echo "Required variables: PGHOST, PGUSER, PGDATABASE, PGPASSWORD"
+  echo "Current values:"
+  echo "PGHOST=$PGHOST"
+  echo "PGUSER=$PGUSER"
+  echo "PGDATABASE=$PGDATABASE"
+  echo "PGPASSWORD=****"
+  
+  # Try to infer values if in Docker Compose environment
+  if [ -n "$POSTGRES_USER" ] && [ -n "$POSTGRES_PASSWORD" ] && [ -n "$POSTGRES_DB" ]; then
+    echo "Found Docker Compose environment variables, using those instead."
+    export PGUSER=$POSTGRES_USER
+    export PGPASSWORD=$POSTGRES_PASSWORD
+    export PGDATABASE=$POSTGRES_DB
+    export PGHOST=postgres
+  else
+    exit 1
+  fi
+fi
+
 # Check if this migration has already been applied
 CURRENT_VERSION=$(execute_query "SELECT MAX(version) FROM schema_versions;" | sed -n 3p | tr -d ' ')
+
+if [ -z "$CURRENT_VERSION" ] || [ "$CURRENT_VERSION" = "NULL" ]; then
+  CURRENT_VERSION=0
+fi
 
 if [ "$CURRENT_VERSION" -ge "2" ]; then
   echo "Migration 001 already applied (version 2)"
