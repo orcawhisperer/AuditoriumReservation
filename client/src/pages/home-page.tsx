@@ -14,9 +14,8 @@ import { Loader2, UserCircle, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { TourGuideButton } from "@/components/tour-guide-button";
+import { FloatingActionButtons } from "@/components/floating-action-buttons";
 import { useTranslation } from "react-i18next";
 import { DataPagination } from "@/components/data-pagination";
 import React, { useState, useRef, useEffect } from "react";
@@ -152,15 +151,14 @@ export default function HomePage() {
   if (showsLoading) {
     return (
       <div className="min-h-screen bg-background">
+        <FloatingActionButtons />
         <header className="border-b">
           <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between h-auto sm:h-16 py-4 sm:py-0 px-4 sm:px-8">
             <h1 className="text-2xl font-bold mb-4 sm:mb-0">
               {t("translation.common.appName")}
             </h1>
             <div className="flex items-center gap-4">
-              <ThemeToggle />
               <LanguageSwitcher />
-              <TourGuideButton />
               <Skeleton className="h-10 w-24" />
             </div>
           </div>
@@ -211,15 +209,14 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <FloatingActionButtons />
       <header className="border-b app-header">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between h-auto sm:h-16 py-4 sm:py-0 px-4 sm:px-8">
           <h1 className="text-2xl font-bold mb-4 sm:mb-0">
             {t("translation.common.appName")}
           </h1>
           <div className="flex items-center gap-4">
-            <ThemeToggle />
             <LanguageSwitcher />
-            <TourGuideButton />
 
             {user?.isAdmin && (
               <Button variant="outline" onClick={() => setLocation("/admin")}>
