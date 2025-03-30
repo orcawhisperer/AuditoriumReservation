@@ -8,7 +8,9 @@ This document provides comprehensive instructions for deploying the Shahbaaz Aud
 2. [Quick Start](#quick-start)
 3. [Management Script](#management-script)
 4. [Deployment Options](#deployment-options)
-5. [Database Backup and Restore](#database-backup-and-restore)
+5. [Database Management](#database-management)
+   - [Backup and Restore](#database-backup-and-restore)
+   - [Schema Migrations](#schema-migrations)
 6. [Production Configuration](#production-configuration)
 7. [SSL Configuration](#ssl-configuration)
 8. [Troubleshooting](#troubleshooting)
@@ -70,6 +72,12 @@ The application includes a comprehensive management script (`manage.sh`) that si
 
 # Restore from a backup
 ./manage.sh restore backups/shahbaaz_backup_20250330_123456.sql.gz
+
+# Create a new database migration
+./manage.sh create-migration add_user_preferences
+
+# Run database migrations
+./manage.sh migrate
 
 # Open PostgreSQL terminal
 ./manage.sh psql
@@ -217,3 +225,85 @@ If the database becomes corrupted, you can:
    ```bash
    ./manage.sh restore backups/shahbaaz_backup_20250330_123456.sql.gz
    ```
+
+## Schema Migrations
+
+The application includes a database migration system to manage schema changes safely across deployments.
+
+### Creating a New Migration
+
+When you need to make schema changes (like adding a column or table), create a new migration:
+
+```bash
+./manage.sh create-migration add_user_preferences
+```
+
+This creates a new migration script in `scripts/migrations/` with a sequential version number:
+
+```bash
+scripts/migrations/002-add_user_preferences.sh
+```
+
+### Editing Migration Scripts
+
+Edit the migration script to include your SQL changes:
+
+```bash
+#!/bin/bash
+# Migration: add_user_preferences
+# Migration version: 2
+# Description: add_user_preferences
+
+# Function to execute SQL query
+execute_query() {
+  PGPASSWORD="$PGPASSWORD" psql -h "$PGHOST" -U "$PGUSER" -d "$PGDATABASE" -c "$1"
+  return $?
+}
+
+# Check if this migration has already been applied
+CURRENT_VERSION=$(execute_query "SELECT MAX(version) FROM schema_versions;" | sed -n 3p | tr -d ' ')
+
+if [ "$CURRENT_VERSION" -ge "2" ]; then
+  echo "Migration 002 already applied (version 2)"
+  exit 0
+fi
+
+echo "Applying migration 002: add_user_preferences..."
+
+# Apply the migration
+execute_query "
+  -- Add preferences JSON column to users table
+  ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB DEFAULT '{}';
+" || exit 1
+
+# Record the migration
+execute_query "
+  INSERT INTO schema_versions (version, description)
+  VALUES (2, 'add_user_preferences');
+" || exit 1
+
+echo "Migration 002 applied successfully!"
+exit 0
+```
+
+### Running Migrations
+
+To apply all pending migrations:
+
+```bash
+./manage.sh migrate
+```
+
+The system will:
+1. Check the current database version
+2. Run only migrations that haven't been applied yet
+3. Track applied migrations in the `schema_versions` table
+
+### Migration in Docker Deployment
+
+The migration system is integrated with Docker deployment:
+- When containers start, migrations are automatically applied
+- Each migration script safely checks if it has already been applied
+- The system maintains a version history in the database
+
+This ensures consistent database schema across all environments.
