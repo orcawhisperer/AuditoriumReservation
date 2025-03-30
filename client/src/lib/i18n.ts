@@ -30,6 +30,7 @@ const enTranslations = {
     actions: "Actions",
     view: "View",
     seats: "Seats",
+    morePages: "More pages",
   },
   auth: {
     username: "Username",
@@ -80,6 +81,9 @@ const enTranslations = {
     soldOut: "Sold Out",
     bookNow: "Book Now",
     selectSeats: "Select Seats",
+    pastShow: "Past Show",
+    pastShowDescription: "This show took place on {{date}} at {{time}}. Reservations are no longer available.",
+    reservationsNotAvailable: "Reservations are not available for past shows.",
   },
   booking: {
     selectSeats: "Select Seats",
@@ -161,6 +165,7 @@ const hiTranslations = {
     actions: "क्रियाएँ",
     view: "देखें",
     seats: "सीटें",
+    morePages: "अधिक पृष्ठ",
   },
   auth: {
     username: "उपयोगकर्ता नाम",
@@ -211,6 +216,9 @@ const hiTranslations = {
     soldOut: "बिक चुका है",
     bookNow: "अभी बुक करें",
     selectSeats: "सीटें चुनें",
+    pastShow: "बीता हुआ शो",
+    pastShowDescription: "यह शो {{date}} को {{time}} पर हुआ था। आरक्षण अब उपलब्ध नहीं हैं।",
+    reservationsNotAvailable: "पिछले शो के लिए आरक्षण उपलब्ध नहीं हैं।",
   },
   booking: {
     selectSeats: "सीटें चुनें",
@@ -302,6 +310,7 @@ interface ExtendedCommonTranslation
   filter: string;
   actions: string;
   view: string;
+  morePages: string;
 }
 
 // Now update the common translations with the new keys
@@ -311,6 +320,13 @@ const extendedEnCommon: ExtendedCommonTranslation = {
   andTheir: "and their",
   configurations: "configurations",
   system: "system",
+  morePages: "More pages",
+  add: "Add",
+  required: "Required",
+  submit: "Submit",
+  date: "Date",
+  time: "Time",
+  price: "Price",
 };
 
 const extendedHiCommon: ExtendedCommonTranslation = {
@@ -319,6 +335,13 @@ const extendedHiCommon: ExtendedCommonTranslation = {
   andTheir: "और उनके",
   configurations: "विन्यास",
   system: "सिस्टम",
+  morePages: "अधिक पृष्ठ",
+  add: "जोड़ें",
+  required: "आवश्यक",
+  submit: "सबमिट करें",
+  date: "दिनांक",
+  time: "समय",
+  price: "मूल्य",
 };
 
 // Replace the common objects with the extended versions

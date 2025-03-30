@@ -37,6 +37,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  ShowCardSkeleton, 
+  ReservationCardSkeleton 
+} from "@/components/ui/skeleton-loaders";
 
 function ShowCard({
   show,
@@ -128,11 +133,59 @@ export default function HomePage() {
 
   if (showsLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-2">
-        <Loader2 className="h-8 w-8 animate-spin text-border" />
-        <p className="text-muted-foreground">
-          {t("translation.common.loading")}
-        </p>
+      <div className="min-h-screen bg-background">
+        <header className="border-b">
+          <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between h-auto sm:h-16 py-4 sm:py-0 px-4 sm:px-8">
+            <h1 className="text-2xl font-bold mb-4 sm:mb-0">
+              {t("translation.common.appName")}
+            </h1>
+            <div className="flex items-center gap-4">
+              <ThemeToggle />
+              <LanguageSwitcher />
+              <Skeleton className="h-10 w-24" />
+            </div>
+          </div>
+        </header>
+
+        <main className="container mx-auto py-8 px-4 sm:px-8 space-y-8">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("translation.home.upcomingShows")}</CardTitle>
+                <CardDescription>
+                  {t("translation.show.selectSeats")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[500px] overflow-y-auto pr-2">
+                  <div className="space-y-4">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <ShowCardSkeleton key={i} />
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("translation.home.yourReservations")}</CardTitle>
+                <CardDescription>
+                  {t("translation.home.viewReservation")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[500px] overflow-y-auto pr-2">
+                  <div className="space-y-4">
+                    {Array.from({ length: 2 }).map((_, i) => (
+                      <ReservationCardSkeleton key={i} />
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
       </div>
     );
   }
