@@ -11,6 +11,7 @@ import AdminPage from "@/pages/admin-page";
 import ProfilePage from "@/pages/profile-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import ShowPage from "@/pages/show-page";
+import { FloatingControls } from "@/components/floating-controls";
 
 // i18n
 import "./lib/i18n";
@@ -45,6 +46,7 @@ function App() {
         <ThemeProvider defaultTheme="light" storageKey="theme">
           <AuthProvider>
             <Router />
+            <FloatingControls />
             <Toaster />
           </AuthProvider>
         </ThemeProvider>
