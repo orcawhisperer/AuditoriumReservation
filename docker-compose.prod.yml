@@ -21,6 +21,9 @@ services:
       - PGHOST=postgres
       - PGPORT=5432
     restart: always
+    volumes:
+      - ./scripts/init-db.sh:/app/init-db.sh
+    entrypoint: /bin/sh -c "chmod +x /app/init-db.sh && /app/init-db.sh && node server/index.js"
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/health"]
       interval: 30s

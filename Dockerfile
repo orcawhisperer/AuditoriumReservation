@@ -18,7 +18,7 @@ RUN npm run build
 EXPOSE 5000
 
 # Add DB initialization script
-RUN echo '#!/bin/sh\necho "Running database migrations..."\nnpm run db:push || exit 1\necho "Starting application..."\nnpm start' > /app/docker-entrypoint.sh && \
+RUN echo '#!/bin/sh\necho "Waiting for database to be ready..."\nsleep 5\necho "Initializing database directly..."\nnode scripts/init-db.js || exit 1\necho "Starting application..."\nnpm start' > /app/docker-entrypoint.sh && \
     chmod +x /app/docker-entrypoint.sh
 
 # Use the entrypoint script to ensure DB is initialized

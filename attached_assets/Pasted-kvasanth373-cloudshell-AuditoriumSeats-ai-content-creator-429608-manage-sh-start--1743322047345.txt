@@ -1,0 +1,252 @@
+kvasanth373@cloudshell:~/AuditoriumSeats (ai-content-creator-429608)$ ./manage.sh start
+
+  _____  _           _     _                      
+ / ____|| |         | |   | |                     
+| (___  | |__   __ _| |__ | |__   __ _  __ _ ____ 
+ \___ \ | '_ \ / _` | '_ \| '_ \ / _` |/ _` |_  /
+ ____) || | | | (_| | | | | |_) | (_| | (_| |/ / 
+|_____/ |_| |_|\__,_|_| |_|_.__/ \__,_|\__,_/___| 
+    _             _ _ _             _             
+   / \  _   _  __| (_) |_ ___  _ __(_)_   _ _ __ ___ 
+  / _ \| | | |/ _` | | __/ _ \| '__| | | | | '_ ` _ \
+ / ___ \ |_| | (_| | | || (_) | |  | | |_| | | | | | |
+/_/   \_\__,_|\__,_|_|\__\___/|_|  |_|\__,_|_| |_| |_|
+
+Management Script
+
+Starting application in development mode...
+WARN[0000] /home/kvasanth373/AuditoriumSeats/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
+[+] Running 2/2
+ ✔ Network auditoriumseats_default       Created                                                                                                                                                                                            0.1s 
+ ✔ Container auditoriumseats-postgres-1  Started                                                                                                                                                                                            0.3s 
+Checking if database schema exists...
+Database schema not found. Running migrations...
+WARN[0000] /home/kvasanth373/AuditoriumSeats/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
+[+] Running 2/2
+ ✔ Container auditoriumseats-postgres-1  Healthy                                                                                                                                                                                            0.5s 
+ ✔ Container auditoriumseats-app-1       Started                                                                                                                                                                                            0.8s 
+WARN[0000] /home/kvasanth373/AuditoriumSeats/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
+
+> rest-express@1.0.0 db:push
+> drizzle-kit push
+
+No config path provided, using default 'drizzle.config.ts'
+Reading config file '/app/drizzle.config.ts'
+Using 'pg' driver for database querying
+
+Application started. Access at http://localhost:5000
+kvasanth373@cloudshell:~/AuditoriumSeats (ai-content-creator-429608)$ docker log
+login   (Authenticate to a registry)     logout  (Log out from a registry)        logs    (Fetch the logs of a container)  
+kvasanth373@cloudshell:~/AuditoriumSeats (ai-content-creator-429608)$ docker logs -f auditoriumseats-
+auditoriumseats-app-1       auditoriumseats-postgres-1  
+kvasanth373@cloudshell:~/AuditoriumSeats (ai-content-creator-429608)$ docker logs -f auditoriumseats-app-1 
+
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+
+⚠️ WARNING: Using default admin credentials in production is a security risk!
+Set ADMIN_USERNAME and ADMIN_PASSWORD environment variables.
+PostgreSQL database connected
+node:internal/process/promises:288
+            triggerUncaughtException(err, true /* fromPromise */);
+            ^
+
+PostgresError: relation "users" does not exist
+    at ErrorResponse (file:///app/node_modules/postgres/src/connection.js:788:26)
+    at handle (file:///app/node_modules/postgres/src/connection.js:474:6)
+    at Socket.data (file:///app/node_modules/postgres/src/connection.js:315:9)
+    at Socket.emit (node:events:517:28)
+    at addChunk (node:internal/streams/readable:368:12)
+    at readableAddChunk (node:internal/streams/readable:341:9)
+    at Readable.push (node:internal/streams/readable:278:10)
+    at TCP.onStreamRead (node:internal/stream_base_commons:190:23) {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42P01',
+  position: '131',
+  file: 'parse_relation.c',
+  line: '1392',
+  routine: 'parserOpenTable'
+}
+
+Node.js v18.20.8
+
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+
+⚠️ WARNING: Using default admin credentials in production is a security risk!
+Set ADMIN_USERNAME and ADMIN_PASSWORD environment variables.
+PostgreSQL database connected
+node:internal/process/promises:288
+            triggerUncaughtException(err, true /* fromPromise */);
+            ^
+
+PostgresError: relation "users" does not exist
+    at ErrorResponse (file:///app/node_modules/postgres/src/connection.js:788:26)
+    at handle (file:///app/node_modules/postgres/src/connection.js:474:6)
+    at Socket.data (file:///app/node_modules/postgres/src/connection.js:315:9)
+    at Socket.emit (node:events:517:28)
+    at addChunk (node:internal/streams/readable:368:12)
+    at readableAddChunk (node:internal/streams/readable:341:9)
+    at Readable.push (node:internal/streams/readable:278:10)
+    at TCP.onStreamRead (node:internal/stream_base_commons:190:23) {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42P01',
+  position: '131',
+  file: 'parse_relation.c',
+  line: '1392',
+  routine: 'parserOpenTable'
+}
+
+Node.js v18.20.8
+
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+
+⚠️ WARNING: Using default admin credentials in production is a security risk!
+Set ADMIN_USERNAME and ADMIN_PASSWORD environment variables.
+PostgreSQL database connected
+node:internal/process/promises:288
+            triggerUncaughtException(err, true /* fromPromise */);
+            ^
+
+PostgresError: relation "users" does not exist
+    at ErrorResponse (file:///app/node_modules/postgres/src/connection.js:788:26)
+    at handle (file:///app/node_modules/postgres/src/connection.js:474:6)
+    at Socket.data (file:///app/node_modules/postgres/src/connection.js:315:9)
+    at Socket.emit (node:events:517:28)
+    at addChunk (node:internal/streams/readable:368:12)
+    at readableAddChunk (node:internal/streams/readable:341:9)
+    at Readable.push (node:internal/streams/readable:278:10)
+    at TCP.onStreamRead (node:internal/stream_base_commons:190:23) {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42P01',
+  position: '131',
+  file: 'parse_relation.c',
+  line: '1392',
+  routine: 'parserOpenTable'
+}
+
+Node.js v18.20.8
+
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+
+⚠️ WARNING: Using default admin credentials in production is a security risk!
+Set ADMIN_USERNAME and ADMIN_PASSWORD environment variables.
+PostgreSQL database connected
+node:internal/process/promises:288
+            triggerUncaughtException(err, true /* fromPromise */);
+            ^
+
+PostgresError: relation "users" does not exist
+    at ErrorResponse (file:///app/node_modules/postgres/src/connection.js:788:26)
+    at handle (file:///app/node_modules/postgres/src/connection.js:474:6)
+    at Socket.data (file:///app/node_modules/postgres/src/connection.js:315:9)
+    at Socket.emit (node:events:517:28)
+    at addChunk (node:internal/streams/readable:368:12)
+    at readableAddChunk (node:internal/streams/readable:341:9)
+    at Readable.push (node:internal/streams/readable:278:10)
+    at TCP.onStreamRead (node:internal/stream_base_commons:190:23) {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42P01',
+  position: '131',
+  file: 'parse_relation.c',
+  line: '1392',
+  routine: 'parserOpenTable'
+}
+
+Node.js v18.20.8
+
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+
+⚠️ WARNING: Using default admin credentials in production is a security risk!
+Set ADMIN_USERNAME and ADMIN_PASSWORD environment variables.
+PostgreSQL database connected
+node:internal/process/promises:288
+            triggerUncaughtException(err, true /* fromPromise */);
+            ^
+
+PostgresError: relation "users" does not exist
+    at ErrorResponse (file:///app/node_modules/postgres/src/connection.js:788:26)
+    at handle (file:///app/node_modules/postgres/src/connection.js:474:6)
+    at Socket.data (file:///app/node_modules/postgres/src/connection.js:315:9)
+    at Socket.emit (node:events:517:28)
+    at addChunk (node:internal/streams/readable:368:12)
+    at readableAddChunk (node:internal/streams/readable:341:9)
+    at Readable.push (node:internal/streams/readable:278:10)
+    at TCP.onStreamRead (node:internal/stream_base_commons:190:23) {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42P01',
+  position: '131',
+  file: 'parse_relation.c',
+  line: '1392',
+  routine: 'parserOpenTable'
+}
+
+Node.js v18.20.8
+
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+
+⚠️ WARNING: Using default admin credentials in production is a security risk!
+Set ADMIN_USERNAME and ADMIN_PASSWORD environment variables.
+PostgreSQL database connected
+node:internal/process/promises:288
+            triggerUncaughtException(err, true /* fromPromise */);
+            ^
+
+PostgresError: relation "users" does not exist
+    at ErrorResponse (file:///app/node_modules/postgres/src/connection.js:788:26)
+    at handle (file:///app/node_modules/postgres/src/connection.js:474:6)
+    at Socket.data (file:///app/node_modules/postgres/src/connection.js:315:9)
+    at Socket.emit (node:events:517:28)
+    at addChunk (node:internal/streams/readable:368:12)
+    at readableAddChunk (node:internal/streams/readable:341:9)
+    at Readable.push (node:internal/streams/readable:278:10)
+    at TCP.onStreamRead (node:internal/stream_base_commons:190:23) {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42P01',
+  position: '131',
+  file: 'parse_relation.c',
+  line: '1392',
+  routine: 'parserOpenTable'
+}
+
+Node.js v18.20.8
+
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+
+⚠️ WARNING: Using default admin credentials in production is a security risk!
+Set ADMIN_USERNAME and ADMIN_PASSWORD environment variables.
+PostgreSQL database connected
+node:internal/process/promises:288
+            triggerUncaughtException(err, true /* fromPromise */);
+            ^
+
+PostgresError: relation "users" does not exist
+    at ErrorResponse (file:///app/node_modules/postgres/src/connection.js:788:26)
+    at handle (file:///app/node_modules/postgres/src/connection.js:474:6)
+    at Socket.data (file:///app/node_modules/postgres/src/connection.js:315:9)
+    at Socket.emit (node:events:517:28)
+    at addChunk (node:internal/streams/readable:368:12)
+    at readableAddChunk (node:internal/streams/readable:341:9)
+    at Readable.push (node:internal/streams/readable:278:10)
+    at TCP.onStreamRead (node:internal/stream_base_commons:190:23) {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42P01',
+  position: '131',
+  file: 'parse_relation.c',
+  line: '1392',
+  routine: 'parserOpenTable'
+}
+
+Node.js v18.20.8

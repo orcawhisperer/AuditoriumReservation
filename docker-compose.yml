@@ -19,6 +19,9 @@ services:
       - PGHOST=postgres
       - PGPORT=5432
     restart: unless-stopped
+    volumes:
+      - ./scripts/init-db.sh:/app/init-db.sh
+    entrypoint: /bin/sh -c "chmod +x /app/init-db.sh && /app/init-db.sh && npm start"
 
   postgres:
     image: postgres:15-alpine
