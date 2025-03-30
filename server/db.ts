@@ -1,15 +1,23 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import Database from 'better-sqlite3';
 import * as schema from '@shared/schema';
 import { config } from './config';
+import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
+import path from 'path';
+import fs from 'fs';
 
-// Create PostgreSQL database connection with retries
-const client = postgres(config.database.url, {
-  host: '0.0.0.0',
-  max: 1,
-  connect_timeout: 10,
-  idle_timeout: 20
-});
-export const db = drizzle(client, { schema });
+// Create SQLite database file if it doesn't exist
+const dbFile = config.database.sqliteFile || 'sqlite.db';
+// Make sure the directory exists
+const dbDir = path.dirname(dbFile);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
 
-console.log('PostgreSQL database connected');
+// Create SQLite database connection
+const sqlite = new Database(dbFile);
+
+// Create Drizzle instance
+export const db = drizzle(sqlite, { schema });
+
+console.log('SQLite database connected');

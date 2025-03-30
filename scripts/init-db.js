@@ -1,84 +1,62 @@
-// Database initialization script
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import Database from 'better-sqlite3';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { config } from '../server/config.js';
+import { generateSecurePassword, hashPassword } from '../server/utils/password.js';
 
-const { db } = require('../server/db');
-const { users, shows, reservations } = require('../shared/schema');
-const bcrypt = require('bcrypt');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function initializeDatabase() {
-  console.log('Starting database initialization...');
-  
-  try {
-    // Create the schema by directly creating tables
-    console.log('Creating tables...');
-    
-    // Create users table
-    await db.execute(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        username TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL,
-        email TEXT,
-        is_admin BOOLEAN NOT NULL DEFAULT FALSE,
-        seat_limit INTEGER DEFAULT 8,
-        is_enabled BOOLEAN DEFAULT TRUE,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-    console.log('- Users table created');
-    
-    // Create shows table
-    await db.execute(`
-      CREATE TABLE IF NOT EXISTS shows (
-        id SERIAL PRIMARY KEY,
-        title TEXT NOT NULL,
-        date TIMESTAMP WITH TIME ZONE NOT NULL,
-        poster TEXT,
-        price REAL DEFAULT 0,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-    console.log('- Shows table created');
-    
-    // Create reservations table
-    await db.execute(`
-      CREATE TABLE IF NOT EXISTS reservations (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL REFERENCES users(id),
-        show_id INTEGER NOT NULL REFERENCES shows(id),
-        seat_numbers TEXT[] NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-    console.log('- Reservations table created');
-    
-    // Check if admin user exists
-    const adminExists = await db.execute('SELECT COUNT(*) FROM users WHERE username = $1', ['admin']);
-    
-    if (parseInt(adminExists.rows[0].count) === 0) {
-      console.log('Creating admin user...');
-      // Create default admin user
-      const hashedPassword = await bcrypt.hash('adminpass', 10);
-      await db.execute(`
-        INSERT INTO users (username, password, is_admin, seat_limit)
-        VALUES ($1, $2, $3, $4)
-      `, ['admin', hashedPassword, true, null]);
-      console.log('Admin user created with default credentials: admin/adminpass');
-    } else {
-      console.log('Admin user already exists');
-    }
-    
-    console.log('Database initialization completed successfully');
-  } catch (error) {
-    console.error('Error initializing database:', error);
+  // Get SQLite file path
+  const dbFile = config.database.sqliteFile || 'sqlite.db';
+  console.log(`Using SQLite database file: ${dbFile}`);
+
+  // Ensure the directory exists
+  const dbDir = path.dirname(dbFile);
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
+
+  // Create the database file if it doesn't exist
+  const sqlite = new Database(dbFile);
+
+  // Execute initial schema SQL
+  const schemaPath = path.join(__dirname, '../migrations-sqlite/0000_initial_schema.sql');
+  if (fs.existsSync(schemaPath)) {
+    const schemaSql = fs.readFileSync(schemaPath, 'utf8');
+    sqlite.exec(schemaSql);
+    console.log('Applied initial schema');
+  } else {
+    console.error('Initial schema SQL file not found');
     process.exit(1);
   }
+
+  // Create admin user if not exists
+  const adminExists = sqlite.prepare('SELECT 1 FROM users WHERE username = ?').get(config.admin.username);
+  
+  if (!adminExists) {
+    const password = config.admin.password || generateSecurePassword(12);
+    const hashedPassword = await hashPassword(password);
+    
+    sqlite.prepare(
+      'INSERT INTO users (username, password, is_admin, is_enabled, name) VALUES (?, ?, 1, 1, ?)'
+    ).run(config.admin.username, hashedPassword, 'Administrator');
+    
+    console.log(`Created admin user: ${config.admin.username}`);
+    if (!config.admin.password) {
+      console.log(`Generated admin password: ${password}`);
+      console.log('Please save this password as it will not be shown again.');
+    }
+  } else {
+    console.log('Admin user already exists');
+  }
+
+  console.log('Database initialization complete');
 }
 
-initializeDatabase()
-  .then(() => {
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error('Unhandled error during initialization:', error);
-    process.exit(1);
-  });
+initializeDatabase().catch(err => {
+  console.error('Database initialization failed:', err);
+  process.exit(1);
+});

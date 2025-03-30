@@ -1,32 +1,32 @@
-import { pgTable, text, integer, serial, timestamp, boolean, varchar, json } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer, primaryKey, blob } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { sql } from "drizzle-orm";
 
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: varchar("username", { length: 100 }).notNull().unique(),
-  password: varchar("password", { length: 255 }).notNull(),
-  isAdmin: boolean("is_admin").notNull().default(false),
-  isEnabled: boolean("is_enabled").notNull().default(true),
+export const users = sqliteTable("users", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  isAdmin: integer("is_admin", { mode: "boolean" }).notNull().default(false),
+  isEnabled: integer("is_enabled", { mode: "boolean" }).notNull().default(true),
   seatLimit: integer("seat_limit").notNull().default(4),
-  name: varchar("name", { length: 255 }),
-  gender: varchar("gender", { length: 50 }),
-  dateOfBirth: varchar("date_of_birth", { length: 50 }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  name: text("name"),
+  gender: text("gender"),
+  dateOfBirth: text("date_of_birth"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const shows = pgTable("shows", {
-  id: serial("id").primaryKey(),
-  title: varchar("title", { length: 255 }).notNull(),
-  date: timestamp("date").notNull(),
+export const shows = sqliteTable("shows", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  title: text("title").notNull(),
+  date: text("date").notNull(),
   poster: text("poster"),
   description: text("description"),
-  themeColor: varchar("theme_color", { length: 7 }).default("#4B5320"),
-  emoji: varchar("emoji", { length: 50 }),
-  blockedSeats: json("blocked_seats").notNull().default([]),
+  themeColor: text("theme_color").default("#4B5320"),
+  emoji: text("emoji"),
+  blockedSeats: text("blocked_seats").notNull().default("[]"),
   price: integer("price").default(0),
-  seatLayout: json("seat_layout").notNull().default([
+  seatLayout: text("seat_layout").notNull().default(JSON.stringify([
     {
       section: "Balcony",
       rows: [
@@ -53,15 +53,15 @@ export const shows = pgTable("shows", {
       ],
       total_section_seats: 232
     }
-  ]),
+  ])),
 });
 
-export const reservations = pgTable("reservations", {
-  id: serial("id").primaryKey(),
+export const reservations = sqliteTable("reservations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id").references(() => users.id),
   showId: integer("show_id").references(() => shows.id),
-  seatNumbers: json("seat_numbers").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  seatNumbers: text("seat_numbers").notNull(),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const insertUserSchema = createInsertSchema(users, {

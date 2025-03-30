@@ -5,13 +5,7 @@ import { eq } from "drizzle-orm";
 import { users, shows, reservations } from '@shared/schema';
 import { hashPassword } from "./utils/password";
 import { config } from "./config";
-import connectPg from "connect-pg-simple";
-import pg from "pg";
-
-const PostgresStore = connectPg(session);
-const pool = new pg.Pool({
-  connectionString: config.database.url,
-});
+import MemoryStore from "memorystore";
 
 export interface IStorage {
   // User operations
@@ -43,13 +37,13 @@ export interface IStorage {
   sessionStore: session.Store;
 }
 
-export class PostgresStorage implements IStorage {
+export class SQLiteStorage implements IStorage {
   sessionStore: session.Store;
 
   constructor() {
-    this.sessionStore = new PostgresStore({
-      pool,
-      createTableIfMissing: true,
+    const MemoryStoreFactory = MemoryStore(session);
+    this.sessionStore = new MemoryStoreFactory({
+      checkPeriod: 86400000 // 24 hours
     });
     
     // Admin user initialization is now handled by the seed.ts module
@@ -107,10 +101,19 @@ export class PostgresStorage implements IStorage {
   }
 
   async createShow(insertShow: InsertShow): Promise<Show> {
-    // Handle date conversion for PostgreSQL
+    // For SQLite, store blockedSeats and seatLayout as JSON strings
     const showData = {
       ...insertShow,
-      date: new Date(insertShow.date) // Convert string date to Date object
+      // Store as ISO string in SQLite
+      date: typeof insertShow.date === 'string' ? insertShow.date : new Date(insertShow.date).toISOString(),
+      // Convert array to JSON string if needed
+      blockedSeats: Array.isArray(insertShow.blockedSeats) 
+        ? JSON.stringify(insertShow.blockedSeats) 
+        : insertShow.blockedSeats,
+      // Ensure seatLayout is a string in SQLite
+      seatLayout: typeof insertShow.seatLayout === 'string'
+        ? insertShow.seatLayout
+        : JSON.stringify(insertShow.seatLayout)
     };
     
     const result = await db.insert(shows).values(showData).returning();
@@ -119,11 +122,43 @@ export class PostgresStorage implements IStorage {
 
   async getShow(id: number): Promise<Show | undefined> {
     const result = await db.select().from(shows).where(eq(shows.id, id));
-    return result[0];
+    
+    if (!result.length) return undefined;
+    
+    // Parse JSON strings from SQLite
+    const show = result[0];
+    try {
+      if (typeof show.blockedSeats === 'string') {
+        show.blockedSeats = JSON.parse(show.blockedSeats);
+      }
+      if (typeof show.seatLayout === 'string') {
+        show.seatLayout = JSON.parse(show.seatLayout);
+      }
+    } catch (error) {
+      console.error('Error parsing JSON fields:', error);
+    }
+    
+    return show;
   }
 
   async getShows(): Promise<Show[]> {
-    return await db.select().from(shows);
+    const results = await db.select().from(shows);
+    
+    // Parse JSON strings from SQLite for each show
+    results.forEach(show => {
+      try {
+        if (typeof show.blockedSeats === 'string') {
+          show.blockedSeats = JSON.parse(show.blockedSeats);
+        }
+        if (typeof show.seatLayout === 'string') {
+          show.seatLayout = JSON.parse(show.seatLayout);
+        }
+      } catch (error) {
+        console.error('Error parsing JSON fields:', error);
+      }
+    });
+    
+    return results;
   }
 
   async deleteShow(id: number): Promise<void> {
@@ -131,10 +166,19 @@ export class PostgresStorage implements IStorage {
   }
 
   async updateShow(id: number, show: InsertShow): Promise<Show> {
-    // Handle date conversion for PostgreSQL
+    // For SQLite, store blockedSeats and seatLayout as JSON strings
     const showData = {
       ...show,
-      date: new Date(show.date) // Convert string date to Date object
+      // Store as ISO string in SQLite
+      date: typeof show.date === 'string' ? show.date : new Date(show.date).toISOString(),
+      // Convert array to JSON string if needed
+      blockedSeats: Array.isArray(show.blockedSeats) 
+        ? JSON.stringify(show.blockedSeats) 
+        : show.blockedSeats,
+      // Ensure seatLayout is a string in SQLite
+      seatLayout: typeof show.seatLayout === 'string'
+        ? show.seatLayout
+        : JSON.stringify(show.seatLayout)
     };
     
     const result = await db.update(shows)
@@ -145,27 +189,72 @@ export class PostgresStorage implements IStorage {
   }
 
   async createReservation(userId: number, insertReservation: InsertReservation): Promise<Reservation> {
-    const result = await db.insert(reservations).values({
+    // For SQLite, store seatNumbers as JSON string
+    const reservationData = {
       ...insertReservation,
       userId,
-    }).returning();
+      seatNumbers: Array.isArray(insertReservation.seatNumbers) 
+        ? JSON.stringify(insertReservation.seatNumbers) 
+        : insertReservation.seatNumbers
+    };
+    
+    const result = await db.insert(reservations).values(reservationData).returning();
     return result[0];
   }
 
   async getReservations(): Promise<Reservation[]> {
-    return await db.select().from(reservations);
+    const results = await db.select().from(reservations);
+    
+    // Parse JSON strings from SQLite for each reservation
+    results.forEach(reservation => {
+      try {
+        if (typeof reservation.seatNumbers === 'string') {
+          reservation.seatNumbers = JSON.parse(reservation.seatNumbers);
+        }
+      } catch (error) {
+        console.error('Error parsing seatNumbers JSON:', error);
+      }
+    });
+    
+    return results;
   }
 
   async getReservationsByShow(showId: number): Promise<Reservation[]> {
-    return await db.select()
+    const results = await db.select()
       .from(reservations)
       .where(eq(reservations.showId, showId));
+    
+    // Parse JSON strings from SQLite
+    results.forEach(reservation => {
+      try {
+        if (typeof reservation.seatNumbers === 'string') {
+          reservation.seatNumbers = JSON.parse(reservation.seatNumbers);
+        }
+      } catch (error) {
+        console.error('Error parsing seatNumbers JSON:', error);
+      }
+    });
+    
+    return results;
   }
 
   async getReservationsByUser(userId: number): Promise<Reservation[]> {
-    return await db.select()
+    const results = await db.select()
       .from(reservations)
       .where(eq(reservations.userId, userId));
+    
+    // Parse JSON strings from SQLite
+    results.forEach(reservation => {
+      try {
+        if (typeof reservation.seatNumbers === 'string') {
+          reservation.seatNumbers = JSON.parse(reservation.seatNumbers);
+        }
+      } catch (error) {
+        console.error('Error parsing seatNumbers JSON:', error);
+      }
+    });
+    
+    return results;
   }
 
   async deleteReservation(id: number): Promise<void> {
@@ -180,4 +269,4 @@ export class PostgresStorage implements IStorage {
   }
 }
 
-export const storage = new PostgresStorage();
+export const storage = new SQLiteStorage();

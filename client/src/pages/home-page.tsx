@@ -345,13 +345,17 @@ export default function HomePage() {
   );
 }
 
+interface ReservationCardProps {
+  reservation: Reservation & { 
+    seatNumbers: string | string[] 
+  };
+  show?: Show;
+}
+
 function ReservationCard({
   reservation,
   show,
-}: {
-  reservation: Reservation;
-  show?: Show;
-}) {
+}: ReservationCardProps) {
   const { toast } = useToast();
   const { t } = useTranslation();
   const isPastShow = show && new Date(show.date) < new Date();
@@ -402,7 +406,8 @@ function ReservationCard({
                       ? JSON.parse(reservation.seatNumbers).join(", ")
                       : reservation.seatNumbers;
                   } else if (Array.isArray(reservation.seatNumbers)) {
-                    return reservation.seatNumbers.join(", ");
+                    // Use type assertion to handle the never type error
+                    return (reservation.seatNumbers as string[]).join(", ");
                   }
                   return "";
                 } catch (e) {

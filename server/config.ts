@@ -36,12 +36,22 @@ export const config = {
   
   // Database configuration
   database: {
-    url: getEnv('DATABASE_URL', '', true),
+    url: getEnv('DATABASE_URL', ''),
+    sqliteFile: getEnv('SQLITE_FILE', 'sqlite.db'),
+    // Keep these for backwards compatibility
     host: getEnv('PGHOST', ''),
     port: parseInt(getEnv('PGPORT', '5432')),
     user: getEnv('PGUSER', ''),
     password: getEnv('PGPASSWORD', ''),
     name: getEnv('PGDATABASE', ''),
+  } as {
+    url: string;
+    sqliteFile: string;
+    host: string;
+    port: number;
+    user: string;
+    password: string;
+    name: string;
   },
   
   // Initialize the config and validate required variables
