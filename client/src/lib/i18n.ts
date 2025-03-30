@@ -122,6 +122,8 @@ const enTranslations = {
     cannotDelete: "Cannot delete this item",
     pastShowModificationsDisabled: "Past show - modifications disabled",
     backToHome: "Back to Home",
+    permissions: "Permissions",
+    viewAndManageReservations: "View and manage reservations",
   },
   profile: {
     profileDetails: "Profile Details",
@@ -257,6 +259,8 @@ const hiTranslations = {
     cannotDelete: "इस आइटम को हटाया नहीं जा सकता",
     pastShowModificationsDisabled: "पिछला शो - संशोधन अक्षम",
     backToHome: "होम पर वापस जाएं",
+    permissions: "अनुमति",
+    viewAndManageReservations: "आरक्षण देखें और प्रबंधित करें",
   },
   profile: {
     profileDetails: "प्रोफाइल विवरण",
