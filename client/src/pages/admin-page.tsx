@@ -163,6 +163,24 @@ interface Reservation {
 function ShowForm() {
   const { toast } = useToast();
   const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [isTemplateSelectOpen, setIsTemplateSelectOpen] = useState<boolean>(false);
+
+  // Fetch all existing shows to use as templates
+  const { data: existingShows = [] } = useQuery<Show[]>({
+    queryKey: ["/api/shows"],
+  });
+  
+  // Filter shows based on search term
+  const filteredShows = useMemo(() => {
+    if (!searchTerm.trim()) return existingShows;
+    
+    const lowerSearch = searchTerm.toLowerCase();
+    return existingShows.filter(show => 
+      show.title.toLowerCase().includes(lowerSearch) ||
+      show.description?.toLowerCase().includes(lowerSearch)
+    );
+  }, [existingShows, searchTerm]);
 
   const form = useForm({
     resolver: zodResolver(insertShowSchema),
@@ -188,6 +206,30 @@ function ShowForm() {
       };
       reader.readAsDataURL(file);
     }
+  };
+  
+  // Function to load template data from an existing show
+  const loadTemplateData = (templateShow: Show) => {
+    form.setValue("title", templateShow.title);
+    form.setValue("description", templateShow.description || "");
+    form.setValue("themeColor", templateShow.themeColor || "#4B5320");
+    form.setValue("emoji", templateShow.emoji || "🎭");
+    form.setValue("blockedSeats", templateShow.blockedSeats || "");
+    
+    // Always set a new date as default
+    form.setValue("date", new Date().toISOString().slice(0, 16));
+    
+    // Load poster if exists
+    if (templateShow.poster) {
+      form.setValue("poster", templateShow.poster);
+      setPreviewUrl(templateShow.poster);
+    }
+    
+    setIsTemplateSelectOpen(false);
+    toast({
+      title: "Template Loaded",
+      description: `Data loaded from "${templateShow.title}". Don't forget to update the date!`,
+    });
   };
 
   const createShowMutation = useMutation({
@@ -220,6 +262,81 @@ function ShowForm() {
 
   return (
     <Form {...form}>
+      <div className="mb-4">
+        <Dialog open={isTemplateSelectOpen} onOpenChange={setIsTemplateSelectOpen}>
+          <DialogTrigger asChild>
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="w-full flex items-center gap-2"
+            >
+              <CalendarPlus className="h-4 w-4" />
+              Use Existing Show as Template
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Choose a Show Template</DialogTitle>
+              <DialogDescription>
+                Select an existing show to reuse its data for creating a new show.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="py-4">
+              <div className="relative mb-4">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search shows..."
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto p-1">
+                {filteredShows.length > 0 ? (
+                  filteredShows.map((show) => (
+                    <Card 
+                      key={show.id} 
+                      className="cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => loadTemplateData(show)}
+                    >
+                      <CardHeader className="p-4 pb-2">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          {show.emoji || "🎭"} {show.title}
+                        </CardTitle>
+                        <CardDescription className="text-xs">
+                          {format(new Date(show.date), "PPP")}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0">
+                        {show.poster && (
+                          <div className="w-full h-20 overflow-hidden rounded mb-2">
+                            <img 
+                              src={show.poster} 
+                              alt={show.title}
+                              className="w-full h-full object-cover" 
+                            />
+                          </div>
+                        )}
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {show.description || "No description"}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="col-span-full flex flex-col items-center justify-center h-40 text-muted-foreground">
+                    <Search className="h-8 w-8 mb-2 opacity-50" />
+                    <p>No shows found matching your search</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+      
       <form
         onSubmit={form.handleSubmit((data) => createShowMutation.mutate(data))}
         className="space-y-4"

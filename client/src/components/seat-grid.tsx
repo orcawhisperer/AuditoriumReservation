@@ -1,14 +1,16 @@
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Reservation, Show, insertReservationSchema } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useParams, useLocation } from "wouter";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle, Clock } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from "react-i18next";
 
 type SeatProps = {
   seatId: string;
@@ -85,6 +87,7 @@ export function SeatGrid() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const { t } = useTranslation();
 
   const { data: show, isLoading: showLoading } = useQuery<Show>({
     queryKey: [`/api/shows/${showId}`],
@@ -106,6 +109,17 @@ export function SeatGrid() {
   const hasExistingReservation = userReservations.some(
     (reservation) => reservation.showId === parseInt(showId),
   );
+  
+  // Check if the show time is within 30 minutes from now
+  const isPastCutoffTime = useMemo(() => {
+    if (!show) return false;
+    
+    const showTime = new Date(show.date);
+    const cutoffTime = new Date(showTime.getTime() - 30 * 60 * 1000); // 30 minutes before show
+    const now = new Date();
+    
+    return now > cutoffTime;
+  }, [show]);
 
   const reserveMutation = useMutation({
     mutationFn: async () => {
@@ -242,6 +256,19 @@ export function SeatGrid() {
             <>You can book up to <strong>{seatLimit}</strong> seats for this show.</>
           )}
         </p>
+        
+        {/* Cutoff time alert */}
+        {isPastCutoffTime && (
+          <Alert variant="destructive" className="mt-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Reservation Cutoff Time</AlertTitle>
+            <AlertDescription>
+              Online reservations are closed 30 minutes before the show starts.
+              Please contact the admin at the venue for last-minute reservations.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {show.poster && (
           <div className="mt-4 relative w-full max-w-md mx-auto overflow-hidden rounded-lg border">
             <div className="relative aspect-video">
@@ -419,7 +446,8 @@ export function SeatGrid() {
               disabled={
                 selectedSeats.length === 0 ||
                 reserveMutation.isPending ||
-                hasExistingReservation
+                hasExistingReservation ||
+                isPastCutoffTime
               }
               className="min-w-[120px]"
             >
@@ -428,6 +456,8 @@ export function SeatGrid() {
               )}
               {hasExistingReservation
                 ? "Already Reserved"
+                : isPastCutoffTime
+                ? "Booking Closed"
                 : `Reserve (${selectedSeats.length})`}
             </Button>
           </div>
