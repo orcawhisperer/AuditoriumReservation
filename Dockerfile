@@ -1,25 +1,30 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and install dependencies
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
 
-# Copy source code
+# Copy application code
 COPY . .
+
+# Create scripts directory
+RUN mkdir -p /app/scripts
+
+# Make init scripts executable
+COPY scripts/ /app/scripts/
+RUN chmod +x /app/scripts/*.sh || true
+RUN chmod +x /app/scripts/migrations/*.sh || true
 
 # Build the application
 RUN npm run build
 
-# Expose port
+# Expose the application port
 EXPOSE 5000
 
-# Add DB initialization script
-RUN echo '#!/bin/sh\necho "Waiting for database to be ready..."\nsleep 5\necho "Initializing database directly..."\nnode scripts/init-db.js || exit 1\necho "Starting application..."\nnpm start' > /app/docker-entrypoint.sh && \
-    chmod +x /app/docker-entrypoint.sh
+# Set environment variable
+ENV NODE_ENV=production
 
-# Use the entrypoint script to ensure DB is initialized
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+# Start the application
+CMD ["npm", "run", "start"]

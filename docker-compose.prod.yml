@@ -22,8 +22,8 @@ services:
       - PGPORT=5432
     restart: always
     volumes:
-      - ./scripts:/app/scripts
-    entrypoint: /bin/sh -c "chmod +x /app/scripts/init-db.sh && chmod +x /app/scripts/migrate-db.sh && /app/scripts/init-db.sh && /app/scripts/migrate-db.sh && node server/index.js"
+      - ./scripts:/app/scripts:ro
+    entrypoint: ["/bin/sh", "-c", "mkdir -p /app/scripts && ls -la /app/scripts && if [ -f /app/scripts/init-db.sh ]; then chmod +x /app/scripts/init-db.sh && /app/scripts/init-db.sh; fi && if [ -f /app/scripts/migrate-db.sh ]; then chmod +x /app/scripts/migrate-db.sh && /app/scripts/migrate-db.sh; fi && node server/index.js"]
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/health"]
       interval: 30s
