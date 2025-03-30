@@ -393,10 +393,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             // If we get here, we can safely create the reservation
             console.log(`[Transaction ${retryCount}] Creating reservation`);
-            const reservation = await tx.insert(reservations).values({
+            
+            // Make sure to convert array to JSON string for SQLite
+            const reservationData = {
               userId: req.user!.id,
-              ...parsed.data,
-            }).returning();
+              showId: parsed.data.showId,
+              seatNumbers: Array.isArray(parsed.data.seatNumbers) 
+                ? JSON.stringify(parsed.data.seatNumbers) 
+                : parsed.data.seatNumbers
+            };
+            
+            const reservation = await tx.insert(reservations).values(reservationData).returning();
 
             console.log(`[Transaction ${retryCount}] Reservation created successfully:`, reservation[0]);
             res.status(201).json(reservation[0]);
@@ -582,7 +589,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .update(reservations)
           .set({
             showId: parsed.data.showId,
-            seatNumbers: parsed.data.seatNumbers,
+            seatNumbers: Array.isArray(parsed.data.seatNumbers) 
+              ? JSON.stringify(parsed.data.seatNumbers) 
+              : parsed.data.seatNumbers,
           })
           .where(sql`${reservations.id} = ${reservationId}`)
           .returning();
