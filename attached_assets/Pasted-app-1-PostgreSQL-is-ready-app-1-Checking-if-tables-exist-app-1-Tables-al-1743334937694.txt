@@ -1,0 +1,38 @@
+app-1       | PostgreSQL is ready!
+app-1       | Checking if tables exist...
+app-1       | Tables already exist.
+app-1       | Admin user already exists.
+app-1       | Database initialization completed successfully!
+app-1       | 
+app-1       | > rest-express@1.0.0 start
+app-1       | > NODE_ENV=production node dist/index.js
+app-1       | 
+app-1       | ⚠️ WARNING: Using default admin credentials in production is a security risk!
+app-1       | Set ADMIN_USERNAME and ADMIN_PASSWORD environment variables.
+app-1       | PostgreSQL database connected
+postgres-1  | 2025-03-30 11:41:12.548 UTC [52] ERROR:  column "name" does not exist at character 78
+postgres-1  | 2025-03-30 11:41:12.548 UTC [52] STATEMENT:  select "id", "username", "password", "is_admin", "is_enabled", "seat_limit", "name", "gender", "date_of_birth", "created_at" from "users" where "users"."is_admin" = $1 limit $2
+app-1       | node:internal/process/promises:391
+app-1       |     triggerUncaughtException(err, true /* fromPromise */);
+app-1       |     ^
+app-1       | 
+app-1       | PostgresError: column "name" does not exist
+app-1       |     at ErrorResponse (file:///app/node_modules/postgres/src/connection.js:788:26)
+app-1       |     at handle (file:///app/node_modules/postgres/src/connection.js:474:6)
+app-1       |     at Socket.data (file:///app/node_modules/postgres/src/connection.js:315:9)
+app-1       |     at Socket.emit (node:events:524:28)
+app-1       |     at addChunk (node:internal/streams/readable:561:12)
+app-1       |     at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+app-1       |     at Readable.push (node:internal/streams/readable:392:5)
+app-1       |     at TCP.onStreamRead (node:internal/stream_base_commons:191:23) {
+app-1       |   severity_local: 'ERROR',
+app-1       |   severity: 'ERROR',
+app-1       |   code: '42703',
+app-1       |   position: '78',
+app-1       |   file: 'parse_relation.c',
+app-1       |   line: '3665',
+app-1       |   routine: 'errorMissingColumn'
+app-1       | }
+app-1       | 
+app-1       | Node.js v20.19.0
+app-1 exited with code 1

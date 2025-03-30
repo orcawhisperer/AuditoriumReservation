@@ -228,62 +228,40 @@ If the database becomes corrupted, you can:
 
 ## Schema Migrations
 
-The application includes a database migration system to manage schema changes safely across deployments.
+The application uses Drizzle ORM for type-safe database schema management and migrations.
+
+### Database Schema Management
+
+The database schema is defined in `shared/schema.ts` using Drizzle's type-safe schema definition syntax:
+
+```typescript
+// Example schema definition
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: varchar("username", { length: 50 }).notNull().unique(),
+  password: varchar("password", { length: 100 }).notNull(),
+  is_admin: boolean("is_admin").default(false).notNull(),
+  // ... other fields
+});
+```
 
 ### Creating a New Migration
 
-When you need to make schema changes (like adding a column or table), create a new migration:
+When you need to make schema changes, update the schema in `shared/schema.ts`, then generate a migration:
 
 ```bash
-./manage.sh create-migration add_user_preferences
+./scripts/drizzle-generate.sh
 ```
 
-This creates a new migration script in `scripts/migrations/` with a sequential version number:
+This creates a new SQL migration file in the `migrations/` directory with an incremental prefix (e.g., `0001_descriptive_name.sql`).
 
-```bash
-scripts/migrations/002-add_user_preferences.sh
-```
+### Migration File Structure
 
-### Editing Migration Scripts
+Drizzle generates SQL migration files containing the necessary ALTER TABLE statements:
 
-Edit the migration script to include your SQL changes:
-
-```bash
-#!/bin/bash
-# Migration: add_user_preferences
-# Migration version: 2
-# Description: add_user_preferences
-
-# Function to execute SQL query
-execute_query() {
-  PGPASSWORD="$PGPASSWORD" psql -h "$PGHOST" -U "$PGUSER" -d "$PGDATABASE" -c "$1"
-  return $?
-}
-
-# Check if this migration has already been applied
-CURRENT_VERSION=$(execute_query "SELECT MAX(version) FROM schema_versions;" | sed -n 3p | tr -d ' ')
-
-if [ "$CURRENT_VERSION" -ge "2" ]; then
-  echo "Migration 002 already applied (version 2)"
-  exit 0
-fi
-
-echo "Applying migration 002: add_user_preferences..."
-
-# Apply the migration
-execute_query "
-  -- Add preferences JSON column to users table
-  ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB DEFAULT '{}';
-" || exit 1
-
-# Record the migration
-execute_query "
-  INSERT INTO schema_versions (version, description)
-  VALUES (2, 'add_user_preferences');
-" || exit 1
-
-echo "Migration 002 applied successfully!"
-exit 0
+```sql
+-- Example migration file: migrations/0001_add_price_column.sql
+ALTER TABLE "shows" ADD COLUMN "price" integer;
 ```
 
 ### Running Migrations
@@ -291,19 +269,30 @@ exit 0
 To apply all pending migrations:
 
 ```bash
-./manage.sh migrate
+./scripts/drizzle-run-migrations.sh
 ```
 
 The system will:
-1. Check the current database version
-2. Run only migrations that haven't been applied yet
-3. Track applied migrations in the `schema_versions` table
+1. Check if tables already exist in the database
+2. For new databases, apply all migrations from scratch
+3. For existing databases, apply only incremental migrations (files prefixed after 0000_)
+4. Track applied migrations in a Drizzle-managed migrations table
+
+### Alternative: Direct Schema Push
+
+During development, you can also push schema changes directly without generating migration files:
+
+```bash
+./scripts/drizzle-db-push.sh
+```
+
+This is useful for rapid development, but migrations are recommended for production deployments.
 
 ### Migration in Docker Deployment
 
-The migration system is integrated with Docker deployment:
+The Drizzle migration system is integrated with Docker deployment:
 - When containers start, migrations are automatically applied
-- Each migration script safely checks if it has already been applied
-- The system maintains a version history in the database
+- The system intelligently detects existing tables and only applies needed changes
+- Drizzle maintains a version history in the database
 
-This ensures consistent database schema across all environments.
+This ensures consistent database schema across all environments while providing type safety through TypeScript integration.

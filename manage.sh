@@ -69,7 +69,7 @@ function show_help {
   echo "  backup              Create a database backup"
   echo "  restore <file>      Restore database from a backup file"
   echo "  list-backups        List all available database backups"
-  echo "  migrate             Run database migrations"
+  echo "  migrate             Run database migrations with Drizzle ORM"
   echo "  create-migration <name>  Create a new migration script"
   echo "  build               Rebuild application containers"
   echo "  clean               Stop containers and remove volumes (caution: data loss)"
@@ -425,22 +425,22 @@ case "$1" in
     open_psql
     ;;
   migrate)
-    echo -e "${BLUE}Running database migrations...${NC}"
+    echo -e "${BLUE}Running database migrations with Drizzle ORM...${NC}"
     
     # Check if postgres container is running
     if ! docker compose ps | grep -q "postgres.*Up"; then
       if docker compose -f docker-compose.prod.yml ps | grep -q "postgres.*Up"; then
-        docker compose -f docker-compose.prod.yml exec app /app/scripts/migrate-db.sh
+        docker compose -f docker-compose.prod.yml exec app /app/scripts/drizzle-run-migrations.sh
       else
         echo -e "${YELLOW}PostgreSQL container is not running. Starting it...${NC}"
         docker compose up -d postgres
         sleep 5 # Wait for PostgreSQL to start
         docker compose up -d app
         sleep 2
-        docker compose exec app /app/scripts/migrate-db.sh
+        docker compose exec app /app/scripts/drizzle-run-migrations.sh
       fi
     else
-      docker compose exec app /app/scripts/migrate-db.sh
+      docker compose exec app /app/scripts/drizzle-run-migrations.sh
     fi
     ;;
     
@@ -451,72 +451,37 @@ case "$1" in
       exit 1
     fi
     
-    echo -e "${BLUE}Creating new migration: $2${NC}"
+    echo -e "${BLUE}Creating new migration using Drizzle ORM: $2${NC}"
     
     # Ensure migrations directory exists
-    mkdir -p scripts/migrations
+    mkdir -p migrations
     
-    # Get the latest migration version
-    LATEST_VERSION=0
-    for file in scripts/migrations/*.sh; do
-      if [ -f "$file" ]; then
-        VERSION=$(basename "$file" | cut -d'-' -f1 | sed 's/^0*//')
-        if [ "$VERSION" -gt "$LATEST_VERSION" ]; then
-          LATEST_VERSION=$VERSION
-        fi
+    # Prompt user to update the schema first
+    echo -e "${YELLOW}IMPORTANT: Before generating the migration, make sure you've updated the database schema in shared/schema.ts.${NC}"
+    echo -e "This will generate SQL migration files based on the schema changes."
+    echo -e "Press any key to continue or Ctrl+C to cancel..."
+    read -n 1 -s
+    
+    # Check if app container is running
+    if ! docker compose ps | grep -q "app.*Up"; then
+      if docker compose -f docker-compose.prod.yml ps | grep -q "app.*Up"; then
+        echo -e "${BLUE}Generating migration in production container...${NC}"
+        docker compose -f docker-compose.prod.yml exec app /app/scripts/drizzle-generate.sh
+      else
+        echo -e "${YELLOW}App container is not running. Starting it...${NC}"
+        docker compose up -d app
+        sleep 2
+        echo -e "${BLUE}Generating migration...${NC}"
+        docker compose exec app /app/scripts/drizzle-generate.sh
       fi
-    done
+    else
+      echo -e "${BLUE}Generating migration...${NC}"
+      docker compose exec app /app/scripts/drizzle-generate.sh
+    fi
     
-    # Calculate new version
-    NEW_VERSION=$((LATEST_VERSION + 1))
-    # Format with leading zeros
-    FORMATTED_VERSION=$(printf "%03d" $NEW_VERSION)
-    
-    # Create new migration file
-    NEW_FILE="scripts/migrations/${FORMATTED_VERSION}-${2}.sh"
-    
-    cat > "$NEW_FILE" << EOF
-#!/bin/bash
-# Migration: $2
-# Migration version: $((LATEST_VERSION + 1))
-# Description: $2
-
-# Function to execute SQL query
-execute_query() {
-  PGPASSWORD="\$PGPASSWORD" psql -h "\$PGHOST" -U "\$PGUSER" -d "\$PGDATABASE" -c "\$1"
-  return \$?
-}
-
-# Check if this migration has already been applied
-CURRENT_VERSION=\$(execute_query "SELECT MAX(version) FROM schema_versions;" | sed -n 3p | tr -d ' ')
-
-if [ "\$CURRENT_VERSION" -ge "$((LATEST_VERSION + 1))" ]; then
-  echo "Migration $FORMATTED_VERSION already applied (version $((LATEST_VERSION + 1)))"
-  exit 0
-fi
-
-echo "Applying migration $FORMATTED_VERSION: $2..."
-
-# Apply the migration
-execute_query "
-  -- Add your SQL changes here
-  -- Example: ALTER TABLE users ADD COLUMN new_column TEXT;
-" || exit 1
-
-# Record the migration
-execute_query "
-  INSERT INTO schema_versions (version, description)
-  VALUES ($((LATEST_VERSION + 1)), '$2');
-" || exit 1
-
-echo "Migration $FORMATTED_VERSION applied successfully!"
-exit 0
-EOF
-    
-    chmod +x "$NEW_FILE"
-    echo -e "${GREEN}Created new migration script: $NEW_FILE${NC}"
+    echo -e "${GREEN}Migration files generated successfully.${NC}"
     echo ""
-    echo -e "Edit this file to add your SQL changes, then run:"
+    echo -e "To apply the migration, run:"
     echo -e "  ./manage.sh migrate"
     ;;
     

@@ -1,7 +1,7 @@
 #!/bin/bash
-# Direct SQL-based database initialization script
+# Drizzle-based database initialization script
 
-echo "Initializing Shahbaaz Auditorium database..."
+echo "Initializing Shahbaaz Auditorium database using Drizzle ORM..."
 
 # Check if required environment variables are set
 if [ -z "$PGHOST" ] || [ -z "$PGUSER" ] || [ -z "$PGDATABASE" ]; then
@@ -24,6 +24,10 @@ if [ -z "$PGHOST" ] || [ -z "$PGUSER" ] || [ -z "$PGDATABASE" ]; then
     exit 1
   fi
 fi
+
+# Export DATABASE_URL for Drizzle ORM
+export DATABASE_URL="postgres://$PGUSER:$PGPASSWORD@$PGHOST:$PGPORT/$PGDATABASE"
+echo "Using DATABASE_URL: ${DATABASE_URL//$PGPASSWORD/****}"
 
 # Wait for PostgreSQL to be ready
 echo "Checking PostgreSQL connection to $PGHOST:$PGPORT as $PGUSER..."
@@ -51,49 +55,67 @@ execute_query() {
 # Check if users table exists
 echo "Checking if tables exist..."
 if ! execute_query "SELECT 1 FROM users LIMIT 1" &>/dev/null; then
-  echo "Creating tables..."
+  echo "Tables don't exist. Creating schema using Drizzle ORM..."
   
-  # Create users table
-  execute_query "
-    CREATE TABLE IF NOT EXISTS users (
-      id SERIAL PRIMARY KEY,
-      username TEXT NOT NULL UNIQUE,
-      password TEXT NOT NULL,
-      email TEXT,
-      is_admin BOOLEAN NOT NULL DEFAULT FALSE,
-      seat_limit INTEGER DEFAULT 8,
-      is_enabled BOOLEAN DEFAULT TRUE,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    );
-  " || exit 1
-  echo "- Users table created"
+  # Use Drizzle push to create the schema
+  echo "Running drizzle-kit push..."
+  npx drizzle-kit push:pg
   
-  # Create shows table
-  execute_query "
-    CREATE TABLE IF NOT EXISTS shows (
-      id SERIAL PRIMARY KEY,
-      title TEXT NOT NULL,
-      date TIMESTAMP WITH TIME ZONE NOT NULL,
-      poster TEXT,
-      price REAL DEFAULT 0,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    );
-  " || exit 1
-  echo "- Shows table created"
+  if [ $? -ne 0 ]; then
+    echo "Error: Drizzle schema push failed. Falling back to manual SQL initialization."
+    
+    # Create users table
+    execute_query "
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        email TEXT,
+        is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+        seat_limit INTEGER DEFAULT 8,
+        is_enabled BOOLEAN DEFAULT TRUE,
+        name TEXT,
+        gender TEXT,
+        date_of_birth TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    " || exit 1
+    echo "- Users table created"
+    
+    # Create shows table
+    execute_query "
+      CREATE TABLE IF NOT EXISTS shows (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        date TIMESTAMP WITH TIME ZONE NOT NULL,
+        poster TEXT,
+        description TEXT,
+        theme_color TEXT DEFAULT '#4B5320',
+        emoji TEXT,
+        price INTEGER DEFAULT 0,
+        blocked_seats JSONB DEFAULT '[]'::jsonb,
+        seat_layout JSONB DEFAULT '[]'::jsonb,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    " || exit 1
+    echo "- Shows table created"
+    
+    # Create reservations table
+    execute_query "
+      CREATE TABLE IF NOT EXISTS reservations (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        show_id INTEGER NOT NULL REFERENCES shows(id),
+        seat_numbers JSONB NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    " || exit 1
+    echo "- Reservations table created"
+  else
+    echo "Schema created successfully using Drizzle ORM!"
+  fi
   
-  # Create reservations table
-  execute_query "
-    CREATE TABLE IF NOT EXISTS reservations (
-      id SERIAL PRIMARY KEY,
-      user_id INTEGER NOT NULL REFERENCES users(id),
-      show_id INTEGER NOT NULL REFERENCES shows(id),
-      seat_numbers TEXT[] NOT NULL,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    );
-  " || exit 1
-  echo "- Reservations table created"
-  
-  # Create schema versions table to track migrations
+  # Create schema versions table to track migrations (for backwards compatibility)
   execute_query "
     CREATE TABLE IF NOT EXISTS schema_versions (
       version INTEGER PRIMARY KEY,
@@ -107,7 +129,7 @@ if ! execute_query "SELECT 1 FROM users LIMIT 1" &>/dev/null; then
   if [ "$(execute_query "SELECT COUNT(*) FROM schema_versions;" | grep -Eo '[0-9]+')" = "0" ]; then
     execute_query "
       INSERT INTO schema_versions (version, description)
-      VALUES (1, 'Initial schema');
+      VALUES (1, 'Initial schema with Drizzle ORM');
     " || exit 1
     echo "- Schema version set to 1"
   fi
@@ -123,8 +145,8 @@ if [ "$ADMIN_COUNT" = "0" ]; then
   # Hash the admin password using PostgreSQL's built-in functions
   # This is not ideal, but works for initialization
   execute_query "
-    INSERT INTO users (username, password, is_admin, seat_limit)
-    VALUES ('admin', '\$2b\$10\$933ZXqgdwpY9VKPuECgTCefCAwDrOxrXSvNhkG7uxpnVIFikCpgTC', true, null);
+    INSERT INTO users (username, password, is_admin, seat_limit, name, gender, date_of_birth)
+    VALUES ('admin', '\$2b\$10\$933ZXqgdwpY9VKPuECgTCefCAwDrOxrXSvNhkG7uxpnVIFikCpgTC', true, null, 'System Administrator', 'other', '2000-01-01');
   " || exit 1
   echo "Admin user created with default credentials: admin/adminpass"
 else

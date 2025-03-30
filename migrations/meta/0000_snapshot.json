@@ -1,0 +1,252 @@
+{
+  "id": "e1295cf9-bef7-4116-8417-92a92647b1aa",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.reservations": {
+      "name": "reservations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "show_id": {
+          "name": "show_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "seat_numbers": {
+          "name": "seat_numbers",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "reservations_user_id_users_id_fk": {
+          "name": "reservations_user_id_users_id_fk",
+          "tableFrom": "reservations",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "reservations_show_id_shows_id_fk": {
+          "name": "reservations_show_id_shows_id_fk",
+          "tableFrom": "reservations",
+          "tableTo": "shows",
+          "columnsFrom": [
+            "show_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.shows": {
+      "name": "shows",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date": {
+          "name": "date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "poster": {
+          "name": "poster",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "theme_color": {
+          "name": "theme_color",
+          "type": "varchar(7)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'#4B5320'"
+        },
+        "emoji": {
+          "name": "emoji",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "blocked_seats": {
+          "name": "blocked_seats",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::json"
+        },
+        "price": {
+          "name": "price",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "seat_layout": {
+          "name": "seat_layout",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[{\"section\":\"Balcony\",\"rows\":[{\"row\":\"C\",\"seats\":[1,2,3,4,5,6,7,8,9,10,11,12],\"total_seats\":12},{\"row\":\"B\",\"seats\":[1,2,3,4,5,6,7,8,9,10,11,12],\"total_seats\":12},{\"row\":\"A\",\"seats\":[9,10,11,12],\"total_seats\":4}],\"total_section_seats\":28},{\"section\":\"Downstairs\",\"rows\":[{\"row\":\"N\",\"seats\":[1,2,3,4,9,10,11,12,13,14,15,16],\"total_seats\":12},{\"row\":\"M\",\"seats\":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],\"total_seats\":16},{\"row\":\"L\",\"seats\":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],\"total_seats\":16},{\"row\":\"K\",\"seats\":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],\"total_seats\":16},{\"row\":\"J\",\"seats\":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],\"total_seats\":16},{\"row\":\"I\",\"seats\":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],\"total_seats\":16},{\"row\":\"H\",\"seats\":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],\"total_seats\":16},{\"row\":\"G\",\"seats\":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],\"total_seats\":16},{\"row\":\"F\",\"seats\":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18],\"total_seats\":18},{\"row\":\"E\",\"seats\":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18],\"total_seats\":18},{\"row\":\"D\",\"seats\":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18],\"total_seats\":18},{\"row\":\"C\",\"seats\":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18],\"total_seats\":18},{\"row\":\"B\",\"seats\":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18],\"total_seats\":18},{\"row\":\"A\",\"seats\":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18],\"total_seats\":18}],\"total_section_seats\":232}]'::json"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password": {
+          "name": "password",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_admin": {
+          "name": "is_admin",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "is_enabled": {
+          "name": "is_enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "seat_limit": {
+          "name": "seat_limit",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 4
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gender": {
+          "name": "gender",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_of_birth": {
+          "name": "date_of_birth",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_username_unique": {
+          "name": "users_username_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "username"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

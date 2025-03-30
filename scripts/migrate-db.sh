@@ -1,7 +1,7 @@
 #!/bin/bash
-# Database migration runner for Shahbaaz Auditorium
+# Database migration runner for Shahbaaz Auditorium using Drizzle ORM
 
-echo "Starting database migration process..."
+echo "Starting database migration process using Drizzle ORM..."
 
 # Check if required environment variables are set
 if [ -z "$PGHOST" ] || [ -z "$PGUSER" ] || [ -z "$PGDATABASE" ]; then
@@ -24,6 +24,10 @@ if [ -z "$PGHOST" ] || [ -z "$PGUSER" ] || [ -z "$PGDATABASE" ]; then
     exit 1
   fi
 fi
+
+# Export DATABASE_URL for Drizzle ORM
+export DATABASE_URL="postgres://$PGUSER:$PGPASSWORD@$PGHOST:$PGPORT/$PGDATABASE"
+echo "Using DATABASE_URL: ${DATABASE_URL//$PGPASSWORD/****}"
 
 # Wait for PostgreSQL to be ready
 echo "Checking PostgreSQL connection to $PGHOST:$PGPORT as $PGUSER..."
@@ -48,47 +52,33 @@ execute_query() {
   return $?
 }
 
-# Check if schema_versions table exists
-if ! execute_query "SELECT 1 FROM schema_versions LIMIT 1" &>/dev/null; then
-  echo "Schema versions table doesn't exist. Run init-db.sh first."
-  exit 1
-fi
+echo "Checking if database schema needs updates..."
 
-# Get current schema version
-CURRENT_VERSION=$(execute_query "SELECT MAX(version) FROM schema_versions;" | sed -n 3p | tr -d ' ')
-if [ -z "$CURRENT_VERSION" ] || [ "$CURRENT_VERSION" = "NULL" ]; then
-  CURRENT_VERSION=0
-fi
+# First, generate migrations if needed
+echo "Generating migration files if schema has changed..."
+npx drizzle-kit generate
 
-echo "Current database schema version: $CURRENT_VERSION"
+# Then apply the migrations
+echo "Applying migrations using Drizzle ORM..."
+npx tsx scripts/drizzle-migrate.ts
 
-# Get all migration scripts
-MIGRATION_SCRIPTS=$(find "$(dirname "$0")/migrations" -name "*.sh" | sort)
-
-# Apply migrations in order
-for SCRIPT in $MIGRATION_SCRIPTS; do
-  # Extract version number from script name (assumes format NNN-description.sh)
-  SCRIPT_VERSION=$(basename "$SCRIPT" | cut -d'-' -f1 | sed 's/^0*//')
-  
-  # Skip if already applied
-  if [ "$CURRENT_VERSION" -ge "$SCRIPT_VERSION" ]; then
-    echo "Skipping migration $(basename "$SCRIPT") (already applied)"
-    continue
+# For backwards compatibility with previous migration system
+if execute_query "SELECT 1 FROM schema_versions LIMIT 1" &>/dev/null; then
+  # Update schema_versions table for legacy tracking
+  CURRENT_VERSION=$(execute_query "SELECT MAX(version) FROM schema_versions;" | sed -n 3p | tr -d ' ')
+  if [ -z "$CURRENT_VERSION" ] || [ "$CURRENT_VERSION" = "NULL" ]; then
+    CURRENT_VERSION=0
   fi
   
-  echo "Applying migration $(basename "$SCRIPT")..."
-  chmod +x "$SCRIPT"
-  if ! "$SCRIPT"; then
-    echo "Error applying migration $(basename "$SCRIPT")"
-    exit 1
-  fi
+  NEW_VERSION=$((CURRENT_VERSION + 1))
   
-  echo "Migration $(basename "$SCRIPT") completed successfully"
-done
+  execute_query "
+    INSERT INTO schema_versions (version, description)
+    VALUES ($NEW_VERSION, 'Migrated with Drizzle ORM at $(date -u +"%Y-%m-%d %H:%M:%S UTC")');
+  "
+  
+  echo "Updated schema_versions table to version $NEW_VERSION for backward compatibility"
+fi
 
-# Display final schema version
-FINAL_VERSION=$(execute_query "SELECT MAX(version) FROM schema_versions;" | sed -n 3p | tr -d ' ')
-echo "Database schema is now at version $FINAL_VERSION"
-
-echo "Migration process completed!"
+echo "Database migration completed successfully!"
 exit 0

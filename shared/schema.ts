@@ -25,6 +25,7 @@ export const shows = pgTable("shows", {
   themeColor: varchar("theme_color", { length: 7 }).default("#4B5320"),
   emoji: varchar("emoji", { length: 50 }),
   blockedSeats: json("blocked_seats").notNull().default([]),
+  price: integer("price").default(0),
   seatLayout: json("seat_layout").notNull().default([
     {
       section: "Balcony",
@@ -94,6 +95,7 @@ export const insertShowSchema = createInsertSchema(shows).extend({
   description: z.string().optional(),
   themeColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color").optional(),
   emoji: z.string().optional(),
+  price: z.number().int().min(0, "Price cannot be negative").default(0),
   blockedSeats: z.union([z.string(), z.array(z.string())]).transform(val => {
     // If it's already an array, validate it
     if (Array.isArray(val)) {
