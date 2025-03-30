@@ -9,6 +9,9 @@ RUN npm run build
 FROM node:18-alpine AS runner
 WORKDIR /app
 
+# Install PostgreSQL client tools which are needed for database initialization
+RUN apk add --no-cache postgresql-client
+
 # Copy only production dependencies
 COPY package*.json ./
 RUN npm ci --only=production

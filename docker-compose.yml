@@ -21,7 +21,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./scripts:/app/scripts
-    entrypoint: ["/bin/sh", "-c", "mkdir -p /tmp/scripts /tmp/scripts/migrations && cp -r /app/scripts/* /tmp/scripts/ && chmod +x /tmp/scripts/*.sh /tmp/scripts/migrations/*.sh && ls -la /tmp/scripts && cd /app && if [ -f /tmp/scripts/init-db.sh ]; then /tmp/scripts/init-db.sh; fi && if [ -f /tmp/scripts/migrate-db.sh ]; then /tmp/scripts/migrate-db.sh; fi && npm start"]
+    entrypoint: ["/bin/sh", "-c", "mkdir -p /tmp/scripts /tmp/scripts/migrations && cp -r /app/scripts/* /tmp/scripts/ && chmod +x /tmp/scripts/*.sh /tmp/scripts/migrations/*.sh && ls -la /tmp/scripts && cd /app && if [ -f /tmp/scripts/init-db.sh ]; then /tmp/scripts/init-db.sh || exit 1; fi && if [ -f /tmp/scripts/migrate-db.sh ]; then /tmp/scripts/migrate-db.sh || true; fi && npm start"]
 
   postgres:
     image: postgres:15-alpine

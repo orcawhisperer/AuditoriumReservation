@@ -2,6 +2,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Install PostgreSQL client tools which are needed for database initialization
+RUN apk add --no-cache postgresql-client
+
 # Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install
