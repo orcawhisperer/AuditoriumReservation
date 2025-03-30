@@ -19,16 +19,6 @@ function show_help() {
   echo "  list-backups  - List available database backups"
   echo "  restore FILE  - Restore database from backup file"
   echo ""
-  echo "Docker Commands:"
-  echo "  start         - Start containers in development mode"
-  echo "  start:prod    - Start containers in production mode"
-  echo "  stop          - Stop all containers"
-  echo "  restart       - Restart all containers"
-  echo "  logs [svc]    - View logs (optionally for a specific service)"
-  echo "  status        - Check container status"
-  echo "  shell:app     - Open shell in app container"
-  echo "  clean         - Remove all containers and volumes (WARNING: data loss)"
-  echo ""
   echo "Helper Commands:"
   echo "  help          - Show this help message"
 }
@@ -93,50 +83,6 @@ case "$1" in
       exit 1
     fi
     restore_db "$1" "$2"
-    ;;
-    
-  # Docker commands
-  start)
-    echo "Starting containers in development mode..."
-    docker-compose up -d
-    ;;
-  start:prod)
-    echo "Starting containers in production mode..."
-    docker-compose -f docker-compose.prod.yml up -d
-    ;;
-  stop)
-    echo "Stopping containers..."
-    docker-compose down
-    ;;
-  restart)
-    echo "Restarting containers..."
-    docker-compose restart
-    ;;
-  logs)
-    if [ -z "$2" ]; then
-      docker-compose logs -f
-    else
-      docker-compose logs -f "$2"
-    fi
-    ;;
-  status)
-    echo "Container status:"
-    docker-compose ps
-    ;;
-  shell:app)
-    echo "Opening shell in app container..."
-    docker-compose exec app sh
-    ;;
-  clean)
-    echo "WARNING: This will remove all containers and volumes, resulting in DATA LOSS."
-    read -p "Are you sure you want to proceed? (y/N) " confirm
-    if [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]]; then
-      echo "Removing all containers and volumes..."
-      docker-compose down -v
-      echo "Cleanup complete."
-    else
-      echo "Operation cancelled."
-    fi
     ;;
     
   # Help command

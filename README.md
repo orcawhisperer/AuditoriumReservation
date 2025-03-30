@@ -18,7 +18,7 @@ A military-themed auditorium reservation system providing a comprehensive, user-
 - **Database**: SQLite with Drizzle ORM (with PostgreSQL compatibility)
 - **Authentication**: Passport.js with session-based authentication
 - **State Management**: TanStack Query (React Query)
-- **Deployment**: Docker containers for development and production
+- **Deployment**: Direct VPS deployment with PM2 and Nginx
 
 ## Database Management
 
@@ -76,16 +76,22 @@ This starts both the Express backend server and the Vite development server for 
 
 ## Deployment
 
-Use Docker for deployment:
+For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
-```
-docker-compose up
-```
+Quick production deployment on a VPS:
 
-For production:
+```bash
+# Build and start the production application
+npm run build
+npm start
 
-```
-docker-compose -f docker-compose.prod.yml up
+# For automated deployment
+./scripts/deploy-vps.sh
+
+# Setting up with PM2 for process management
+pm2 start npm --name "shahbaaz-auditorium" -- start
+pm2 startup
+pm2 save
 ```
 
 ## Initial Setup

@@ -1,8 +1,8 @@
 # Shahbaaz Auditorium Deployment Guide
 
-This document provides comprehensive instructions for deploying the Shahbaaz Auditorium Seat Reservation System using Docker and Docker Compose.
+This document provides comprehensive instructions for deploying the Shahbaaz Auditorium Seat Reservation System on a VPS (Virtual Private Server) without Docker.
 
-**Note:** The system has been migrated from PostgreSQL to SQLite for simplified deployment. This guide has been updated to reflect these changes.
+**Note:** The system uses SQLite for simplified deployment. This guide has been updated to reflect direct VPS deployment.
 
 ## Table of Contents
 
@@ -14,14 +14,17 @@ This document provides comprehensive instructions for deploying the Shahbaaz Aud
    - [Backup and Restore](#database-backup-and-restore)
    - [Schema Migrations](#schema-migrations)
 6. [Production Configuration](#production-configuration)
-7. [SSL Configuration](#ssl-configuration)
-8. [Troubleshooting](#troubleshooting)
+7. [SSL Configuration with Nginx](#ssl-configuration-with-nginx)
+8. [Process Management with PM2](#process-management-with-pm2)
+9. [Troubleshooting](#troubleshooting)
 
 ## Prerequisites
 
-- Docker (20.10.x or higher)
-- Docker Compose (2.x or higher)
+- Node.js (v18.x or higher)
+- npm (v9.x or higher)
 - Git (for cloning the repository)
+- Nginx (for production deployments)
+- PM2 (for process management in production)
 
 ## Quick Start
 
@@ -31,17 +34,27 @@ This document provides comprehensive instructions for deploying the Shahbaaz Aud
    cd <project-directory>
    ```
 
-2. Create a `.env` file (copy from `.env.example`):
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Create a `.env` file (copy from `.env.example`):
    ```bash
    cp .env.example .env
    ```
 
-3. Use the management script to start the application:
+4. Initialize the database:
    ```bash
-   ./manage.sh start
+   ./manage.sh init-db
    ```
 
-4. Access the application at `http://localhost:5000`
+5. Start the application in development mode:
+   ```bash
+   npm run dev
+   ```
+
+6. Access the application at `http://localhost:5000`
 
 ## Management Script
 
@@ -60,27 +73,14 @@ The application includes a comprehensive management script (`manage.sh`) that si
 # Run SQLite migrations
 ./manage.sh migrate
 
-# Start the application (in development mode)
-npm run dev
+# Backup database
+./manage.sh backup
 
-# When using Docker:
-# Start in development mode
-./manage.sh start
+# List available backups
+./manage.sh list-backups
 
-# Start in production mode
-./manage.sh start:prod
-
-# View application status
-./manage.sh status
-
-# View logs
-./manage.sh logs
-
-# Stop the application
-./manage.sh stop
-
-# Docker shell access
-./manage.sh shell:app
+# Restore database from backup
+./manage.sh restore backups/sqlite_backup_YYYYMMDD_HHMMSS.db
 ```
 
 ## Deployment Options
@@ -88,11 +88,11 @@ npm run dev
 ### Development Deployment
 
 ```bash
-# Using Node.js directly
-npm run dev
+# Install dependencies (if not already installed)
+npm install
 
-# Using Docker (if available)
-./manage.sh start
+# Start development server
+npm run dev
 ```
 
 This runs the application with:
@@ -102,21 +102,60 @@ This runs the application with:
 
 ### Production Deployment
 
-```bash
-# Build the production version
-npm run build
+For production deployment on a VPS, follow these steps:
 
-# Run the production server
-npm run start
+1. Set up your server with Node.js 18+
+   ```bash
+   # Example for Ubuntu/Debian
+   curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+   sudo apt-get install -y nodejs
+   ```
 
-# Using Docker (if available)
-./manage.sh start:prod
-```
+2. Install PM2 globally
+   ```bash
+   sudo npm install -g pm2
+   ```
 
-This deploys the application with:
-- Optimized production build
-- SQLite database for simplified deployment
-- Application accessible at `http://localhost:5000` or with Nginx as a reverse proxy at `http://localhost` when using Docker
+3. Clone your repository
+   ```bash
+   git clone <repository-url>
+   cd <project-directory>
+   ```
+
+4. Install dependencies
+   ```bash
+   npm install
+   ```
+
+5. Create/update environment variables
+   ```bash
+   cp .env.example .env
+   # Edit .env with your production values
+   nano .env
+   ```
+
+6. Build the application
+   ```bash
+   npm run build
+   ```
+
+7. Initialize the database
+   ```bash
+   ./manage.sh init-db
+   ```
+
+8. Start the application with PM2
+   ```bash
+   pm2 start npm --name "shahbaaz-auditorium" -- start
+   ```
+
+9. Set up PM2 to start on system boot
+   ```bash
+   pm2 startup
+   pm2 save
+   ```
+
+10. Set up Nginx as a reverse proxy (see Nginx Configuration section)
 
 ## Database Backup and Restore
 
@@ -165,38 +204,115 @@ SQLITE_FILE=./data/production.db    # Store database in a protected directory
 
 Since we're using SQLite, database credentials are no longer needed. However, ensure the database file is stored in a secure location with proper file permissions and regular backups.
 
-## SSL Configuration
+## Nginx Configuration
 
-1. Place your SSL certificates in the `nginx/ssl/` directory:
-   - `cert.pem`: SSL certificate
-   - `key.pem`: Private key
+Create an Nginx configuration file for your application:
 
-2. Uncomment the HTTPS server block in `nginx/conf/default.conf`
+```bash
+sudo nano /etc/nginx/sites-available/shahbaaz-auditorium
+```
 
-3. Update the `server_name` directive with your domain name
+Add the following configuration:
 
-4. Restart the application:
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com www.your-domain.com;
+
+    location / {
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Add custom error pages
+    error_page 404 /404.html;
+    error_page 500 502 503 504 /50x.html;
+}
+```
+
+Enable the site and restart Nginx:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/shahbaaz-auditorium /etc/nginx/sites-enabled/
+sudo nginx -t  # Test configuration
+sudo systemctl restart nginx
+```
+
+## SSL Configuration with Let's Encrypt
+
+For production environments, using Let's Encrypt to secure your site is recommended:
+
+1. Install Certbot:
    ```bash
-   ./manage.sh restart
+   # Ubuntu/Debian
+   sudo apt-get update
+   sudo apt-get install certbot python3-certbot-nginx
    ```
+
+2. Obtain and install SSL certificate:
+   ```bash
+   sudo certbot --nginx -d your-domain.com -d www.your-domain.com
+   ```
+
+3. Set up auto-renewal:
+   ```bash
+   sudo systemctl status certbot.timer  # Verify timer is active
+   ```
+
+## Process Management with PM2
+
+PM2 is used to ensure your application stays running and restarts automatically:
+
+```bash
+# List running applications
+pm2 list
+
+# View application logs
+pm2 logs shahbaaz-auditorium
+
+# Restart application
+pm2 restart shahbaaz-auditorium
+
+# Stop application
+pm2 stop shahbaaz-auditorium
+
+# Start application if stopped
+pm2 start shahbaaz-auditorium
+
+# Set up PM2 to start on system boot
+pm2 startup
+pm2 save
+```
 
 ## Troubleshooting
 
 ### Application not starting
 
-1. Check container logs:
+1. Check PM2 logs:
    ```bash
-   ./manage.sh logs
+   pm2 logs shahbaaz-auditorium
    ```
 
-2. Verify database connectivity:
+2. Check for port conflicts:
    ```bash
-   ./manage.sh psql
+   sudo netstat -tulpn | grep 5000
    ```
 
-3. Check for port conflicts:
+3. Verify Node.js version:
    ```bash
-   netstat -tuln | grep 5000
+   node -v  # Should be v18.x or higher
+   ```
+
+4. Check if the build was successful:
+   ```bash
+   ls -la dist/
    ```
 
 ### Database connection issues
@@ -209,22 +325,43 @@ Since we're using SQLite, database credentials are no longer needed. However, en
 2. Check file permissions:
    ```bash
    ls -l sqlite.db
+   sudo chown -R $USER:$USER .  # Fix permissions if needed
    ```
 
-3. Verify SQLite file path in `.env` file
-
-4. Check application logs for database-related errors:
+3. Verify SQLite file path in `.env` file:
    ```bash
-   ./manage.sh logs
+   grep SQLITE_FILE .env
+   ```
+
+4. Check PM2 logs for database errors:
+   ```bash
+   pm2 logs shahbaaz-auditorium --lines 100
+   ```
+
+### Nginx issues
+
+1. Check Nginx configuration:
+   ```bash
+   sudo nginx -t
+   ```
+
+2. Check Nginx logs:
+   ```bash
+   sudo tail -f /var/log/nginx/error.log
+   ```
+
+3. Verify Nginx is running:
+   ```bash
+   sudo systemctl status nginx
    ```
 
 ### Restoring a corrupt database
 
-If the SQLite database becomes corrupted, you can:
+If the SQLite database becomes corrupted:
 
 1. Stop the application:
    ```bash
-   ./manage.sh stop
+   pm2 stop shahbaaz-auditorium
    ```
 
 2. Rename or remove the corrupted database file:
@@ -244,7 +381,7 @@ If the SQLite database becomes corrupted, you can:
 
 5. Start the application:
    ```bash
-   ./manage.sh start
+   pm2 start shahbaaz-auditorium
    ```
 
 ## Schema Migrations
