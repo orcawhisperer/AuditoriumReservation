@@ -124,27 +124,36 @@ export const TourGuideProvider = ({ children }: { children: ReactNode }) => {
   
   // Determine which steps to show based on current page
   useEffect(() => {
+    console.log("TourGuide location changed:", location);
+    
     if (location === '/') {
-      setSteps(homePageSteps.map(step => ({
+      console.log("Setting up home page tour steps");
+      const mappedSteps = homePageSteps.map(step => ({
         ...step,
         content: t(`translation.tourGuide.${step.content}`, { defaultValue: step.content }),
-      })));
+      }));
+      console.log("Home page steps:", mappedSteps);
+      setSteps(mappedSteps);
     } else if (location.startsWith('/show/')) {
+      console.log("Setting up show page tour steps");
       setSteps(showPageSteps.map(step => ({
         ...step,
         content: t(`translation.tourGuide.${step.content}`, { defaultValue: step.content }),
       })));
     } else if (location === '/admin') {
+      console.log("Setting up admin page tour steps");
       setSteps(adminPageSteps.map(step => ({
         ...step,
         content: t(`translation.tourGuide.${step.content}`, { defaultValue: step.content }),
       })));
     } else if (location === '/profile') {
+      console.log("Setting up profile page tour steps");
       setSteps(profilePageSteps.map(step => ({
         ...step,
         content: t(`translation.tourGuide.${step.content}`, { defaultValue: step.content }),
       })));
     } else {
+      console.log("No tour steps available for this location");
       setSteps([]);
     }
     
@@ -165,13 +174,44 @@ export const TourGuideProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const startTour = () => setRun(true);
-  const stopTour = () => setRun(false);
+  const startTour = () => {
+    console.log("startTour called, setting run to true");
+    setRun(true);
+    console.log("run state should be updated to true");
+  };
+  
+  const stopTour = () => {
+    console.log("stopTour called, setting run to false");
+    setRun(false);
+  };
+
+  // For debugging
+  useEffect(() => {
+    console.log("Current run state:", run);
+  }, [run]);
 
   return (
     <TourGuideContext.Provider value={{ run, steps, startTour, stopTour, isTourAvailable }}>
+      {/* Debug checkbox - Remove in production */}
+      <div style={{ position: 'fixed', top: 0, left: 0, zIndex: 10001, background: 'white', padding: '5px' }}>
+        <label>
+          <input 
+            type="checkbox" 
+            checked={run} 
+            onChange={(e) => {
+              console.log("Debug checkbox clicked, setting run to:", e.target.checked);
+              setRun(e.target.checked);
+            }}
+          />
+          Force Enable Tour
+        </label>
+      </div>
+      
       <Joyride
-        callback={handleJoyrideCallback}
+        callback={(data) => {
+          console.log("Joyride callback:", data);
+          handleJoyrideCallback(data);
+        }}
         continuous
         hideCloseButton
         run={run}
