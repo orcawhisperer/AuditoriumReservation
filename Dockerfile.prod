@@ -18,13 +18,20 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/shared ./shared
 COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
 
 # Add health check endpoint
 RUN echo 'app.get("/health", (_, res) => res.status(200).send("OK"));' >> ./server/routes.ts
 
+# Add DB initialization script
+RUN echo '#!/bin/sh\necho "Running database migrations..."\nnpx ts-node scripts/db-push.js || exit 1\necho "Starting application..."\nnode server/index.js' > /app/docker-entrypoint.sh && \
+    chmod +x /app/docker-entrypoint.sh
+
 # Create a non-root user
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
-USER nodejs
+RUN chown -R nodejs:nodejs /app
 
+USER nodejs
 EXPOSE 5000
-CMD ["node", "server/index.js"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

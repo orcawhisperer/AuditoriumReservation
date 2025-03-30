@@ -87,14 +87,49 @@ function show_help {
 # Start application in development mode
 function start_dev {
   echo -e "${BLUE}Starting application in development mode...${NC}"
-  docker compose up -d
+  
+  # Start the database first
+  docker compose up -d postgres
+  sleep 5  # Wait for database to be ready
+  
+  # Check if database schema exists
+  echo "Checking if database schema exists..."
+  if ! docker compose exec postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 1 FROM users LIMIT 1" &>/dev/null; then
+    echo "Database schema not found. Running migrations..."
+    docker compose up -d app
+    sleep 5
+    docker compose exec app npm run db:push
+  else
+    echo "Database schema already exists."
+    docker compose up -d
+  fi
+  
   echo -e "${GREEN}Application started. Access at http://localhost:5000${NC}"
 }
 
 # Start application in production mode
 function start_prod {
   echo -e "${BLUE}Starting application in production mode...${NC}"
-  docker compose -f docker-compose.prod.yml up -d
+  
+  # Start the database first
+  docker compose -f docker-compose.prod.yml up -d postgres
+  sleep 5  # Wait for database to be ready
+  
+  # Check if database schema exists
+  echo "Checking if database schema exists..."
+  if ! docker compose -f docker-compose.prod.yml exec postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 1 FROM users LIMIT 1" &>/dev/null; then
+    echo "Database schema not found. Running migrations..."
+    docker compose -f docker-compose.prod.yml up -d app
+    sleep 5
+    docker compose -f docker-compose.prod.yml exec app npm run db:push
+    
+    # Start the rest of the services
+    docker compose -f docker-compose.prod.yml up -d
+  else
+    echo "Database schema already exists."
+    docker compose -f docker-compose.prod.yml up -d
+  fi
+  
   echo -e "${GREEN}Application started in production mode.${NC}"
   echo -e "Access at http://localhost or https://your-domain.com when configured"
 }
