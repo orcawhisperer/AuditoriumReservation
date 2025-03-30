@@ -37,7 +37,6 @@ export function LanguageSwitcher() {
         size="icon" 
         aria-label="Switch Language"
         onClick={() => setIsOpen(!isOpen)}
-        className="language-switcher"
       >
         <Globe className="h-5 w-5" />
       </Button>

@@ -31,33 +31,6 @@ const enTranslations = {
     view: "View",
     seats: "Seats",
     morePages: "More pages",
-    startTour: "Start interactive guide",
-  },
-  tourGuide: {
-    // Home page
-    "Welcome to Shahbaaz Auditorium Seat Reservation System! This is the header area where you can navigate the application.": "Welcome to Shahbaaz Auditorium Seat Reservation System! This is the header area where you can navigate the application.",
-    "Toggle between light and dark mode for your comfort.": "Toggle between light and dark mode for your comfort.",
-    "Switch between English and Hindi languages.": "Switch between English and Hindi languages.",
-    "Access your profile or log out from the system here.": "Access your profile or log out from the system here.",
-    "Browse all upcoming shows here. Click on a show to reserve seats.": "Browse all upcoming shows here. Click on a show to reserve seats.",
-    "View all your current reservations here. You can cancel reservations if needed.": "View all your current reservations here. You can cancel reservations if needed.",
-    
-    // Show page
-    "This is the seat map. Choose your seats by clicking on them.": "This is the seat map. Choose your seats by clicking on them.",
-    "Legend shows available, reserved, and your selected seats.": "Legend shows available, reserved, and your selected seats.",
-    "Two sections are available: Balcony (B) and Downstairs (D).": "Two sections are available: Balcony (B) and Downstairs (D).",
-    "Exit locations are marked for your safety awareness.": "Exit locations are marked for your safety awareness.",
-    "Click here to confirm your reservation after selecting seats.": "Click here to confirm your reservation after selecting seats.",
-    
-    // Admin page
-    "Navigation between different management sections.": "Navigation between different management sections.",
-    "Create and manage shows, set dates, and upload poster images.": "Create and manage shows, set dates, and upload poster images.",
-    "Create and manage user accounts, reset passwords, and set seat limits.": "Create and manage user accounts, reset passwords, and set seat limits.",
-    "View and manage all reservations across the system.": "View and manage all reservations across the system.",
-    
-    // Profile page
-    "Update your profile information here.": "Update your profile information here.",
-    "Change your password to maintain security.": "Change your password to maintain security.",
   },
   auth: {
     username: "Username",
@@ -193,33 +166,6 @@ const hiTranslations = {
     view: "देखें",
     seats: "सीटें",
     morePages: "अधिक पृष्ठ",
-    startTour: "इंटरैक्टिव गाइड शुरू करें",
-  },
-  tourGuide: {
-    // Home page
-    "Welcome to Shahbaaz Auditorium Seat Reservation System! This is the header area where you can navigate the application.": "शाहबाज़ ऑडिटोरियम सीट आरक्षण प्रणाली में आपका स्वागत है! यह हेडर क्षेत्र है जहां आप एप्लिकेशन को नेविगेट कर सकते हैं।",
-    "Toggle between light and dark mode for your comfort.": "अपने आराम के लिए लाइट और डार्क मोड के बीच टॉगल करें।",
-    "Switch between English and Hindi languages.": "अंग्रेजी और हिंदी भाषाओं के बीच स्विच करें।",
-    "Access your profile or log out from the system here.": "यहां से अपने प्रोफाइल तक पहुंचें या सिस्टम से लॉग आउट करें।",
-    "Browse all upcoming shows here. Click on a show to reserve seats.": "यहां सभी आगामी शो ब्राउज़ करें। सीटें आरक्षित करने के लिए शो पर क्लिक करें।",
-    "View all your current reservations here. You can cancel reservations if needed.": "यहां अपने सभी वर्तमान आरक्षण देखें। आवश्यकता पड़ने पर आप आरक्षण रद्द कर सकते हैं।",
-    
-    // Show page
-    "This is the seat map. Choose your seats by clicking on them.": "यह सीट मैप है। उन पर क्लिक करके अपनी सीटें चुनें।",
-    "Legend shows available, reserved, and your selected seats.": "लीजेंड उपलब्ध, आरक्षित और आपकी चयनित सीटें दिखाता है।",
-    "Two sections are available: Balcony (B) and Downstairs (D).": "दो सेक्शन उपलब्ध हैं: बालकनी (B) और नीचे (D)।",
-    "Exit locations are marked for your safety awareness.": "आपकी सुरक्षा जागरूकता के लिए निकास स्थान चिह्नित हैं।",
-    "Click here to confirm your reservation after selecting seats.": "सीटें चुनने के बाद अपना आरक्षण पुष्ट करने के लिए यहां क्लिक करें।",
-    
-    // Admin page
-    "Navigation between different management sections.": "विभिन्न प्रबंधन अनुभागों के बीच नेविगेशन।",
-    "Create and manage shows, set dates, and upload poster images.": "शो बनाएं और प्रबंधित करें, तिथियां सेट करें, और पोस्टर इमेज अपलोड करें।",
-    "Create and manage user accounts, reset passwords, and set seat limits.": "उपयोगकर्ता खाते बनाएं और प्रबंधित करें, पासवर्ड रीसेट करें, और सीट सीमाएं सेट करें।",
-    "View and manage all reservations across the system.": "सिस्टम भर में सभी आरक्षण देखें और प्रबंधित करें।",
-    
-    // Profile page
-    "Update your profile information here.": "अपनी प्रोफाइल जानकारी यहां अपडेट करें।",
-    "Change your password to maintain security.": "सुरक्षा बनाए रखने के लिए अपना पासवर्ड बदलें।",
   },
   auth: {
     username: "उपयोगकर्ता नाम",
@@ -365,7 +311,6 @@ interface ExtendedCommonTranslation
   actions: string;
   view: string;
   morePages: string;
-  startTour: string;
 }
 
 // Now update the common translations with the new keys
@@ -382,7 +327,6 @@ const extendedEnCommon: ExtendedCommonTranslation = {
   date: "Date",
   time: "Time",
   price: "Price",
-  startTour: "Start interactive guide",
 };
 
 const extendedHiCommon: ExtendedCommonTranslation = {
@@ -398,7 +342,6 @@ const extendedHiCommon: ExtendedCommonTranslation = {
   date: "दिनांक",
   time: "समय",
   price: "मूल्य",
-  startTour: "इंटरैक्टिव गाइड शुरू करें",
 };
 
 // Replace the common objects with the extended versions
@@ -435,7 +378,6 @@ const flatEnResources = {
       booking: enTranslations.booking,
       admin: enTranslations.admin,
       profile: enTranslations.profile,
-      tourGuide: enTranslations.tourGuide,
     },
   }),
 };
@@ -450,7 +392,6 @@ const flatHiResources = {
       booking: hiTranslations.booking,
       admin: hiTranslations.admin,
       profile: hiTranslations.profile,
-      tourGuide: hiTranslations.tourGuide,
     },
   }),
 };
