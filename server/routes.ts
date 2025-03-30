@@ -331,13 +331,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
               where: sql`${reservations.showId} = ${show.id}`
             });
 
-            const reservedSeats = existingReservations.flatMap((r) =>
-              JSON.parse(r.seatNumbers)
-            );
+            const reservedSeats = existingReservations.flatMap((r) => {
+              try {
+                if (typeof r.seatNumbers === 'string') {
+                  return r.seatNumbers.startsWith('[') 
+                    ? JSON.parse(r.seatNumbers) 
+                    : r.seatNumbers.split(',').map(s => s.trim());
+                } else if (Array.isArray(r.seatNumbers)) {
+                  return r.seatNumbers;
+                }
+                return [];
+              } catch (e) {
+                console.error("Error parsing seat numbers:", e);
+                return [];
+              }
+            });
 
             console.log(`[Transaction ${retryCount}] Current reserved seats:`, reservedSeats);
 
-            const seatNumbers = JSON.parse(parsed.data.seatNumbers) as string[];
+            const seatNumbers = Array.isArray(parsed.data.seatNumbers) 
+              ? parsed.data.seatNumbers 
+              : (typeof parsed.data.seatNumbers === 'string'
+                ? (parsed.data.seatNumbers.startsWith('[') 
+                  ? JSON.parse(parsed.data.seatNumbers) 
+                  : parsed.data.seatNumbers.split(',').map(s => s.trim()))
+                : []);
             console.log(`[Transaction ${retryCount}] Attempting to reserve seats:`, seatNumbers);
 
             // Check if the number of seats exceeds the user's seat limit
@@ -494,12 +512,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           (r) => r.id !== reservationId
         );
 
-        const reservedSeats = otherReservations.flatMap((r) =>
-          JSON.parse(r.seatNumbers)
-        );
+        const reservedSeats = otherReservations.flatMap((r) => {
+          try {
+            if (typeof r.seatNumbers === 'string') {
+              return r.seatNumbers.startsWith('[') 
+                ? JSON.parse(r.seatNumbers) 
+                : r.seatNumbers.split(',').map(s => s.trim());
+            } else if (Array.isArray(r.seatNumbers)) {
+              return r.seatNumbers;
+            }
+            return [];
+          } catch (e) {
+            console.error("Error parsing seat numbers:", e);
+            return [];
+          }
+        });
 
         // Check for seat conflicts
-        const seatNumbers = JSON.parse(parsed.data.seatNumbers) as string[];
+        const seatNumbers = Array.isArray(parsed.data.seatNumbers) 
+          ? parsed.data.seatNumbers 
+          : (typeof parsed.data.seatNumbers === 'string'
+            ? (parsed.data.seatNumbers.startsWith('[') 
+              ? JSON.parse(parsed.data.seatNumbers) 
+              : parsed.data.seatNumbers.split(',').map(s => s.trim()))
+            : []);
         
         // Get the user who owns the reservation
         const reservationUser = await tx.query.users.findFirst({

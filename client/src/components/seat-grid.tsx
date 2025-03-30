@@ -159,11 +159,36 @@ export function SeatGrid() {
     return <div>Show not found</div>;
   }
 
-  const layout = JSON.parse(show.seatLayout);
+  const layout = typeof show.seatLayout === 'string' 
+    ? JSON.parse(show.seatLayout) 
+    : show.seatLayout;
+    
   const reservedSeats = new Set(
-    showReservations.flatMap((r) => JSON.parse(r.seatNumbers)),
+    showReservations.flatMap((r) => {
+      try {
+        return typeof r.seatNumbers === 'string' 
+          ? (r.seatNumbers.startsWith('[') 
+              ? JSON.parse(r.seatNumbers) 
+              : r.seatNumbers.split(',').map(s => s.trim()))
+          : Array.isArray(r.seatNumbers) 
+              ? r.seatNumbers 
+              : [];
+      } catch (e) {
+        console.error("Error parsing seat numbers:", e);
+        return [];
+      }
+    })
   );
-  const blockedSeats = new Set(JSON.parse(show.blockedSeats || "[]"));
+  
+  const blockedSeats = new Set(
+    Array.isArray(show.blockedSeats)
+      ? show.blockedSeats
+      : (typeof show.blockedSeats === 'string'
+          ? (show.blockedSeats.startsWith('[') 
+              ? JSON.parse(show.blockedSeats)
+              : show.blockedSeats.split(',').map(s => s.trim()))
+          : [])
+  );
 
   const handleSeatSelect = (seatId: string) => {
     setSelectedSeats((current) => {

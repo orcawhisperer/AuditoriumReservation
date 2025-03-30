@@ -284,7 +284,21 @@ function ReservationCard({
             </p>
             <p className="text-sm text-muted-foreground">
               {t("translation.common.seats")}:{" "}
-              {JSON.parse(reservation.seatNumbers).join(", ")}
+              {(() => {
+                try {
+                  if (typeof reservation.seatNumbers === 'string') {
+                    return reservation.seatNumbers.startsWith('[')
+                      ? JSON.parse(reservation.seatNumbers).join(", ")
+                      : reservation.seatNumbers;
+                  } else if (Array.isArray(reservation.seatNumbers)) {
+                    return reservation.seatNumbers.join(", ");
+                  }
+                  return '';
+                } catch (e) {
+                  console.error("Error parsing seat numbers:", e);
+                  return '';
+                }
+              })()}
             </p>
             {isPastShow && (
               <p className="text-sm text-destructive mt-1">
