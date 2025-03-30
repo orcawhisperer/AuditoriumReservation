@@ -60,19 +60,19 @@ export const InteractiveGuide: React.FC = () => {
         completeTour(currentTourType);
       }
     }
-  }, [currentTourType, completeTour, setStepIndex]);
+  }, [currentTourType, completeTour]);
 
   // Start different tours based on user choice
-  const handleStartTour = (tourType: 'admin' | 'user' | 'auth' | 'seat-selection' | 'profile') => {
+  const handleStartTour = useCallback((tourType: 'admin' | 'user' | 'auth' | 'seat-selection' | 'profile') => {
     startTour(tourType);
     setIsHelpMenuOpen(false);
-  };
+  }, [startTour]);
 
   // Reset all completed tours
-  const handleResetTours = () => {
+  const handleResetTours = useCallback(() => {
     resetCompletedTours();
     setIsHelpMenuOpen(false);
-  };
+  }, [resetCompletedTours]);
 
   // Convert our steps to Joyride format
   const joyrideSteps = convertToJoyrideSteps(tourSteps);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './use-auth';
@@ -168,18 +168,20 @@ export const useInteractiveGuide = () => {
   const [stepIndex, setStepIndex] = useState(0);
 
   // Helper function to determine if a tour has been completed
-  const isTourCompleted = (tourType: TourType) => completedTours.includes(tourType);
+  const isTourCompleted = useCallback((tourType: TourType) => {
+    return completedTours.includes(tourType);
+  }, [completedTours]);
 
   // Start a tour
-  const startTour = (tourType: TourType) => {
+  const startTour = useCallback((tourType: TourType) => {
     setCurrentTourType(tourType);
     setTourSteps(getTourSteps(tourType, t));
     setStepIndex(0);
     setIsTourActive(true);
-  };
+  }, [t]);
 
   // Mark a tour as completed
-  const completeTour = (tourType: TourType) => {
+  const completeTour = useCallback((tourType: TourType) => {
     if (!isTourCompleted(tourType)) {
       const newCompletedTours = [...completedTours, tourType];
       setCompletedTours(newCompletedTours);
@@ -191,17 +193,17 @@ export const useInteractiveGuide = () => {
     }
     setIsTourActive(false);
     setCurrentTourType(null);
-  };
+  }, [completedTours, isTourCompleted]);
 
   // Reset the completed tours (for testing or user preference)
-  const resetCompletedTours = () => {
+  const resetCompletedTours = useCallback(() => {
     setCompletedTours([]);
     try {
       localStorage.setItem('shahbaaz-completed-tours', JSON.stringify([]));
     } catch (e) {
       console.error('Error writing to localStorage', e);
     }
-  };
+  }, []);
 
   // Auto-suggest tours based on current location and completion status
   useEffect(() => {
@@ -229,7 +231,7 @@ export const useInteractiveGuide = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [location, isTourActive, completedTours]);
+  }, [location, isTourActive, isTourCompleted, startTour]);
 
   return {
     isTourActive,
