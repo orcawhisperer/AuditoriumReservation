@@ -11,18 +11,27 @@ import { Globe } from "lucide-react";
 
 export function LanguageSwitcher() {
   const { i18n } = useTranslation();
-  const [currentLang, setCurrentLang] = React.useState(i18n.language);
-
-  // Use a memoized callback to prevent recreation on each render
+  // Store language selection in a ref to avoid re-renders
+  const currentLangRef = React.useRef(i18n.language);
+  
+  // Properly handle state changes with dependency arrays
   const changeLanguage = React.useCallback((lng: string) => {
-    i18n.changeLanguage(lng);
-    setCurrentLang(lng);
-  }, [i18n]);
+    if (currentLangRef.current !== lng) {
+      currentLangRef.current = lng;
+      i18n.changeLanguage(lng);
+    }
+  }, []); // No dependencies to prevent recreation
 
-  // Update local state if i18n.language changes externally
+  // Use a side effect hook with proper dependency tracking
   React.useEffect(() => {
-    setCurrentLang(i18n.language);
-  }, [i18n.language]);
+    // Synchronize ref with i18n only on mount
+    currentLangRef.current = i18n.language;
+  }, []); // Empty dependency array = only run once on mount
+
+  // Create a stable reference for checking the current language
+  const isSelected = React.useCallback((lang: string) => {
+    return currentLangRef.current === lang;
+  }, []); // No dependencies to prevent recreation
 
   return (
     <DropdownMenu>
@@ -34,13 +43,13 @@ export function LanguageSwitcher() {
       <DropdownMenuContent align="end">
         <DropdownMenuItem 
           onClick={() => changeLanguage("en")}
-          className={currentLang === "en" ? "bg-muted" : ""}
+          className={isSelected("en") ? "bg-muted" : ""}
         >
           English
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={() => changeLanguage("hi")}
-          className={currentLang === "hi" ? "bg-muted" : ""}
+          className={isSelected("hi") ? "bg-muted" : ""}
         >
           हिंदी (Hindi)
         </DropdownMenuItem>
