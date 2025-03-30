@@ -4,6 +4,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
+# Ensure vite is available for the build process
+RUN npm install vite --save
 RUN npm run build
 
 FROM node:18-alpine AS runner
@@ -12,9 +14,12 @@ WORKDIR /app
 # Install SQLite and build dependencies needed for better-sqlite3
 RUN apk add --no-cache sqlite python3 make g++ build-base
 
-# Copy only production dependencies
+# Copy package files and install all dependencies
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci
+
+# Also add vite as regular dependency to ensure it's available
+RUN npm install vite --save
 
 # Copy built app
 COPY --from=builder /app/dist ./dist
@@ -32,7 +37,7 @@ RUN chmod +x /app/scripts/*.sh || true
 RUN chmod +x /app/scripts/migrations/*.sh || true
 
 # Add SQLite DB initialization script
-RUN echo '#!/bin/sh\necho "Initializing SQLite database..."\nif [ -f /app/scripts/init-db.js ]; then\n  echo "Running database initialization script..."\n  node /app/scripts/init-db.js || exit 1\nfi\n\nif [ -f /app/scripts/migrate-sqlite.ts ]; then\n  echo "Running database migration script..."\n  npx tsx /app/scripts/migrate-sqlite.ts || true\nfi\n\necho "Starting application..."\nnode server/index.js' > /app/docker-entrypoint.sh && \
+RUN echo '#!/bin/sh\necho "Initializing SQLite database..."\nif [ -f /app/scripts/init-db.js ]; then\n  echo "Running database initialization script..."\n  node /app/scripts/init-db.js || exit 1\nfi\n\nif [ -f /app/scripts/migrate-sqlite.ts ]; then\n  echo "Running database migration script..."\n  npx tsx /app/scripts/migrate-sqlite.ts || true\nfi\n\necho "Starting application..."\nnpm start' > /app/docker-entrypoint.sh && \
     chmod +x /app/docker-entrypoint.sh
 
 # Create directory for SQLite database
