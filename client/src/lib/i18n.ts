@@ -61,7 +61,9 @@ const enTranslations = {
     yourReservations: "Your Reservations",
     noReservations: "You have no reservations",
     viewReservation: "View Reservation",
-    cancelReservation: "Cancel Reservation",
+    cancelReservation: "Reservation cancelled successfully",
+    cancelReservationTitle: "Cancel Reservation",
+    cancelReservationConfirmation: "Are you sure you want to cancel your reservation for {{showTitle}}? This action cannot be undone.",
   },
   show: {
     showDetails: "Show Details",
@@ -190,7 +192,9 @@ const hiTranslations = {
     yourReservations: "आपके आरक्षण",
     noReservations: "आपके पास कोई आरक्षण नहीं है",
     viewReservation: "आरक्षण देखें",
-    cancelReservation: "आरक्षण रद्द करें",
+    cancelReservation: "आरक्षण सफलतापूर्वक रद्द किया गया",
+    cancelReservationTitle: "आरक्षण रद्द करें",
+    cancelReservationConfirmation: "क्या आप वाकई {{showTitle}} के लिए अपना आरक्षण रद्द करना चाहते हैं? इस क्रिया को वापस नहीं किया जा सकता।",
   },
   show: {
     showDetails: "शो विवरण",
