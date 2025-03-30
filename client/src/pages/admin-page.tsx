@@ -1822,7 +1822,7 @@ function ReservationManagement() {
                                   ? JSON.parse(reservation.seatNumbers).join(", ")
                                   : reservation.seatNumbers;
                               } else if (Array.isArray(reservation.seatNumbers)) {
-                                return reservation.seatNumbers.join(", ");
+                                return (reservation.seatNumbers as string[]).join(", ");
                               }
                               return 'No seats';
                             } catch (e) {
@@ -1932,7 +1932,7 @@ function ReservationManagement() {
       {editingReservation && (
         <EditReservationDialog
           reservation={editingReservation}
-          shows={shows}
+          shows={shows || []}
           onClose={() => setEditingReservation(null)}
         />
       )}
