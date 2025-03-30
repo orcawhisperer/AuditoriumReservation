@@ -1,12 +1,39 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3';
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { config } from '../server/config.js';
-import { generateSecurePassword, hashPassword } from '../server/utils/password.js';
+import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Config properties from environment
+const config = {
+  admin: {
+    username: process.env.ADMIN_USERNAME || 'admin',
+    password: process.env.ADMIN_PASSWORD || 'admin'
+  },
+  database: {
+    sqliteFile: process.env.SQLITE_FILE || 'sqlite.db'
+  }
+};
+
+// Password utilities
+async function hashPassword(password) {
+  const bcrypt = await import('bcrypt');
+  return bcrypt.default.hash(password, 10);
+}
+
+function generateSecurePassword(length = 12) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+';
+  let password = '';
+  for (let i = 0; i < length; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+}
 
 async function initializeDatabase() {
   // Get SQLite file path

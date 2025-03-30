@@ -1,81 +1,87 @@
+import * as path from 'path';
+import * as url from 'url';
+import fs from 'fs';
+import BetterSQLite3 from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
-import Database from 'better-sqlite3';
-import * as schema from '../shared/schema';
-import path from 'path';
-import fs from 'fs';
-import { config } from '../server/config';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
+
+// Convert __dirname to work with ES modules
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 /**
  * This script creates the SQLite database schema directly
  */
 async function main() {
-  // Determine SQLite db file
-  const dbFile = config.database.sqliteFile || 'sqlite.db';
+  console.log('Starting SQLite schema push...');
+  
+  // Get SQLite file path from environment or use default
+  const dbFile = process.env.SQLITE_FILE || 'sqlite.db';
   console.log(`Using SQLite database file: ${dbFile}`);
-
-  // Ensure the directory exists
+  
+  // Ensure the database directory exists
   const dbDir = path.dirname(dbFile);
   if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });
   }
-
-  // Create SQLite database connection
-  const sqlite = new Database(dbFile);
-  const db = drizzle(sqlite, { schema });
-
-  console.log('Creating SQLite database schema...');
+  
   try {
-    // Create users table
-    sqlite.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT NOT NULL UNIQUE,
-      password TEXT NOT NULL,
-      is_admin INTEGER NOT NULL DEFAULT 0,
-      is_enabled INTEGER NOT NULL DEFAULT 1,
-      seat_limit INTEGER NOT NULL DEFAULT 4,
-      name TEXT,
-      gender TEXT,
-      date_of_birth TEXT,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-    `);
-
-    // Create shows table
-    sqlite.exec(`
-    CREATE TABLE IF NOT EXISTS shows (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      date TEXT NOT NULL,
-      poster TEXT,
-      description TEXT,
-      theme_color TEXT DEFAULT "#4B5320",
-      emoji TEXT,
-      blocked_seats TEXT NOT NULL DEFAULT "[]",
-      price INTEGER DEFAULT 0,
-      seat_layout TEXT NOT NULL
-    );
-    `);
-
-    // Create reservations table
-    sqlite.exec(`
-    CREATE TABLE IF NOT EXISTS reservations (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER,
-      show_id INTEGER,
-      seat_numbers TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id),
-      FOREIGN KEY (show_id) REFERENCES shows(id)
-    );
-    `);
-
-    console.log('SQLite database schema created successfully.');
+    // Open the SQLite database with Drizzle
+    const sqlite = new BetterSQLite3(dbFile);
+    const db = drizzle(sqlite);
+    
+    // Generate migrations from schema into a temporary directory
+    const migrationsFolder = path.join(__dirname, '../migrations-sqlite-temp');
+    
+    // Ensure migrations directory exists
+    if (!fs.existsSync(migrationsFolder)) {
+      fs.mkdirSync(migrationsFolder, { recursive: true });
+    }
+    
+    // Copy the initial schema migration to the temp directory if it doesn't exist
+    const initialSchemaPath = path.join(__dirname, '../migrations-sqlite/0000_initial_schema.sql');
+    const tempInitialSchemaPath = path.join(migrationsFolder, '0000_initial_schema.sql');
+    
+    if (fs.existsSync(initialSchemaPath) && !fs.existsSync(tempInitialSchemaPath)) {
+      fs.copyFileSync(initialSchemaPath, tempInitialSchemaPath);
+      console.log('Copied initial schema to temporary migrations folder');
+    }
+    
+    // Apply migrations from the temporary directory
+    try {
+      console.log(`Applying migrations from: ${migrationsFolder}`);
+      await migrate(db, { migrationsFolder });
+      console.log('Schema push completed successfully!');
+    } catch (error) {
+      console.error('Error applying migrations:', error);
+      
+      // Try the direct SQL approach as fallback
+      console.log('Trying fallback method...');
+      if (fs.existsSync(initialSchemaPath)) {
+        const sqlContent = fs.readFileSync(initialSchemaPath, 'utf8');
+        sqlite.exec(sqlContent);
+        console.log('Applied schema using fallback method!');
+      } else {
+        throw new Error('Initial schema file not found');
+      }
+    }
+    
+    // Close the database connection
+    sqlite.close();
   } catch (error) {
-    console.error('Error creating schema:', error);
+    console.error('Schema push failed:', error);
     process.exit(1);
   }
+  
+  console.log('SQLite schema push completed!');
+  process.exit(0);
 }
 
-main();
+// Run the main function
+main().catch(error => {
+  console.error('Schema push script failed:', error);
+  process.exit(1);
+});

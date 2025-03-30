@@ -15,7 +15,7 @@ services:
       - ./scripts:/app/scripts
       - sqlite-data:/app/data
       - ./backups:/app/backups
-    entrypoint: ["/bin/sh", "-c", "mkdir -p /tmp/scripts && cp -r /app/scripts/* /tmp/scripts/ && chmod +x /tmp/scripts/*.sh || true && cd /app && if [ -f /tmp/scripts/init-db.js ]; then node /tmp/scripts/init-db.js || exit 1; fi && if [ -f /tmp/scripts/migrate-sqlite.ts ]; then npx tsx /tmp/scripts/migrate-sqlite.ts || true; fi && npm start"]
+    entrypoint: ["/bin/sh", "-c", "cd /app && npm install && mkdir -p /tmp/scripts && cp -r /app/scripts/* /tmp/scripts/ && chmod +x /tmp/scripts/*.sh || true && if [ -f /app/scripts/init-db.js ]; then node /app/scripts/init-db.js || exit 1; fi && if [ -f /app/scripts/migrate-sqlite.ts ]; then npx tsx /app/scripts/migrate-sqlite.ts || true; fi && npm start"]
 
 volumes:
   sqlite-data:
