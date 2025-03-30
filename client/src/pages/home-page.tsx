@@ -17,6 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useTranslation } from "react-i18next";
+import { DataPagination } from "@/components/data-pagination";
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -93,6 +95,8 @@ export default function HomePage() {
   const { user, logoutMutation } = useAuth();
   const [, setLocation] = useLocation();
   const { t } = useTranslation();
+  const [paginatedShows, setPaginatedShows] = useState<Show[]>([]);
+  const [paginatedReservations, setPaginatedReservations] = useState<Reservation[]>([]);
 
   const { data: shows = [], isLoading: showsLoading } = useQuery<Show[]>({
     queryKey: ["/api/shows"],
@@ -169,17 +173,22 @@ export default function HomePage() {
                     {t("translation.home.noShows")}
                   </p>
                 ) : (
-                  <div className="space-y-4">
-                    {shows
-                      .filter((show) => new Date(show.date) >= new Date())
-                      .map((show) => (
+                  <>
+                    <div className="space-y-4">
+                      {paginatedShows.map((show) => (
                         <ShowCard
                           key={show.id}
                           show={show}
                           reservations={reservations}
                         />
                       ))}
-                  </div>
+                    </div>
+                    <DataPagination
+                      data={shows.filter((show) => new Date(show.date) >= new Date())}
+                      itemsPerPage={4}
+                      onPageChange={setPaginatedShows}
+                    />
+                  </>
                 )}
               </div>
             </CardContent>
@@ -199,15 +208,22 @@ export default function HomePage() {
                     {t("translation.home.noReservations")}
                   </p>
                 ) : (
-                  <div className="space-y-4">
-                    {reservations.map((reservation) => (
-                      <ReservationCard
-                        key={reservation.id}
-                        reservation={reservation}
-                        show={shows.find((s) => s.id === reservation.showId)}
-                      />
-                    ))}
-                  </div>
+                  <>
+                    <div className="space-y-4">
+                      {paginatedReservations.map((reservation) => (
+                        <ReservationCard
+                          key={reservation.id}
+                          reservation={reservation}
+                          show={shows.find((s) => s.id === reservation.showId)}
+                        />
+                      ))}
+                    </div>
+                    <DataPagination
+                      data={reservations}
+                      itemsPerPage={4}
+                      onPageChange={setPaginatedReservations}
+                    />
+                  </>
                 )}
               </div>
             </CardContent>

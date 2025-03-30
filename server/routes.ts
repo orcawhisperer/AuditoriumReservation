@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, hashPassword, comparePasswords } from "./auth";
+import { setupAuth } from "./auth";
+import { hashPassword, comparePasswords } from "./utils/password";
 import { insertShowSchema, insertReservationSchema } from "@shared/schema";
 import { randomBytes } from "crypto";
 import { eq, and, or, sql } from 'drizzle-orm';

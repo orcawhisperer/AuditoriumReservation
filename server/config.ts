@@ -29,8 +29,10 @@ export const config = {
   sessionSecret: getEnv('SESSION_SECRET', 'shahbaaz-auditorium-secret-key', true),
   
   // Admin user configuration
-  adminUsername: getEnv('ADMIN_USERNAME', 'admin'),
-  adminPassword: getEnv('ADMIN_PASSWORD', 'admin'),
+  admin: {
+    username: getEnv('ADMIN_USERNAME', 'admin'),
+    password: getEnv('ADMIN_PASSWORD', 'admin'),
+  },
   
   // Database configuration - for future use when migrating to PostgreSQL
   databaseUrl: getEnv('DATABASE_URL', ''),
@@ -43,7 +45,7 @@ export const config = {
       
       // Warn about default admin credentials in production
       if (!this.isDevelopment && 
-         (this.adminUsername === 'admin' || this.adminPassword === 'admin')) {
+         (this.admin.username === 'admin' || this.admin.password === 'admin')) {
         console.warn('⚠️ WARNING: Using default admin credentials in production is a security risk!');
         console.warn('Set ADMIN_USERNAME and ADMIN_PASSWORD environment variables.');
       }

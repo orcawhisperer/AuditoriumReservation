@@ -4,7 +4,7 @@ import createMemoryStore from "memorystore";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { users, shows, reservations } from '@shared/schema';
-import { hashPassword } from "./auth";
+import { hashPassword } from "./utils/password";
 import { config } from "./config";
 
 const MemoryStore = createMemoryStore(session);
@@ -47,51 +47,12 @@ export class SQLiteStorage implements IStorage {
       checkPeriod: 86400000,
     });
     
-    // Initialize the admin user asynchronously
-    this.initializeAdmin().catch(error => {
-      console.error('Failed to initialize admin user during startup:', error);
-    });
+    // Admin user initialization is now handled by the seed.ts module
   }
 
   async initializeAdmin(): Promise<void> {
-    const adminUsername = config.adminUsername;
-    const adminPassword = config.adminPassword;
-
-    try {
-      // Check if admin exists
-      const existingAdmin = await this.getUserByUsername(adminUsername);
-
-      if (!existingAdmin) {
-        console.log(`Creating new admin user '${adminUsername}'`);
-        const hashedPassword = await hashPassword(adminPassword);
-        const result = await db.insert(users).values({
-          username: adminUsername,
-          password: hashedPassword,
-          isAdmin: true,
-          isEnabled: true,
-          name: 'System Administrator',
-          gender: 'other',
-          dateOfBirth: new Date().toISOString(),
-        }).returning();
-
-        if (result[0]) {
-          console.log(`Admin user '${adminUsername}' created successfully`);
-          
-          // Security warning for default credentials
-          if (adminUsername === 'admin' && adminPassword === 'admin') {
-            console.warn('⚠️ WARNING: Using default admin credentials is a security risk!');
-            console.warn('Set ADMIN_USERNAME and ADMIN_PASSWORD environment variables.');
-          }
-        } else {
-          console.error('Failed to create admin user');
-        }
-      } else {
-        console.log(`Admin user '${adminUsername}' already exists`);
-      }
-    } catch (error) {
-      console.error('Error in initializeAdmin:', error);
-      throw error; // Re-throw to handle it in the calling function
-    }
+    // This method is now a no-op as admin initialization is handled by the seed.ts module
+    console.log('Admin initialization requested via storage - use seedDatabase() instead');
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -117,8 +78,10 @@ export class SQLiteStorage implements IStorage {
   }
 
   async resetUserPassword(userId: number, newPassword: string): Promise<void> {
+    // Hash the password before storing it
+    const hashedPassword = await hashPassword(newPassword);
     await db.update(users)
-      .set({ password: newPassword })
+      .set({ password: hashedPassword })
       .where(eq(users.id, userId));
   }
 
@@ -135,7 +98,7 @@ export class SQLiteStorage implements IStorage {
   }
 
   async deleteAdmin(): Promise<void> {
-    const adminUsername = config.adminUsername;
+    const adminUsername = config.admin.username;
     await db.delete(users).where(eq(users.username, adminUsername));
   }
 

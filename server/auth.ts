@@ -2,25 +2,15 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";
 import session from "express-session";
-import { hash, compare } from "bcrypt";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 import { config } from "./config";
+import { hashPassword, comparePasswords } from "./utils/password";
 
 declare global {
   namespace Express {
     interface User extends SelectUser {}
   }
-}
-
-const SALT_ROUNDS = 10;
-
-async function hashPassword(password: string): Promise<string> {
-  return await hash(password, SALT_ROUNDS);
-}
-
-async function comparePasswords(plaintext: string, hashed: string): Promise<boolean> {
-  return await compare(plaintext, hashed);
 }
 
 export async function setupAuth(app: Express) {
@@ -49,7 +39,7 @@ export async function setupAuth(app: Express) {
           return done(null, false, { message: "Invalid username or password" });
         }
 
-        const isValid = await compare(password, user.password);
+        const isValid = await comparePasswords(password, user.password);
         if (!isValid) {
           console.log(`Login failed: Invalid password for user ${username}`);
           return done(null, false, { message: "Invalid username or password" });
@@ -109,4 +99,4 @@ export async function setupAuth(app: Express) {
   });
 }
 
-export { hashPassword, comparePasswords };
+// These functions are now exported directly from utils/password
