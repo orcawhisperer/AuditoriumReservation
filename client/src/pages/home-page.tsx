@@ -26,6 +26,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 function ShowCard({
   show,
@@ -315,17 +326,40 @@ function ReservationCard({
               </p>
             )}
           </div>
-          <Button
-            variant="destructive"
-            onClick={() => cancelMutation.mutate()}
-            disabled={cancelMutation.isPending || isPastShow}
-            className="w-full sm:w-auto"
-          >
-            {cancelMutation.isPending && (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            )}
-            {t("translation.common.cancel")}
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="destructive"
+                disabled={cancelMutation.isPending || isPastShow}
+                className="w-full sm:w-auto"
+              >
+                {cancelMutation.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                )}
+                {t("translation.common.cancel")}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t("translation.home.cancelReservationTitle")}</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t("translation.home.cancelReservationConfirmation", { showTitle: show.title })}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{t("translation.common.back")}</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => cancelMutation.mutate()}
+                  disabled={cancelMutation.isPending}
+                >
+                  {cancelMutation.isPending && (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  )}
+                  {t("translation.common.confirm")}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </CardContent>
     </Card>
