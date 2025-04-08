@@ -352,9 +352,9 @@ export function SeatGrid() {
                           if (section.section === "Balcony") {
                             prefix = "B";
                           } else if (section.section === "Back Section") {
-                            prefix = "F";
+                            prefix = "R"; // Rear/Back section uses R prefix
                           } else if (section.section === "Front Section") {
-                            prefix = "R";
+                            prefix = "F"; // Front section uses F prefix
                           }
                           const seatId = `${prefix}${rowData.row}${seatNumber}`;
 
