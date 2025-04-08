@@ -358,7 +358,7 @@ export function SeatGrid() {
                           }
                           const seatId = `${prefix}${rowData.row}${seatNumber}`;
 
-                          // Back section has evenly spaced aisles after seats 4, 9, and 14 (server room at row M seats 5-8)
+                          // Back section has aisles after seats 4 and 9 (server room at row M seats 5-8)
                           if (section.section === "Back Section" && 
                               (seatNumber === 4 || seatNumber === 9)) {
                             return (
@@ -387,9 +387,7 @@ export function SeatGrid() {
                                     onSelect={handleSeatSelect}
                                   />
                                 )}
-                                <div className="w-4 h-12 mx-1 flex items-center justify-center">
-                                  <div className="h-full w-0.5 bg-muted-foreground/40"></div>
-                                </div>
+                                <div className="w-8 h-12 mx-1"></div>
                               </div>
                             );
                           }
@@ -425,9 +423,7 @@ export function SeatGrid() {
                                       onSelect={handleSeatSelect}
                                     />
                                   )}
-                                  <div className="w-4 h-12 mx-1 flex items-center justify-center">
-                                    <div className="h-full w-0.5 bg-muted-foreground/40"></div>
-                                  </div>
+                                  <div className="w-8 h-12 mx-1"></div>
                                 </div>
                               );
                             }
@@ -460,9 +456,7 @@ export function SeatGrid() {
                                   })}
                                   onSelect={handleSeatSelect}
                                 />
-                                <div className="w-4 h-12 mx-1 flex items-center justify-center">
-                                  <div className="h-full w-0.5 bg-muted-foreground/40"></div>
-                                </div>
+                                <div className="w-8 h-12 mx-1"></div>
                               </div>
                             );
                           }
