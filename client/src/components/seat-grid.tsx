@@ -93,6 +93,8 @@ export function SeatGrid() {
     queryKey: [`/api/shows/${showId}`],
   });
 
+  console.log(show?.seatLayout);
+
   const { data: showReservations = [], isLoading: reservationsLoading } =
     useQuery<Reservation[]>({
       queryKey: [`/api/reservations/show/${showId}`],
@@ -302,7 +304,7 @@ export function SeatGrid() {
                 {section.section === "Balcony" && (
                   <div className="flex justify-center mb-4">
                     <div className="text-sm text-muted-foreground py-1 px-3 bg-muted/50 rounded-md">
-                      UPSTAIRS BALCONY (2 rows with 9 seats each - aisles between every 3 seats)
+                      UPSTAIRS BALCONY (2 rows with 9 seats each - evenly spaced aisles after seats 3 and 7)
                     </div>
                   </div>
                 )}
@@ -310,7 +312,7 @@ export function SeatGrid() {
                 {section.section === "Back Section" && (
                   <div className="flex justify-center mb-4">
                     <div className="text-sm text-muted-foreground py-1 px-3 bg-muted/50 rounded-md">
-                      BACK SECTION (rows G-N, aisles between every 4 seats)
+                      BACK SECTION (rows G-N, evenly spaced aisles after seats 4, 9, and 14, server room at row M seats 5-8)
                     </div>
                   </div>
                 )}
@@ -318,12 +320,13 @@ export function SeatGrid() {
                 {section.section === "Front Section" && (
                   <div className="flex justify-center mb-4">
                     <div className="text-sm text-muted-foreground py-1 px-3 bg-muted/50 rounded-md">
-                      FRONT SECTION (rows A-F, aisle between seats 9 and 10)
+                      FRONT SECTION (rows A-F, central aisle between seats 9 and 10, evenly spaced)
                     </div>
                   </div>
                 )}
 
-                {section.rows.map((rowData: any, rowIndex: number) => (
+                {/* Reverse rows for proper alphabetical ordering during rendering */}
+                {[...section.rows].reverse().map((rowData: any, rowIndex: number) => (
                   <div key={rowData.row} className="flex gap-3 justify-center">
                     {/* Exit on left for specific rows - only one in balcony at bottom left (row A) */}
                     {section.section === "Balcony" && rowData.row === "A" ? (
@@ -355,7 +358,7 @@ export function SeatGrid() {
                           }
                           const seatId = `${prefix}${rowData.row}${seatNumber}`;
 
-                          // Back section aisles between every 4 seats (after seats 4, 9, and 14) - exactly as in screenshot
+                          // Back section has evenly spaced aisles after seats 4, 9, and 14 (server room at row M seats 5-8)
                           if (section.section === "Back Section" && 
                               (seatNumber === 4 || seatNumber === 9 || seatNumber === 14)) {
                             return (
@@ -391,10 +394,10 @@ export function SeatGrid() {
                             );
                           }
                           
-                          // Balcony aisles between every 3 seats (after seats 3, 7 and before seat 11)
+                          // Balcony has evenly spaced aisles (after seats 3 and 7)
                           if (section.section === "Balcony" && 
                               (seatNumber === 3 || seatNumber === 7 || seatNumber === 11)) {
-                            // We handle the aisle after seat 3 and 7, before 11 special handling
+                            // We handle the aisles after seats 3 and 7
                             if (seatNumber !== 11) {
                               return (
                                 <div key={`${seatId}-aisle`} className="flex items-center">
@@ -431,7 +434,7 @@ export function SeatGrid() {
                             return <div key={seatId} className="w-8" />; // seat 11 doesn't exist but we need the aisle
                           }
                           
-                          // Front section aisle between seats 9 and 10
+                          // Front section has a central aisle between seats 9 and 10 (evenly spaced)
                           if (section.section === "Front Section" && seatNumber === 9) {
                             return (
                               <div key={`${seatId}-aisle`} className="flex items-center">
