@@ -299,8 +299,8 @@ export function SeatGrid() {
                 }
               </span>
             </h3>
-            <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
-              <div className="space-y-3 min-w-fit">
+            <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto lg:overflow-visible">
+              <div className="space-y-3 w-full">
                 {section.section === "Balcony" && (
                   <div className="flex justify-center mb-4">
                     <div className="text-sm text-muted-foreground py-1 px-3 bg-muted/50 rounded-md">
@@ -465,6 +465,23 @@ export function SeatGrid() {
                                 </div>
                               </div>
                             );
+                          }
+                          
+                          // Special case for Row M seats 5-8 (server room)
+                          if (section.section === "Back Section" && rowData.row === "M" && 
+                              (seatNumber >= 5 && seatNumber <= 8)) {
+                            // For seat 5, add the server room indicator
+                            if (seatNumber === 5) {
+                              return (
+                                <div key={`server-room-${seatId}`} className="flex items-center">
+                                  <div className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm w-[68px]">
+                                    SERVER
+                                  </div>
+                                </div>
+                              );
+                            }
+                            // Skip rendering the other server room seats
+                            return null;
                           }
                           
                           // Only render seats that exist in this row
