@@ -30,7 +30,9 @@ export const shows = sqliteTable("shows", {
     {
       section: "Balcony",
       rows: [
-        // 2 rows with 9 seats each, with aisles between every 3 seats
+        // Balcony has 2 rows with 9 seats each
+        // Aisles after seats 3 and 7 (exactly as in screenshot)
+        // Seats are grouped as: 3 seats, aisle, 3 seats, aisle, 3 seats
         { row: "A", seats: [1, 2, 3, 5, 6, 7, 9, 10, 11], total_seats: 9 },
         { row: "B", seats: [1, 2, 3, 5, 6, 7, 9, 10, 11], total_seats: 9 }
       ],
@@ -39,31 +41,32 @@ export const shows = sqliteTable("shows", {
     {
       section: "Back Section",
       rows: [
-        // Regular back section rows
+        // Regular back section rows - From bottom to top: G, H, I, J, K, L, M, N
         ...["N", "M", "L", "K", "J", "I", "H", "G"].map(row => {
           if (row === "M") {
-            // Row M has seats 5-8 removed for server room
+            // Row M has seats 5-8 removed for server room (matches screenshot)
             const seats = [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16];
             return { row, seats, total_seats: seats.length };
           } else {
-            // Aisles between every 4 seats
+            // Aisles after seats 4, 9, and 14 (matches screenshot)
             const seats = [1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19];
             return { row, seats, total_seats: seats.length };
           }
         })
       ],
-      total_section_seats: 144 // 9 rows with 16 seats per row (because of aisles and server room)
+      total_section_seats: 144 // 8 rows with varying seats due to server room and aisles
     },
     {
       section: "Front Section",
       rows: [
+        // Front section rows (arranged from bottom to top: A, B, C, D, E, F)
         ...["F", "E", "D", "C", "B", "A"].map(row => {
-          // Aisle between seats 9 and 10
-          const leftSeats = Array.from({length: 9}, (_, i) => i + 1);
-          const rightSeats = Array.from({length: 9}, (_, i) => i + 10);
+          // Front section has 18 seats per row, with a central aisle between seats 9 and 10
+          // This perfectly matches the layout in the screenshot
+          const seats = Array.from({length: 18}, (_, i) => i + 1);
           return {
             row,
-            seats: [...leftSeats, ...rightSeats],
+            seats,
             total_seats: 18
           };
         })

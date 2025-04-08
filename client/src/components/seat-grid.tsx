@@ -355,7 +355,7 @@ export function SeatGrid() {
                           }
                           const seatId = `${prefix}${rowData.row}${seatNumber}`;
 
-                          // Back section aisles between every 4 seats (after seats 4, 9, and 14)
+                          // Back section aisles between every 4 seats (after seats 4, 9, and 14) - exactly as in screenshot
                           if (section.section === "Back Section" && 
                               (seatNumber === 4 || seatNumber === 9 || seatNumber === 14)) {
                             return (
@@ -384,8 +384,8 @@ export function SeatGrid() {
                                     onSelect={handleSeatSelect}
                                   />
                                 )}
-                                <div className="w-4 h-8 mx-1 flex items-center justify-center">
-                                  <div className="h-full w-1 bg-muted-foreground/30 rounded-full"></div>
+                                <div className="w-4 h-12 mx-1 flex items-center justify-center">
+                                  <div className="h-full w-0.5 bg-muted-foreground/40"></div>
                                 </div>
                               </div>
                             );
@@ -422,8 +422,8 @@ export function SeatGrid() {
                                       onSelect={handleSeatSelect}
                                     />
                                   )}
-                                  <div className="w-4 h-8 mx-1 flex items-center justify-center">
-                                    <div className="h-full w-1 bg-muted-foreground/30 rounded-full"></div>
+                                  <div className="w-4 h-12 mx-1 flex items-center justify-center">
+                                    <div className="h-full w-0.5 bg-muted-foreground/40"></div>
                                   </div>
                                 </div>
                               );
@@ -457,8 +457,8 @@ export function SeatGrid() {
                                   })}
                                   onSelect={handleSeatSelect}
                                 />
-                                <div className="w-4 h-8 mx-1 flex items-center justify-center">
-                                  <div className="h-full w-1 bg-muted-foreground/30 rounded-full"></div>
+                                <div className="w-4 h-12 mx-1 flex items-center justify-center">
+                                  <div className="h-full w-0.5 bg-muted-foreground/40"></div>
                                 </div>
                               </div>
                             );
