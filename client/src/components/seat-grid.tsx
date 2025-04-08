@@ -74,7 +74,7 @@ function Exit({ position }: { position: "left" | "right" | "top" | "bottom" }) {
 
   return (
     <div className={`flex items-center ${getPositionClasses()} mx-2 my-3`}>
-      <div className="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold shadow-md border border-red-600">
+      <div className="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
         EXIT
       </div>
     </div>
@@ -92,8 +92,6 @@ export function SeatGrid() {
   const { data: show, isLoading: showLoading } = useQuery<Show>({
     queryKey: [`/api/shows/${showId}`],
   });
-
-  console.log(show?.seatLayout);
 
   const { data: showReservations = [], isLoading: reservationsLoading } =
     useQuery<Reservation[]>({
@@ -238,26 +236,6 @@ export function SeatGrid() {
     setSelectedSeats([...selectedSeats, seatId].sort());
   };
 
-  // Function to check if a seat is in the user's reservation for the current show
-  const isUserSeat = (seatId: string) => {
-    return userReservations.some(reservation => {
-      if (reservation.showId !== parseInt(showId)) return false;
-      
-      try {
-        const seats = typeof reservation.seatNumbers === 'string'
-          ? (reservation.seatNumbers.startsWith('[')
-            ? JSON.parse(reservation.seatNumbers)
-            : reservation.seatNumbers.split(',').map(s => s.trim()))
-          : reservation.seatNumbers || [];
-        
-        return Array.isArray(seats) && seats.includes(seatId);
-      } catch (e) {
-        console.error("Error parsing user reservation seats:", e);
-        return false;
-      }
-    });
-  };
-
   const seatLimit = user?.seatLimit || 4;
 
   return (
@@ -305,185 +283,117 @@ export function SeatGrid() {
       </div>
 
       <div className="space-y-6">
-        {/* Sections Layout */}
+        {/* Balcony Section */}
         {layout.map((section: any) => (
           <div key={section.section} className="space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               {section.section}
               <span className="text-sm text-muted-foreground font-normal">
-                {section.section === "Balcony" 
-                  ? "(Prefix: B)" 
-                  : section.section === "Back Section"
-                    ? "(Prefix: R)" // Corrected prefix for Back Section
-                    : "(Prefix: F)" // Corrected prefix for Front Section
-                }
+                {section.section === "Balcony" ? "(Prefix: B)" : "(Prefix: D)"}
               </span>
             </h3>
-            
-            <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto lg:overflow-visible">
-              <div className="space-y-3 w-full">
-                {/* Section headers */}
+            <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
+              <div className="space-y-3 min-w-fit">
                 {section.section === "Balcony" && (
                   <div className="flex justify-center mb-4">
-                    <div className="text-sm text-muted-foreground py-1 px-3 bg-muted/50 rounded-md">
-                      UPSTAIRS BALCONY (2 rows with 9 seats each - evenly spaced aisles after seats 3 and 7)
-                    </div>
-                  </div>
-                )}
-                
-                {section.section === "Back Section" && (
-                  <div className="flex justify-center mb-4">
-                    <div className="text-sm text-muted-foreground py-1 px-3 bg-muted/50 rounded-md">
-                      BACK SECTION (rows G-N, aisles after seats 4 and 9, server room at row M seats 5-8)
-                    </div>
-                  </div>
-                )}
-                
-                {section.section === "Front Section" && (
-                  <div className="flex justify-center mb-4">
-                    <div className="text-sm text-muted-foreground py-1 px-3 bg-muted/50 rounded-md">
-                      FRONT SECTION (rows A-F, central aisle between seats 9 and 10, evenly spaced)
+                    <div className="text-sm text-muted-foreground">
+                      UPSTAIRS BALCONY
                     </div>
                   </div>
                 )}
 
-                {/* Reverse rows for proper alphabetical ordering during rendering */}
-                {[...section.rows].reverse().map((rowData: any) => (
+                {section.rows.map((rowData: any, rowIndex: number) => (
                   <div key={rowData.row} className="flex gap-3 justify-center">
                     {/* Exit on left for specific rows */}
-                    {section.section === "Balcony" && rowData.row === "A" ? (
-                      <div className="flex items-center">
-                        <Exit position="left" />
-                        <div className="text-center text-xs text-muted-foreground ml-1">EXIT</div>
-                      </div>
+                    {section.section === "Downstairs" && rowData.row === "G" ? (
+                      <Exit position="left" />
+                    ) : section.section === "Balcony" && rowData.row === "A" ? (
+                      <Exit position="left" />
                     ) : (
                       /* For all other rows, add a placeholder for alignment */
                       <div className="w-[62px]"></div>
                     )}
-                    
-                    {/* Row label (left side) */}
                     <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                       {rowData.row}
                     </span>
 
-                    {/* SEAT LAYOUT - Direct mapping from the database structure */}
-                    <div className="flex flex-nowrap">
-                      {rowData.seats.map((seatNum: number, index: number) => {
-                        // Determine prefix based on section
-                        let prefix = "X"; // Default placeholder
-                        if (section.section === "Balcony") {
-                          prefix = "B";
-                        } else if (section.section === "Back Section") {
-                          prefix = "R"; // Rear section prefix
-                        } else if (section.section === "Front Section") {
-                          prefix = "F"; // Front section prefix
-                        }
-                        
-                        const seatId = `${prefix}${rowData.row}${seatNum}`;
-                        
-                        // Special case: Server Room (Row M, seats 5-8)
-                        if (section.section === "Back Section" && rowData.row === "M" && seatNum === 5) {
+                    <div className="flex gap-3 relative">
+                      {/* Aisle/Exit markers will be added elsewhere */}
+
+                      {Array.from({ length: Math.max(...rowData.seats) }).map(
+                        (_, seatIndex) => {
+                          const seatNumber = seatIndex + 1;
+                          const prefix =
+                            section.section === "Balcony" ? "B" : "D";
+                          const seatId = `${prefix}${rowData.row}${seatNumber}`;
+
+                          // Only render seats that exist in this row
+                          if (!rowData.seats.includes(seatNumber)) {
+                            return <div key={seatId} className="w-8" />;
+                          }
+
+
+                          // Check if this seat is in the user's own reservation FOR THIS SHOW
+                          const isUserReservation = userReservations.some(reservation => {
+                            // First check if the reservation is for this specific show
+                            if (reservation.showId !== parseInt(showId)) {
+                              return false;
+                            }
+                            
+                            try {
+                              const seats = typeof reservation.seatNumbers === 'string'
+                                ? (reservation.seatNumbers.startsWith('[')
+                                  ? JSON.parse(reservation.seatNumbers)
+                                  : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                : reservation.seatNumbers || [];
+                              
+                              return Array.isArray(seats) && seats.includes(seatId);
+                            } catch (e) {
+                              console.error("Error parsing user reservation seats:", e);
+                              return false;
+                            }
+                          });
+
                           return (
-                            <div key={`server-room`} className="flex items-center">
-                              <div className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm w-[100px]">
-                                SERVER ROOM
-                              </div>
-                            </div>
-                          );
-                        }
-                        
-                        // Skip other server room seats (they're not in the seats array, but just to be safe)
-                        if (section.section === "Back Section" && rowData.row === "M" && seatNum >= 5 && seatNum <= 8) {
-                          return null;
-                        }
-                        
-                        // Check if we need to add an aisle after this seat
-                        let needsAisle = false;
-                        
-                        if (section.section === "Balcony" && (seatNum === 3 || seatNum === 7)) {
-                          needsAisle = true;
-                        }
-                        
-                        if (section.section === "Back Section" && (seatNum === 4 || seatNum === 9)) {
-                          needsAisle = true;
-                        }
-                        
-                        if (section.section === "Front Section" && seatNum === 9) {
-                          needsAisle = true;
-                        }
-                        
-                        return (
-                          <div key={seatId} className="flex items-center">
                             <Seat
+                              key={seatId}
                               seatId={seatId}
                               isReserved={reservedSeats.has(seatId)}
                               isBlocked={blockedSeats.has(seatId)}
                               isSelected={selectedSeats.includes(seatId)}
-                              isUserReservation={isUserSeat(seatId)}
+                              isUserReservation={isUserReservation}
                               onSelect={handleSeatSelect}
                             />
-                            {needsAisle && <div className="w-8 h-12 mx-1"></div>}
-                          </div>
-                        );
-                      })}
+                          );
+                        },
+                      )}
                     </div>
 
-                    {/* Row label (right side) */}
+                    
+
                     <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                       {rowData.row}
                     </span>
 
-                    {/* Exits on the right side - no exits on right side as per requirements */}
-                    <div className="w-[62px]"></div>
+                    {/* Exits on the right side */}
+                    {section.section === "Downstairs" && rowData.row === "G" ? (
+                      <Exit position="right" />
+                    ) : (
+                      <div className="w-[62px]"></div>
+                    )}
                   </div>
                 ))}
 
-                {/* Exits between front and rear sections */}
-                {section.section === "Back Section" && section.rows[section.rows.length - 1].row === "G" && (
-                  <div className="flex justify-between mt-4 w-full px-16">
-                    {/* Left exit near left aisle */}
-                    <div className="flex items-center">
-                      <Exit position="bottom" />
-                      <div className="text-center text-xs text-muted-foreground my-2 mx-2">EXIT</div>
-                    </div>
-                    
-                    {/* Center indicator */}
-                    <div className="text-center text-xs text-muted-foreground my-2">
-                      ROW DIVIDER BETWEEN F & G
-                    </div>
-                    
-                    {/* Right exit near right aisle */}
-                    <div className="flex items-center">
-                      <div className="text-center text-xs text-muted-foreground my-2 mx-2">EXIT</div>
-                      <Exit position="bottom" />
-                    </div>
+                {/* Bottom exits for Downstairs section */}
+                {section.section === "Downstairs" && (
+                  <div className="flex justify-between mt-4">
+                    <Exit position="left" />
+                    <div className="flex-grow"></div>
+                    <Exit position="right" />
                   </div>
                 )}
 
-                {/* Exits between screen and first row */}
-                {section.section === "Front Section" && section.rows[section.rows.length - 1].row === "A" && (
-                  <div className="flex justify-between mt-4 mb-8 w-full px-16">
-                    {/* Left exit near left aisle */}
-                    <div className="flex items-center">
-                      <Exit position="bottom" />
-                      <div className="text-center text-xs text-muted-foreground my-2 mx-2">EXIT</div>
-                    </div>
-                    
-                    {/* Center indicator */}
-                    <div className="text-center text-xs text-muted-foreground my-2">
-                      SPACE BETWEEN ROW A & SCREEN
-                    </div>
-                    
-                    {/* Right exit near right aisle */}
-                    <div className="flex items-center">
-                      <div className="text-center text-xs text-muted-foreground my-2 mx-2">EXIT</div>
-                      <Exit position="bottom" />
-                    </div>
-                  </div>
-                )}
-
-                {/* Screen for Front Section */}
-                {section.section === "Front Section" && (
+                {section.section === "Downstairs" && (
                   <div className="mt-8 flex justify-center items-center">
                     <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
                     <div className="px-4 py-1 border-2 border-primary/50 rounded text-sm font-bold mx-2">
