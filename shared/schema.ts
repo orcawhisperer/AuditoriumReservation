@@ -184,15 +184,15 @@ export const insertShowSchema = createInsertSchema(shows).extend({
           ['A', 'B'].includes(row) && 
           [1, 2, 3, 5, 6, 7, 9, 10, 11].includes(number)
         ) ||
-        // Back section (F)
-        (section === 'F' && 
+        // Back section (R)
+        (section === 'R' && 
           ['N', 'M', 'L', 'K', 'J', 'I', 'H', 'G'].includes(row) && 
           (row === 'M' 
             ? [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)
             : [1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19].includes(number))
         ) ||
-        // Front section (R)
-        (section === 'R' && 
+        // Front section (F)
+        (section === 'F' && 
           ['A', 'B', 'C', 'D', 'E', 'F'].includes(row) && 
           ((number >= 1 && number <= 9) || (number >= 10 && number <= 18))
         )
@@ -220,8 +220,8 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
                  [1, 2, 3, 5, 6, 7, 9, 10, 11].includes(number);
         }
         
-        // Check Back section (F)
-        if (section === 'F') {
+        // Check Back section (R)
+        if (section === 'R') {
           if (row === 'M') {
             // Row M has seats 5-8 removed for server room
             return [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number);
@@ -232,8 +232,8 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
           }
         }
         
-        // Check Front section (R)
-        if (section === 'R') {
+        // Check Front section (F)
+        if (section === 'F') {
           return ['A', 'B', 'C', 'D', 'E', 'F'].includes(row) && 
                 ((number >= 1 && number <= 9) || (number >= 10 && number <= 18));
         }
