@@ -40,7 +40,7 @@ export const shows = sqliteTable("shows", {
       section: "Back Section",
       rows: [
         // Regular back section rows
-        ...["I", "H", "G", "F", "E", "D", "C", "B", "A"].map(row => {
+        ...["G", "H", "I", "J", "K", "L", "M", "N"].map(row => {
           if (row === "M") {
             // Row M has seats 5-8 removed for server room
             const seats = [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16];
@@ -57,7 +57,7 @@ export const shows = sqliteTable("shows", {
     {
       section: "Front Section",
       rows: [
-        ...["R", "Q", "P", "N", "M", "L"].map(row => {
+        ...["A", "B", "C", "D", "E", "F"].map(row => {
           // Aisle between seats 9 and 10
           const leftSeats = Array.from({length: 9}, (_, i) => i + 1);
           const rightSeats = Array.from({length: 9}, (_, i) => i + 10);
@@ -118,8 +118,8 @@ export const insertShowSchema = createInsertSchema(shows).extend({
     if (Array.isArray(val)) {
       // Validate each blocked seat
       val.forEach(seat => {
-        if (!/^[BFR][A-RI][0-9]{1,2}$/.test(seat)) {
-          throw new Error(`Invalid seat format: ${seat}. Format should be like BA1, FB2, RC3, etc.`);
+        if (!/^[BFR][A-Z][0-9]{1,2}$/.test(seat)) {
+          throw new Error(`Invalid seat format: ${seat}. Format should be like BA1, FG2, RC3, etc.`);
         }
         const [section, row, number] = [seat[0], seat[1], parseInt(seat.slice(2))];
         const isValid = (
@@ -130,14 +130,14 @@ export const insertShowSchema = createInsertSchema(shows).extend({
           ) ||
           // Back section (F)
           (section === 'F' && 
-            ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'].includes(row) && 
+            ['G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'].includes(row) && 
             (row === 'M' 
               ? [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)
               : [1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19].includes(number))
           ) ||
           // Front section (R)
           (section === 'R' && 
-            ['L', 'M', 'N', 'P', 'Q', 'R'].includes(row) && 
+            ['A', 'B', 'C', 'D', 'E', 'F'].includes(row) && 
             ((number >= 1 && number <= 9) || (number >= 10 && number <= 18))
           )
         );
@@ -171,8 +171,8 @@ export const insertShowSchema = createInsertSchema(shows).extend({
 
     // Validate each blocked seat
     seats.forEach(seat => {
-      if (!/^[BFR][A-RI][0-9]{1,2}$/.test(seat)) {
-        throw new Error(`Invalid seat format: ${seat}. Format should be like BA1, FB2, RC3, etc.`);
+      if (!/^[BFR][A-Z][0-9]{1,2}$/.test(seat)) {
+        throw new Error(`Invalid seat format: ${seat}. Format should be like BA1, FG2, RC3, etc.`);
       }
       const [section, row, number] = [seat[0], seat[1], parseInt(seat.slice(2))];
       const isValid = (
@@ -183,14 +183,14 @@ export const insertShowSchema = createInsertSchema(shows).extend({
         ) ||
         // Back section (F)
         (section === 'F' && 
-          ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'].includes(row) && 
+          ['G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'].includes(row) && 
           (row === 'M' 
             ? [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)
             : [1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19].includes(number))
         ) ||
         // Front section (R)
         (section === 'R' && 
-          ['L', 'M', 'N', 'P', 'Q', 'R'].includes(row) && 
+          ['A', 'B', 'C', 'D', 'E', 'F'].includes(row) && 
           ((number >= 1 && number <= 9) || (number >= 10 && number <= 18))
         )
       );
@@ -206,7 +206,7 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
   showId: true,
   seatNumbers: true,
 }).extend({
-  seatNumbers: z.array(z.string().regex(/^[BFR][A-RI][0-9]{1,2}$/, "Invalid seat format"))
+  seatNumbers: z.array(z.string().regex(/^[BFR][A-Z][0-9]{1,2}$/, "Invalid seat format"))
     .refine(
       (seats) => seats.every(seat => {
         const [section, row, number] = [seat[0], seat[1], parseInt(seat.slice(2))];
@@ -224,14 +224,14 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
             return [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number);
           } else {
             // Other rows have aisles between every 4 seats
-            return ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'].includes(row) && 
+            return ['G', 'H', 'I', 'J', 'K', 'L', 'N'].includes(row) && 
                   [1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19].includes(number);
           }
         }
         
         // Check Front section (R)
         if (section === 'R') {
-          return ['L', 'M', 'N', 'P', 'Q', 'R'].includes(row) && 
+          return ['A', 'B', 'C', 'D', 'E', 'F'].includes(row) && 
                 ((number >= 1 && number <= 9) || (number >= 10 && number <= 18));
         }
         
