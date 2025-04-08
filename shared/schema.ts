@@ -30,33 +30,35 @@ export const shows = sqliteTable("shows", {
     {
       section: "Balcony",
       rows: [
-        { row: "A", seats: Array.from({length: 6}, (_, i) => i + 1), total_seats: 6 },
-        { row: "B", seats: Array.from({length: 6}, (_, i) => i + 1), total_seats: 6 },
-        { row: "C", seats: Array.from({length: 6}, (_, i) => i + 1), total_seats: 6 }
+        // 2 rows with 9 seats each, with aisles between every 3 seats
+        { row: "A", seats: [1, 2, 3, 5, 6, 7, 9, 10, 11], total_seats: 9 },
+        { row: "B", seats: [1, 2, 3, 5, 6, 7, 9, 10, 11], total_seats: 9 }
       ],
       total_section_seats: 18
     },
     {
       section: "Back Section",
       rows: [
+        // Regular back section rows
         ...["I", "H", "G", "F", "E", "D", "C", "B", "A"].map(row => {
-          // Central gap dividing row into two sections of seats
-          const leftSeats = Array.from({length: 7}, (_, i) => i + 1);
-          const rightSeats = Array.from({length: 7}, (_, i) => i + 8);
-          return {
-            row,
-            seats: [...leftSeats, ...rightSeats],
-            total_seats: 14
-          };
+          if (row === "M") {
+            // Row M has seats 5-8 removed for server room
+            const seats = [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16];
+            return { row, seats, total_seats: seats.length };
+          } else {
+            // Aisles between every 4 seats
+            const seats = [1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19];
+            return { row, seats, total_seats: seats.length };
+          }
         })
       ],
-      total_section_seats: 126 // 9 rows * 14 seats = 126 (slight adjustment for accurate layout)
+      total_section_seats: 144 // 9 rows with 16 seats per row (because of aisles and server room)
     },
     {
       section: "Front Section",
       rows: [
         ...["R", "Q", "P", "N", "M", "L"].map(row => {
-          // Central gap dividing row into two sections of seats
+          // Aisle between seats 9 and 10
           const leftSeats = Array.from({length: 9}, (_, i) => i + 1);
           const rightSeats = Array.from({length: 9}, (_, i) => i + 10);
           return {
@@ -123,12 +125,15 @@ export const insertShowSchema = createInsertSchema(shows).extend({
         const isValid = (
           // Balcony section (B)
           (section === 'B' && 
-            ['A', 'B', 'C'].includes(row) && number >= 1 && number <= 6
+            ['A', 'B'].includes(row) && 
+            [1, 2, 3, 5, 6, 7, 9, 10, 11].includes(number)
           ) ||
           // Back section (F)
           (section === 'F' && 
             ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'].includes(row) && 
-            ((number >= 1 && number <= 7) || (number >= 8 && number <= 14))
+            (row === 'M' 
+              ? [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)
+              : [1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19].includes(number))
           ) ||
           // Front section (R)
           (section === 'R' && 
@@ -173,12 +178,15 @@ export const insertShowSchema = createInsertSchema(shows).extend({
       const isValid = (
         // Balcony section (B)
         (section === 'B' && 
-          ['A', 'B', 'C'].includes(row) && number >= 1 && number <= 6
+          ['A', 'B'].includes(row) && 
+          [1, 2, 3, 5, 6, 7, 9, 10, 11].includes(number)
         ) ||
         // Back section (F)
         (section === 'F' && 
           ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'].includes(row) && 
-          ((number >= 1 && number <= 7) || (number >= 8 && number <= 14))
+          (row === 'M' 
+            ? [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)
+            : [1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19].includes(number))
         ) ||
         // Front section (R)
         (section === 'R' && 
@@ -205,13 +213,20 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
         
         // Check Balcony section (B)
         if (section === 'B') {
-          return ['A', 'B', 'C'].includes(row) && number >= 1 && number <= 6;
+          return ['A', 'B'].includes(row) && 
+                 [1, 2, 3, 5, 6, 7, 9, 10, 11].includes(number);
         }
         
         // Check Back section (F)
         if (section === 'F') {
-          return ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'].includes(row) && 
-                ((number >= 1 && number <= 7) || (number >= 8 && number <= 14));
+          if (row === 'M') {
+            // Row M has seats 5-8 removed for server room
+            return [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number);
+          } else {
+            // Other rows have aisles between every 4 seats
+            return ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'].includes(row) && 
+                  [1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19].includes(number);
+          }
         }
         
         // Check Front section (R)

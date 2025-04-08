@@ -302,7 +302,7 @@ export function SeatGrid() {
                 {section.section === "Balcony" && (
                   <div className="flex justify-center mb-4">
                     <div className="text-sm text-muted-foreground">
-                      UPSTAIRS BALCONY
+                      UPSTAIRS BALCONY (2 rows with 9 seats each)
                     </div>
                   </div>
                 )}
@@ -310,7 +310,7 @@ export function SeatGrid() {
                 {section.section === "Back Section" && (
                   <div className="flex justify-center mb-4">
                     <div className="text-sm text-muted-foreground">
-                      BACK SECTION
+                      BACK SECTION (aisles between every 4 seats)
                     </div>
                   </div>
                 )}
@@ -318,19 +318,15 @@ export function SeatGrid() {
                 {section.section === "Front Section" && (
                   <div className="flex justify-center mb-4">
                     <div className="text-sm text-muted-foreground">
-                      FRONT SECTION
+                      FRONT SECTION (aisle between seats 9 and 10)
                     </div>
                   </div>
                 )}
 
                 {section.rows.map((rowData: any, rowIndex: number) => (
                   <div key={rowData.row} className="flex gap-3 justify-center">
-                    {/* Exit on left for specific rows */}
-                    {section.section === "Back Section" && rowData.row === "I" ? (
-                      <Exit position="left" />
-                    ) : section.section === "Front Section" && rowData.row === "L" ? (
-                      <Exit position="left" />
-                    ) : section.section === "Balcony" && rowData.row === "A" ? (
+                    {/* Exit on left for specific rows - only one in balcony at top left */}
+                    {section.section === "Balcony" && rowData.row === "A" ? (
                       <Exit position="left" />
                     ) : (
                       /* For all other rows, add a placeholder for alignment */
@@ -356,6 +352,39 @@ export function SeatGrid() {
                           }
                           const seatId = `${prefix}${rowData.row}${seatNumber}`;
 
+                          // Front section aisle between seats 9 and 10
+                          if (section.section === "Front Section" && seatNumber === 9) {
+                            return (
+                              <div key={`${seatId}-aisle`} className="flex items-center">
+                                <Seat
+                                  key={seatId}
+                                  seatId={seatId}
+                                  isReserved={reservedSeats.has(seatId)}
+                                  isBlocked={blockedSeats.has(seatId)}
+                                  isSelected={selectedSeats.includes(seatId)}
+                                  isUserReservation={userReservations.some(reservation => {
+                                    if (reservation.showId !== parseInt(showId)) return false;
+                                    try {
+                                      const seats = typeof reservation.seatNumbers === 'string'
+                                        ? (reservation.seatNumbers.startsWith('[')
+                                          ? JSON.parse(reservation.seatNumbers)
+                                          : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                        : reservation.seatNumbers || [];
+                                      return Array.isArray(seats) && seats.includes(seatId);
+                                    } catch (e) {
+                                      console.error("Error parsing user reservation seats:", e);
+                                      return false;
+                                    }
+                                  })}
+                                  onSelect={handleSeatSelect}
+                                />
+                                <div className="w-4 h-8 mx-1 flex items-center justify-center">
+                                  <div className="h-full w-0.5 bg-muted-foreground/20"></div>
+                                </div>
+                              </div>
+                            );
+                          }
+                          
                           // Only render seats that exist in this row
                           if (!rowData.seats.includes(seatNumber)) {
                             return <div key={seatId} className="w-8" />;
@@ -404,26 +433,28 @@ export function SeatGrid() {
                       {rowData.row}
                     </span>
 
-                    {/* Exits on the right side */}
-                    {section.section === "Back Section" && rowData.row === "I" ? (
-                      <Exit position="right" />
-                    ) : section.section === "Front Section" && rowData.row === "L" ? (
-                      <Exit position="right" />
-                    ) : (
-                      <div className="w-[62px]"></div>
-                    )}
+                    {/* Exits on the right side - no exits on right side as per requirements */}
+                    <div className="w-[62px]"></div>
                   </div>
                 ))}
 
-                {/* Bottom exits for Front Section */}
-                {section.section === "Front Section" && (
-                  <div className="flex justify-between mt-4">
-                    <Exit position="left" />
-                    <div className="text-center text-xs text-muted-foreground my-2">AISLE</div>
-                    <Exit position="right" />
+                {/* Exit between front and rear sections */}
+                {section.section === "Back Section" && (
+                  <div className="flex justify-center mt-4">
+                    <Exit position="bottom" />
                   </div>
                 )}
 
+                {/* Exit between screen and first row */}
+                {section.section === "Front Section" && (
+                  <div className="flex justify-center mt-4 mb-8">
+                    <div className="text-center text-xs text-muted-foreground my-2 mx-4">AISLE</div>
+                    <Exit position="bottom" />
+                    <div className="text-center text-xs text-muted-foreground my-2 mx-4">AISLE</div>
+                  </div>
+                )}
+
+                {/* Screen for Front Section */}
                 {section.section === "Front Section" && (
                   <div className="mt-8 flex justify-center items-center">
                     <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
