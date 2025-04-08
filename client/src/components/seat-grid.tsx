@@ -289,7 +289,12 @@ export function SeatGrid() {
             <h3 className="text-lg font-semibold flex items-center gap-2">
               {section.section}
               <span className="text-sm text-muted-foreground font-normal">
-                {section.section === "Balcony" ? "(Prefix: B)" : "(Prefix: D)"}
+                {section.section === "Balcony" 
+                  ? "(Prefix: B)" 
+                  : section.section === "Back Section"
+                    ? "(Prefix: F)"
+                    : "(Prefix: R)"
+                }
               </span>
             </h3>
             <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
@@ -301,11 +306,29 @@ export function SeatGrid() {
                     </div>
                   </div>
                 )}
+                
+                {section.section === "Back Section" && (
+                  <div className="flex justify-center mb-4">
+                    <div className="text-sm text-muted-foreground">
+                      BACK SECTION
+                    </div>
+                  </div>
+                )}
+                
+                {section.section === "Front Section" && (
+                  <div className="flex justify-center mb-4">
+                    <div className="text-sm text-muted-foreground">
+                      FRONT SECTION
+                    </div>
+                  </div>
+                )}
 
                 {section.rows.map((rowData: any, rowIndex: number) => (
                   <div key={rowData.row} className="flex gap-3 justify-center">
                     {/* Exit on left for specific rows */}
-                    {section.section === "Downstairs" && rowData.row === "G" ? (
+                    {section.section === "Back Section" && rowData.row === "I" ? (
+                      <Exit position="left" />
+                    ) : section.section === "Front Section" && rowData.row === "L" ? (
                       <Exit position="left" />
                     ) : section.section === "Balcony" && rowData.row === "A" ? (
                       <Exit position="left" />
@@ -323,8 +346,14 @@ export function SeatGrid() {
                       {Array.from({ length: Math.max(...rowData.seats) }).map(
                         (_, seatIndex) => {
                           const seatNumber = seatIndex + 1;
-                          const prefix =
-                            section.section === "Balcony" ? "B" : "D";
+                          let prefix;
+                          if (section.section === "Balcony") {
+                            prefix = "B";
+                          } else if (section.section === "Back Section") {
+                            prefix = "F";
+                          } else if (section.section === "Front Section") {
+                            prefix = "R";
+                          }
                           const seatId = `${prefix}${rowData.row}${seatNumber}`;
 
                           // Only render seats that exist in this row
@@ -376,7 +405,9 @@ export function SeatGrid() {
                     </span>
 
                     {/* Exits on the right side */}
-                    {section.section === "Downstairs" && rowData.row === "G" ? (
+                    {section.section === "Back Section" && rowData.row === "I" ? (
+                      <Exit position="right" />
+                    ) : section.section === "Front Section" && rowData.row === "L" ? (
                       <Exit position="right" />
                     ) : (
                       <div className="w-[62px]"></div>
@@ -384,22 +415,31 @@ export function SeatGrid() {
                   </div>
                 ))}
 
-                {/* Bottom exits for Downstairs section */}
-                {section.section === "Downstairs" && (
+                {/* Bottom exits for Front Section */}
+                {section.section === "Front Section" && (
                   <div className="flex justify-between mt-4">
                     <Exit position="left" />
-                    <div className="flex-grow"></div>
+                    <div className="text-center text-xs text-muted-foreground my-2">AISLE</div>
                     <Exit position="right" />
                   </div>
                 )}
 
-                {section.section === "Downstairs" && (
+                {section.section === "Front Section" && (
                   <div className="mt-8 flex justify-center items-center">
                     <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
                     <div className="px-4 py-1 border-2 border-primary/50 rounded text-sm font-bold mx-2">
                       SCREEN
                     </div>
                     <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
+                  </div>
+                )}
+                
+                {/* Server Room indicator for Back Section */}
+                {section.section === "Back Section" && (
+                  <div className="mt-4 flex justify-center items-center">
+                    <div className="px-4 py-1 bg-green-500 text-white rounded text-sm font-bold mx-2">
+                      SERVER ROOM
+                    </div>
                   </div>
                 )}
               </div>
