@@ -312,7 +312,7 @@ export function SeatGrid() {
                 {section.section === "Back Section" && (
                   <div className="flex justify-center mb-4">
                     <div className="text-sm text-muted-foreground py-1 px-3 bg-muted/50 rounded-md">
-                      BACK SECTION (rows G-N, evenly spaced aisles after seats 4, 9, and 14, server room at row M seats 5-8)
+                      BACK SECTION (rows G-N, aisles after seats 4 and 9, server room at row M seats 5-8)
                     </div>
                   </div>
                 )}
@@ -360,7 +360,7 @@ export function SeatGrid() {
 
                           // Back section has evenly spaced aisles after seats 4, 9, and 14 (server room at row M seats 5-8)
                           if (section.section === "Back Section" && 
-                              (seatNumber === 4 || seatNumber === 9 || seatNumber === 14)) {
+                              (seatNumber === 4 || seatNumber === 9)) {
                             return (
                               <div key={`${seatId}-aisle`} className="flex items-center">
                                 {rowData.seats.includes(seatNumber) && (
@@ -470,12 +470,12 @@ export function SeatGrid() {
                           // Special case for Row M seats 5-8 (server room)
                           if (section.section === "Back Section" && rowData.row === "M" && 
                               (seatNumber >= 5 && seatNumber <= 8)) {
-                            // For seat 5, add the server room indicator
+                            // For seat 5, add the server room indicator that spans the width of 4 seats
                             if (seatNumber === 5) {
                               return (
                                 <div key={`server-room-${seatId}`} className="flex items-center">
-                                  <div className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm w-[68px]">
-                                    SERVER
+                                  <div className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm w-[100px]">
+                                    SERVER ROOM
                                   </div>
                                 </div>
                               );
