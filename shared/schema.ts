@@ -40,7 +40,7 @@ export const shows = sqliteTable("shows", {
       section: "Back Section",
       rows: [
         // Regular back section rows
-        ...["G", "H", "I", "J", "K", "L", "M", "N"].map(row => {
+        ...["N", "M", "L", "K", "J", "I", "H", "G"].map(row => {
           if (row === "M") {
             // Row M has seats 5-8 removed for server room
             const seats = [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16];
@@ -57,7 +57,7 @@ export const shows = sqliteTable("shows", {
     {
       section: "Front Section",
       rows: [
-        ...["A", "B", "C", "D", "E", "F"].map(row => {
+        ...["F", "E", "D", "C", "B", "A"].map(row => {
           // Aisle between seats 9 and 10
           const leftSeats = Array.from({length: 9}, (_, i) => i + 1);
           const rightSeats = Array.from({length: 9}, (_, i) => i + 10);
@@ -130,7 +130,7 @@ export const insertShowSchema = createInsertSchema(shows).extend({
           ) ||
           // Back section (F)
           (section === 'F' && 
-            ['G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'].includes(row) && 
+            ['N', 'M', 'L', 'K', 'J', 'I', 'H', 'G'].includes(row) && 
             (row === 'M' 
               ? [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)
               : [1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19].includes(number))
@@ -183,7 +183,7 @@ export const insertShowSchema = createInsertSchema(shows).extend({
         ) ||
         // Back section (F)
         (section === 'F' && 
-          ['G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'].includes(row) && 
+          ['N', 'M', 'L', 'K', 'J', 'I', 'H', 'G'].includes(row) && 
           (row === 'M' 
             ? [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)
             : [1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19].includes(number))
@@ -224,7 +224,7 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
             return [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number);
           } else {
             // Other rows have aisles between every 4 seats
-            return ['G', 'H', 'I', 'J', 'K', 'L', 'N'].includes(row) && 
+            return ['N', 'M', 'L', 'K', 'J', 'I', 'H', 'G'].includes(row) && 
                   [1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19].includes(number);
           }
         }

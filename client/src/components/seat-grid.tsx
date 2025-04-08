@@ -352,6 +352,42 @@ export function SeatGrid() {
                           }
                           const seatId = `${prefix}${rowData.row}${seatNumber}`;
 
+                          // Back section aisles between every 4 seats (after seats 4, 9, and 14)
+                          if (section.section === "Back Section" && 
+                              (seatNumber === 4 || seatNumber === 9 || seatNumber === 14)) {
+                            return (
+                              <div key={`${seatId}-aisle`} className="flex items-center">
+                                {rowData.seats.includes(seatNumber) && (
+                                  <Seat
+                                    key={seatId}
+                                    seatId={seatId}
+                                    isReserved={reservedSeats.has(seatId)}
+                                    isBlocked={blockedSeats.has(seatId)}
+                                    isSelected={selectedSeats.includes(seatId)}
+                                    isUserReservation={userReservations.some(reservation => {
+                                      if (reservation.showId !== parseInt(showId)) return false;
+                                      try {
+                                        const seats = typeof reservation.seatNumbers === 'string'
+                                          ? (reservation.seatNumbers.startsWith('[')
+                                            ? JSON.parse(reservation.seatNumbers)
+                                            : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                          : reservation.seatNumbers || [];
+                                        return Array.isArray(seats) && seats.includes(seatId);
+                                      } catch (e) {
+                                        console.error("Error parsing user reservation seats:", e);
+                                        return false;
+                                      }
+                                    })}
+                                    onSelect={handleSeatSelect}
+                                  />
+                                )}
+                                <div className="w-4 h-8 mx-1 flex items-center justify-center">
+                                  <div className="h-full w-0.5 bg-muted-foreground/20"></div>
+                                </div>
+                              </div>
+                            );
+                          }
+                          
                           // Front section aisle between seats 9 and 10
                           if (section.section === "Front Section" && seatNumber === 9) {
                             return (
@@ -439,14 +475,16 @@ export function SeatGrid() {
                 ))}
 
                 {/* Exit between front and rear sections */}
-                {section.section === "Back Section" && (
+                {section.section === "Back Section" && section.rows[section.rows.length - 1].row === "G" && (
                   <div className="flex justify-center mt-4">
+                    <div className="text-center text-xs text-muted-foreground my-2 mx-4">AISLE</div>
                     <Exit position="bottom" />
+                    <div className="text-center text-xs text-muted-foreground my-2 mx-4">AISLE</div>
                   </div>
                 )}
 
                 {/* Exit between screen and first row */}
-                {section.section === "Front Section" && (
+                {section.section === "Front Section" && section.rows[section.rows.length - 1].row === "A" && (
                   <div className="flex justify-center mt-4 mb-8">
                     <div className="text-center text-xs text-muted-foreground my-2 mx-4">AISLE</div>
                     <Exit position="bottom" />
