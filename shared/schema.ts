@@ -104,10 +104,16 @@ export const insertShowSchema = createInsertSchema(shows).extend({
   blockedSeats: z.union([z.string(), z.array(z.string())]).transform(val => {
     // Common validation function for seat format
     const validateSeat = (seat: string): boolean => {
-      if (!/^[A-P][0-9]{1,2}$/.test(seat)) {
+      // Handle both old format (with section prefix) and new format
+      if (/^[BFR][A-P][0-9]{1,2}$/.test(seat)) {
+        // Old format with section prefix
+        const [section, row, seatNum] = [seat[0], seat[1], parseInt(seat.slice(2))];
+        return true; // Allow old format during transition
+      } else if (!/^[A-P][0-9]{1,2}$/.test(seat)) {
         throw new Error(`Invalid seat format: ${seat}. Format should be like A1, B2, N3, etc.`);
       }
       
+      // New format without section prefix
       const row = seat[0];
       const number = parseInt(seat.slice(1));
       
@@ -170,11 +176,21 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
   showId: true,
   seatNumbers: true,
 }).extend({
-  seatNumbers: z.array(z.string().regex(/^[A-P][0-9]{1,2}$/, "Invalid seat format"))
+  seatNumbers: z.array(z.string().regex(/^(?:[BFR])?[A-P][0-9]{1,2}$/, "Invalid seat format"))
     .refine(
       (seats) => seats.every(seat => {
-        const row = seat[0];
-        const number = parseInt(seat.slice(1));
+        // Handle both old format with section prefix and new format
+        let row, number;
+        
+        if (/^[BFR][A-P][0-9]{1,2}$/.test(seat)) {
+          // Old format with section prefix
+          row = seat[1];
+          number = parseInt(seat.slice(2));
+        } else {
+          // New format without section prefix
+          row = seat[0];
+          number = parseInt(seat.slice(1));
+        }
         
         // Balcony (rows O-P)
         if ((row === 'O' || row === 'P') && number >= 1 && number <= 12) {
