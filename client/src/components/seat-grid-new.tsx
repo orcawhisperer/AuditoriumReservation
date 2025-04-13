@@ -467,10 +467,51 @@ export function SeatGrid() {
                                 Server Room
                               </div>
                               
-                              {/* Third and fourth groups (9-16) */}
-                              <div className="flex gap-1 ml-2">
-                                {Array.from({ length: 8 }).map((_, idx) => {
+                              {/* Third group (9-12) */}
+                              <div className="flex gap-1 ml-2 mr-2">
+                                {Array.from({ length: 4 }).map((_, idx) => {
                                   const seatNumber = idx + 9;
+                                  const prefix = "R"; // Back section prefix
+                                  const seatId = `${prefix}${rowData.row}${seatNumber}`;
+                                  
+                                  const isUserReservation = userReservations.some(reservation => {
+                                    if (reservation.showId !== parseInt(showId)) return false;
+                                    
+                                    try {
+                                      const seats = typeof reservation.seatNumbers === 'string'
+                                        ? (reservation.seatNumbers.startsWith('[')
+                                          ? JSON.parse(reservation.seatNumbers)
+                                          : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                        : reservation.seatNumbers || [];
+                                      
+                                      return Array.isArray(seats) && seats.includes(seatId);
+                                    } catch (e) {
+                                      console.error("Error parsing user reservation seats:", e);
+                                      return false;
+                                    }
+                                  });
+
+                                  return (
+                                    <Seat
+                                      key={seatId}
+                                      seatId={seatId}
+                                      isReserved={reservedSeats.has(seatId)}
+                                      isBlocked={blockedSeats.has(seatId)}
+                                      isSelected={selectedSeats.includes(seatId)}
+                                      isUserReservation={isUserReservation}
+                                      onSelect={handleSeatSelect}
+                                    />
+                                  );
+                                })}
+                              </div>
+                              
+                              {/* Aisle */}
+                              <div className="w-2 sm:w-3 md:w-4"></div>
+                              
+                              {/* Fourth group (13-16) */}
+                              <div className="flex gap-1">
+                                {Array.from({ length: 4 }).map((_, idx) => {
+                                  const seatNumber = idx + 13;
                                   const prefix = "R"; // Back section prefix
                                   const seatId = `${prefix}${rowData.row}${seatNumber}`;
                                   
