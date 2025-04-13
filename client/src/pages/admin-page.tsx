@@ -566,14 +566,60 @@ function EditShowDialog({
     }
   };
 
+  // Separate mutation for updating just the blocked seats
+  const updateBlockedSeatsMutation = useMutation({
+    mutationFn: async (blockedSeats: string) => {
+      // Process the comma-separated list into an array
+      const blockedSeatsArray = blockedSeats
+        ? blockedSeats.split(",").map(seat => seat.trim())
+        : [];
+      
+      console.log("Sending blocked seats to update:", blockedSeatsArray);
+      
+      const res = await fetch(`/api/shows/${show.id}/blocked-seats`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ blockedSeats: blockedSeatsArray }),
+      });
+      
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/shows"] });
+      toast({
+        title: "Success",
+        description: "Blocked seats updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to update blocked seats",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const editShowMutation = useMutation({
     mutationFn: async (data: any) => {
+      // Extract blockedSeats to handle separately
+      const { blockedSeats, ...showData } = data;
+      
+      // First update the main show data
       const res = await fetch(`/api/shows/${show.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(showData),
       });
+      
       if (!res.ok) throw new Error(await res.text());
+      
+      // Then update the blocked seats separately
+      if (blockedSeats !== undefined) {
+        await updateBlockedSeatsMutation.mutateAsync(blockedSeats);
+      }
+      
       return res.json();
     },
     onSuccess: () => {

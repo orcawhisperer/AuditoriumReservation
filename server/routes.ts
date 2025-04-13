@@ -255,10 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(403).send("Admin access required");
     }
 
-    // Extract blocked seats for special handling
-    const { blockedSeats = [], ...otherShowData } = req.body;
-    
-    const parsed = insertShowSchema.safeParse(otherShowData);
+    const parsed = insertShowSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json(parsed.error);
     }
@@ -268,15 +265,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).send("Show not found");
     }
 
-    // Ensure blockedSeats is not undefined
+    const updatedShow = await storage.updateShow(parseInt(req.params.id), parsed.data);
+    res.json(updatedShow);
+  });
+  
+  // Add a dedicated endpoint for updating blocked seats
+  app.patch("/api/shows/:id/blocked-seats", async (req, res) => {
+    if (!req.user?.isAdmin) {
+      return res.status(403).send("Admin access required");
+    }
+
+    const showId = parseInt(req.params.id);
+    const { blockedSeats } = req.body;
+    
+    console.log("Received blocked seats update:", blockedSeats);
+    
+    // Ensure blockedSeats is not undefined or null
     const safeBlockedSeats = blockedSeats || [];
     
-    // Add back the blocked seats to the parsed data
-    const updatedShowData = { ...parsed.data, blockedSeats: safeBlockedSeats };
+    const show = await storage.getShow(showId);
+    if (!show) {
+      return res.status(404).send("Show not found");
+    }
     
-    console.log("Updating show with data:", JSON.stringify(updatedShowData));
+    // Create a minimal update object with just the blockedSeats property
+    const updatedShow = await storage.updateShow(showId, { 
+      blockedSeats: safeBlockedSeats,
+      // We need these to satisfy schema requirements, but use existing values
+      title: show.title,
+      date: show.date,
+      price: show.price // Include the required price field
+    });
     
-    const updatedShow = await storage.updateShow(parseInt(req.params.id), updatedShowData);
     res.json(updatedShow);
   });
 
