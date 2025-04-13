@@ -256,7 +256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     // Extract blocked seats for special handling
-    const { blockedSeats, ...otherShowData } = req.body;
+    const { blockedSeats = [], ...otherShowData } = req.body;
     
     const parsed = insertShowSchema.safeParse(otherShowData);
     if (!parsed.success) {
@@ -268,8 +268,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).send("Show not found");
     }
 
+    // Ensure blockedSeats is not undefined
+    const safeBlockedSeats = blockedSeats || [];
+    
     // Add back the blocked seats to the parsed data
-    const updatedShowData = { ...parsed.data, blockedSeats };
+    const updatedShowData = { ...parsed.data, blockedSeats: safeBlockedSeats };
+    
+    console.log("Updating show with data:", JSON.stringify(updatedShowData));
     
     const updatedShow = await storage.updateShow(parseInt(req.params.id), updatedShowData);
     res.json(updatedShow);
