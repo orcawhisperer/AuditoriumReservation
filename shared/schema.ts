@@ -165,7 +165,7 @@ export const insertShowSchema = createInsertSchema(shows).extend({
       const isValid = (
         // Balcony section (prefix B)
         (section === 'B' && 
-          ((row === 'P' || row === 'O') && [1, 2, 3, 5, 6, 7, 9, 10, 11].includes(number))
+          ((row === 'P' || row === 'O') && [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(number))
         ) ||
         // Back section (prefix R)
         (section === 'R' && (
@@ -201,7 +201,7 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
         if (section === 'B') {
           // Only rows O and P with specific seat numbers
           if (row === 'P' || row === 'O') {
-            return [1, 2, 3, 5, 6, 7, 9, 10, 11].includes(number);
+            return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(number);
           }
           return false;
         }
