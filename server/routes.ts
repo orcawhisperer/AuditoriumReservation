@@ -255,24 +255,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(403).send("Admin access required");
     }
 
-    // Extract blocked seats for special handling
-    const { blockedSeats, ...otherShowData } = req.body;
-    
-    const parsed = insertShowSchema.safeParse(otherShowData);
-    if (!parsed.success) {
-      return res.status(400).json(parsed.error);
+    try {
+      const showId = parseInt(req.params.id);
+      
+      // Get original show data
+      const show = await storage.getShow(showId);
+      if (!show) {
+        return res.status(404).send("Show not found");
+      }
+      
+      // Handle the data properly
+      const { blockedSeats, ...otherShowData } = req.body;
+      
+      // Validate everything except blockedSeats
+      const parsed = insertShowSchema.safeParse({
+        ...otherShowData,
+        // Pass empty array to avoid validation errors
+        blockedSeats: [] 
+      });
+      
+      if (!parsed.success) {
+        return res.status(400).json(parsed.error);
+      }
+      
+      // Process the blockedSeats array
+      let processedBlockedSeats = blockedSeats || [];
+      
+      // If it's a string, try to parse it
+      if (typeof processedBlockedSeats === 'string') {
+        try {
+          processedBlockedSeats = JSON.parse(processedBlockedSeats);
+        } catch (e) {
+          processedBlockedSeats = processedBlockedSeats
+            .split(',')
+            .map((s: string) => s.trim())
+            .filter(Boolean);
+        }
+      }
+      
+      // Save the data
+      const updatedShow = await storage.updateShow(showId, {
+        ...parsed.data,
+        blockedSeats: processedBlockedSeats
+      });
+      
+      res.json(updatedShow);
+    } catch (error) {
+      console.error('Error updating show:', error);
+      res.status(500).json({ message: 'Failed to update show data' });
     }
-
-    const show = await storage.getShow(parseInt(req.params.id));
-    if (!show) {
-      return res.status(404).send("Show not found");
-    }
-
-    // Add back the blocked seats to the parsed data
-    const updatedShowData = { ...parsed.data, blockedSeats };
-    
-    const updatedShow = await storage.updateShow(parseInt(req.params.id), updatedShowData);
-    res.json(updatedShow);
   });
 
   // Reservation routes with improved transaction handling and logging
