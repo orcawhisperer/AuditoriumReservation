@@ -126,7 +126,16 @@ export function SeatGrid() {
   // Additional blocked seats function - for balcony row O special case
   const isSpecialBlockedSeat = (section: string, row: string, seatNumber: number) => {
     // Block seats 4, 8, 12 in balcony row O
-    return section === "Balcony" && row === "O" && [4, 8, 12].includes(seatNumber);
+    if (section === "Balcony" && row === "O" && [4, 8, 12].includes(seatNumber)) {
+      return true;
+    }
+    
+    // Block server room seats (5-8) in row N
+    if (section === "Back" && row === "N" && seatNumber >= 5 && seatNumber <= 8) {
+      return true;
+    }
+    
+    return false;
   };
 
   const reserveMutation = useMutation({
