@@ -1,0 +1,27 @@
+         throw new Error(`Invalid seat number: ${seat}. This seat does not exist in the layout.`);
+                ^
+
+
+Error: Invalid seat number: BO4. This seat does not exist in the layout.
+    at <anonymous> (/home/runner/workspace/shared/schema.ts:132:17)
+    at Array.forEach (<anonymous>)
+    at Object.transform (/home/runner/workspace/shared/schema.ts:108:11)
+    at ZodEffects._parse (file:///home/runner/workspace/node_modules/zod/lib/index.mjs:3724:39)
+    at ZodObject._parse (file:///home/runner/workspace/node_modules/zod/lib/index.mjs:2379:37)
+    at ZodObject._parseSync (file:///home/runner/workspace/node_modules/zod/lib/index.mjs:678:29)
+    at ZodObject.safeParse (file:///home/runner/workspace/node_modules/zod/lib/index.mjs:708:29)
+    at <anonymous> (/home/runner/workspace/server/routes.ts:258:37)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+    at param (/home/runner/workspace/node_modules/express/lib/router/index.js:365:14)
+    at param (/home/runner/workspace/node_modules/express/lib/router/index.js:376:14)
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:421:3)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at strategy.pass (/home/runner/workspace/node_modules/passport/lib/middleware/authenticate.js:355:9)
+    at /home/runner/workspace/node_modules/passport/lib/strategies/session.js:120:12
+    at pass (/home/runner/workspace/node_modules/passport/lib/authenticator.js:352:31)
+    at deserialized (/home/runner/workspace/node_modules/passport/lib/authenticator.js:364:7)
+    at <anonymous> (/home/runner/workspace/server/auth.ts:65:5)

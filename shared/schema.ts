@@ -110,6 +110,7 @@ export const insertShowSchema = createInsertSchema(shows).extend({
           throw new Error(`Invalid seat format: ${seat}. Format should be like BA1, FB2, RF3, etc.`);
         }
         const [section, row, number] = [seat[0], seat[1], parseInt(seat.slice(2))];
+
         const isValid = (
           // Balcony section (prefix B)
           (section === 'B' && 

@@ -255,7 +255,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(403).send("Admin access required");
     }
 
-    const parsed = insertShowSchema.safeParse(req.body);
+    // Extract blocked seats for special handling
+    const { blockedSeats, ...otherShowData } = req.body;
+    
+    const parsed = insertShowSchema.safeParse(otherShowData);
     if (!parsed.success) {
       return res.status(400).json(parsed.error);
     }
@@ -265,7 +268,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).send("Show not found");
     }
 
-    const updatedShow = await storage.updateShow(parseInt(req.params.id), parsed.data);
+    // Add back the blocked seats to the parsed data
+    const updatedShowData = { ...parsed.data, blockedSeats };
+    
+    const updatedShow = await storage.updateShow(parseInt(req.params.id), updatedShowData);
     res.json(updatedShow);
   });
 
