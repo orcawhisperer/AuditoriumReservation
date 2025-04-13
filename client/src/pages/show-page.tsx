@@ -1,4 +1,4 @@
-import { SeatGrid } from "@/components/seat-grid";
+import { SeatGrid } from "@/components/seat-grid-new";
 import { Button } from "@/components/ui/button";
 import { useLocation, useParams } from "wouter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
