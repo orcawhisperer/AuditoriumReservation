@@ -255,7 +255,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(403).send("Admin access required");
     }
 
-    const parsed = insertShowSchema.safeParse(req.body);
+    // Extract blocked seats for special handling
+    const { blockedSeats = [], ...otherShowData } = req.body;
+    
+    const parsed = insertShowSchema.safeParse(otherShowData);
     if (!parsed.success) {
       return res.status(400).json(parsed.error);
     }
@@ -265,41 +268,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).send("Show not found");
     }
 
-    const updatedShow = await storage.updateShow(parseInt(req.params.id), parsed.data);
-    res.json(updatedShow);
-  });
-  
-  // Add a dedicated endpoint for updating blocked seats
-  app.patch("/api/shows/:id/blocked-seats", async (req, res) => {
-    if (!req.user?.isAdmin) {
-      return res.status(403).send("Admin access required");
-    }
-
-    const showId = parseInt(req.params.id);
-    const { blockedSeats } = req.body;
-    
-    console.log("Received blocked seats update:", blockedSeats);
-    
-    // Ensure blockedSeats is not undefined or null
+    // Ensure blockedSeats is not undefined
     const safeBlockedSeats = blockedSeats || [];
     
-    const show = await storage.getShow(showId);
-    if (!show) {
-      return res.status(404).send("Show not found");
-    }
+    // Add back the blocked seats to the parsed data
+    const updatedShowData = { ...parsed.data, blockedSeats: safeBlockedSeats };
     
-    // Ensure price is a number by using a default value of 0
-    const price = typeof show.price === 'number' ? show.price : 0;
+    console.log("Updating show with data:", JSON.stringify(updatedShowData));
     
-    // Create a minimal update object with just the blockedSeats property
-    const updatedShow = await storage.updateShow(showId, { 
-      blockedSeats: safeBlockedSeats,
-      // We need these to satisfy schema requirements, but use existing values
-      title: show.title,
-      date: show.date,
-      price: price // Include the required price field with a default of 0
-    });
-    
+    const updatedShow = await storage.updateShow(parseInt(req.params.id), updatedShowData);
     res.json(updatedShow);
   });
 

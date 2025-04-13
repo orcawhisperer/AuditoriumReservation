@@ -566,60 +566,14 @@ function EditShowDialog({
     }
   };
 
-  // Separate mutation for updating just the blocked seats
-  const updateBlockedSeatsMutation = useMutation({
-    mutationFn: async (blockedSeats: string) => {
-      // Process the comma-separated list into an array
-      const blockedSeatsArray = blockedSeats
-        ? blockedSeats.split(",").map(seat => seat.trim())
-        : [];
-      
-      console.log("Sending blocked seats to update:", blockedSeatsArray);
-      
-      const res = await fetch(`/api/shows/${show.id}/blocked-seats`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ blockedSeats: blockedSeatsArray }),
-      });
-      
-      if (!res.ok) throw new Error(await res.text());
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/shows"] });
-      toast({
-        title: "Success",
-        description: "Blocked seats updated successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to update blocked seats",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   const editShowMutation = useMutation({
     mutationFn: async (data: any) => {
-      // Extract blockedSeats to handle separately
-      const { blockedSeats, ...showData } = data;
-      
-      // First update the main show data
       const res = await fetch(`/api/shows/${show.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(showData),
+        body: JSON.stringify(data),
       });
-      
       if (!res.ok) throw new Error(await res.text());
-      
-      // Then update the blocked seats separately
-      if (blockedSeats !== undefined) {
-        await updateBlockedSeatsMutation.mutateAsync(blockedSeats);
-      }
-      
       return res.json();
     },
     onSuccess: () => {
@@ -714,37 +668,17 @@ function EditShowDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Blocked Seats</FormLabel>
-                  <div className="space-y-2">
-                    <FormControl>
-                      <Input
-                        placeholder="Enter seats to block (e.g., A1,B2,N1,BO4)"
-                        {...field}
-                      />
-                    </FormControl>
-                    <div className="flex justify-end">
-                      <Button 
-                        type="button" 
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          if (field.value) {
-                            updateBlockedSeatsMutation.mutate(field.value);
-                          }
-                        }}
-                        disabled={updateBlockedSeatsMutation.isPending}
-                      >
-                        {updateBlockedSeatsMutation.isPending && (
-                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                        )}
-                        Update Seats Only
-                      </Button>
-                    </div>
-                    <FormMessage />
-                    <p className="text-sm text-muted-foreground">
-                      Enter comma-separated seat numbers to block (e.g.,
-                      A1,B2,N1,BO4). You can update just the blocked seats by clicking the button above, or update all show details by using the Update Show button below.
-                    </p>
-                  </div>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter seats to block (e.g., BA1,BB2,DN1)"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  <p className="text-sm text-muted-foreground">
+                    Enter comma-separated seat numbers to block (e.g.,
+                    BA1,BB2,DN1)
+                  </p>
                 </FormItem>
               )}
             />
