@@ -102,37 +102,41 @@ export const insertShowSchema = createInsertSchema(shows).extend({
   emoji: z.string().optional(),
   price: z.number().int().min(0, "Price cannot be negative").default(0),
   blockedSeats: z.union([z.string(), z.array(z.string())]).transform(val => {
-    // If it's already an array, validate it
-    if (Array.isArray(val)) {
-      // Validate each blocked seat
-      val.forEach(seat => {
-        if (!/^[BFR][A-P][0-9]{1,2}$/.test(seat)) {
-          throw new Error(`Invalid seat format: ${seat}. Format should be like BA1, FB2, RF3, etc.`);
-        }
-        const [section, row, number] = [seat[0], seat[1], parseInt(seat.slice(2))];
+    // Common validation function for seat format
+    const validateSeat = (seat: string): boolean => {
+      if (!/^[A-P][0-9]{1,2}$/.test(seat)) {
+        throw new Error(`Invalid seat format: ${seat}. Format should be like A1, B2, N3, etc.`);
+      }
+      
+      const row = seat[0];
+      const number = parseInt(seat.slice(1));
+      
+      // Balcony (rows O-P)
+      if ((row === 'O' || row === 'P') && number >= 1 && number <= 12) {
+        return true;
+      }
+      
+      // Row N with server room (missing 5-8)
+      if (row === 'N' && [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)) {
+        return true;
+      }
+      
+      // Back section (rows G-M)
+      if (row >= 'G' && row <= 'M' && number >= 1 && number <= 16) {
+        return true;
+      }
+      
+      // Front section (rows A-F)
+      if (row >= 'A' && row <= 'F' && number >= 1 && number <= 18) {
+        return true;
+      }
+      
+      throw new Error(`Invalid seat number: ${seat}. This seat does not exist in the layout.`);
+    };
 
-        const isValid = (
-          // Balcony section (prefix B)
-          (section === 'B' && 
-            ((row === 'P' || row === 'O') && [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(number))
-          ) ||
-          // Back section (prefix R)
-          (section === 'R' && (
-            // Row N with server room (missing 5-8)
-            (row === 'N' && [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)) ||
-            // Rows G-M with full 16 seats
-            (row >= 'G' && row <= 'M' && number >= 1 && number <= 16)
-          )) ||
-          // Front section (prefix F)
-          (section === 'F' && (
-            // Rows A-F with 18 seats
-            (row >= 'A' && row <= 'F' && number >= 1 && number <= 18)
-          ))
-        );
-        if (!isValid) {
-          throw new Error(`Invalid seat number: ${seat}. This seat does not exist in the layout.`);
-        }
-      });
+    // If it's already an array, validate each seat
+    if (Array.isArray(val)) {
+      val.forEach(validateSeat);
       return val;
     }
 
@@ -148,6 +152,7 @@ export const insertShowSchema = createInsertSchema(shows).extend({
       // Try parsing as JSON first (in case it's already JSON)
       const parsed = JSON.parse(str);
       if (Array.isArray(parsed)) {
+        parsed.forEach(validateSeat);
         return parsed;
       }
     } catch (e) {
@@ -156,35 +161,7 @@ export const insertShowSchema = createInsertSchema(shows).extend({
 
     // Split by comma and clean up each seat
     const seats = str.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
-
-    // Validate each blocked seat
-    seats.forEach(seat => {
-      if (!/^[BFR][A-P][0-9]{1,2}$/.test(seat)) {
-        throw new Error(`Invalid seat format: ${seat}. Format should be like BA1, FB2, RF3, etc.`);
-      }
-      const [section, row, number] = [seat[0], seat[1], parseInt(seat.slice(2))];
-      const isValid = (
-        // Balcony section (prefix B)
-        (section === 'B' && 
-          ((row === 'P' || row === 'O') && [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(number))
-        ) ||
-        // Back section (prefix R)
-        (section === 'R' && (
-          // Row N with server room (missing 5-8)
-          (row === 'N' && [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)) ||
-          // Rows G-M with full 16 seats
-          (row >= 'G' && row <= 'M' && number >= 1 && number <= 16)
-        )) ||
-        // Front section (prefix F)
-        (section === 'F' && (
-          // Rows A-F with 18 seats
-          (row >= 'A' && row <= 'F' && number >= 1 && number <= 18)
-        ))
-      );
-      if (!isValid) {
-        throw new Error(`Invalid seat number: ${seat}. This seat does not exist in the layout.`);
-      }
-    });
+    seats.forEach(validateSeat);
     return seats;
   }),
 });
@@ -193,40 +170,30 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
   showId: true,
   seatNumbers: true,
 }).extend({
-  seatNumbers: z.array(z.string().regex(/^[BFR][A-P][0-9]{1,2}$/, "Invalid seat format"))
+  seatNumbers: z.array(z.string().regex(/^[A-P][0-9]{1,2}$/, "Invalid seat format"))
     .refine(
       (seats) => seats.every(seat => {
-        const [section, row, number] = [seat[0], seat[1], parseInt(seat.slice(2))];
+        const row = seat[0];
+        const number = parseInt(seat.slice(1));
         
-        // Check Balcony section
-        if (section === 'B') {
-          // Only rows O and P with specific seat numbers
-          if (row === 'P' || row === 'O') {
-            return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(number);
-          }
-          return false;
+        // Balcony (rows O-P)
+        if ((row === 'O' || row === 'P') && number >= 1 && number <= 12) {
+          return true;
         }
         
-        // Check Back section
-        if (section === 'R') {
-          // Row N with server room (missing 5-8)
-          if (row === 'N') {
-            return [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number);
-          }
-          // Rows G-M with 16 seats each
-          if (row >= 'G' && row <= 'M') {
-            return number >= 1 && number <= 16;
-          }
-          return false;
+        // Row N with server room (missing 5-8)
+        if (row === 'N' && [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)) {
+          return true;
         }
         
-        // Check Front section
-        if (section === 'F') {
-          // Rows A-F with 18 seats each
-          if (row >= 'A' && row <= 'F') {
-            return number >= 1 && number <= 18;
-          }
-          return false;
+        // Back section (rows G-M)
+        if (row >= 'G' && row <= 'M' && number >= 1 && number <= 16) {
+          return true;
+        }
+        
+        // Front section (rows A-F)
+        if (row >= 'A' && row <= 'F' && number >= 1 && number <= 18) {
+          return true;
         }
         
         return false;
