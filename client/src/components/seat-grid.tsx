@@ -121,6 +121,12 @@ export function SeatGrid() {
     return now > cutoffTime;
   }, [show]);
 
+  // Additional blocked seats function - for balcony row O special case
+  const isSpecialBlockedSeat = (section: string, row: string, seatNumber: number) => {
+    // Block seats 4, 8, 12 in balcony row O
+    return section === "Balcony" && row === "O" && [4, 8, 12].includes(seatNumber);
+  };
+
   const reserveMutation = useMutation({
     mutationFn: async () => {
       const payload = {
@@ -311,10 +317,10 @@ export function SeatGrid() {
                     {/* Exits on left based on section and row */}
                     {section.section === "Back" && rowData.row === "G" ? (
                       <Exit position="left" />
-                    ) : section.section === "Front" && rowData.row === "A" ? (
-                      <Exit position="left" />
                     ) : section.section === "Balcony" && rowData.row === "O" ? (
-                      <Exit position="left" />
+                      <div className="w-[62px]">
+                        <Exit position="left" />
+                      </div>
                     ) : (
                       /* For all other rows, add a placeholder for alignment */
                       <div className="w-[62px]"></div>
@@ -454,8 +460,8 @@ export function SeatGrid() {
                                 })}
                               </div>
                               
-                              {/* Server room placeholder */}
-                              <div className="flex items-center justify-center mx-2 px-2 bg-gray-300 rounded text-xs text-gray-600 h-8 font-medium">
+                              {/* Server room placeholder with better alignment */}
+                              <div className="flex items-center justify-center mx-2 px-2 bg-gray-300 rounded text-xs text-gray-600 h-8 font-medium w-[132px]">
                                 Server Room
                               </div>
                               
@@ -796,8 +802,6 @@ export function SeatGrid() {
 
                     {/* Exits on the right side */}
                     {section.section === "Back" && rowData.row === "G" ? (
-                      <Exit position="right" />
-                    ) : section.section === "Front" && rowData.row === "A" ? (
                       <Exit position="right" />
                     ) : (
                       <div className="w-[62px]"></div>

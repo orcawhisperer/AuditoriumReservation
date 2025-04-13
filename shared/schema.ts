@@ -31,7 +31,7 @@ export const shows = sqliteTable("shows", {
       section: "Balcony",
       rows: [
         { row: "P", seats: [1, 2, 3, 5, 6, 7, 9, 10, 11], total_seats: 9 },
-        { row: "O", seats: [1, 2, 3, 5, 6, 7, 9, 10, 11], total_seats: 9 }
+        { row: "O", seats: [1, 2, 3, 5, 6, 7, 9, 10, 11], total_seats: 9, blocked_seats: [4, 8, 12] }
       ],
       total_section_seats: 18
     },
