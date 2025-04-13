@@ -35,7 +35,7 @@ export function Seat({
   return (
     <button
       className={cn(
-        "w-8 h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm",
+        "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm",
         isUserReservation && 
           "bg-blue-100 border-blue-300 text-blue-700 cursor-not-allowed",
         isReserved && !isUserReservation &&
@@ -300,8 +300,8 @@ export function SeatGrid() {
                  "(Prefix: F)"}
               </span>
             </h3>
-            <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
-              <div className="space-y-3 min-w-fit">
+            <div className="w-full bg-muted/30 p-4 md:p-8 rounded-lg shadow-inner overflow-x-auto">
+              <div className="space-y-3 min-w-max">
                 {/* Balcony section header */}
                 {section.section === "Balcony" && (
                   <div className="flex justify-center mb-4">
@@ -313,7 +313,7 @@ export function SeatGrid() {
 
                 {/* Render each row */}
                 {section.rows.map((rowData: any, rowIndex: number) => (
-                  <div key={rowData.row} className="flex gap-3 justify-center">
+                  <div key={rowData.row} className="flex gap-1 sm:gap-2 md:gap-3 justify-center">
                     {/* Exits on left based on section and row */}
                     {section.section === "Back" && rowData.row === "G" ? (
                       <Exit position="left" />
@@ -330,7 +330,7 @@ export function SeatGrid() {
                       {rowData.row}
                     </span>
 
-                    <div className="flex flex-wrap gap-1 relative">
+                    <div className="flex flex-wrap gap-0.5 sm:gap-1 relative">
                       {/* Front section with aisle in middle (9 seats on each side) */}
                       {section.section === "Front" && (
                         <>
@@ -374,7 +374,7 @@ export function SeatGrid() {
                           </div>
                           
                           {/* Center aisle */}
-                          <div className="w-4"></div>
+                          <div className="w-2 sm:w-3 md:w-4"></div>
                           
                           {/* Second half (10-18) */}
                           <div className="flex gap-1">
