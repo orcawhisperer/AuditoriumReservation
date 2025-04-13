@@ -283,17 +283,20 @@ export function SeatGrid() {
       </div>
 
       <div className="space-y-6">
-        {/* Balcony Section */}
+        {/* Render all sections based on the new layout */}
         {layout.map((section: any) => (
           <div key={section.section} className="space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               {section.section}
               <span className="text-sm text-muted-foreground font-normal">
-                {section.section === "Balcony" ? "(Prefix: B)" : "(Prefix: D)"}
+                {section.section === "Balcony" ? "(Prefix: B)" : 
+                 section.section === "Back" ? "(Prefix: R)" : 
+                 "(Prefix: F)"}
               </span>
             </h3>
             <div className="w-full bg-muted/30 p-8 rounded-lg shadow-inner overflow-x-auto">
               <div className="space-y-3 min-w-fit">
+                {/* Balcony section header */}
                 {section.section === "Balcony" && (
                   <div className="flex justify-center mb-4">
                     <div className="text-sm text-muted-foreground">
@@ -302,81 +305,499 @@ export function SeatGrid() {
                   </div>
                 )}
 
+                {/* Render each row */}
                 {section.rows.map((rowData: any, rowIndex: number) => (
                   <div key={rowData.row} className="flex gap-3 justify-center">
-                    {/* Exit on left for specific rows */}
-                    {section.section === "Downstairs" && rowData.row === "G" ? (
+                    {/* Exits on left based on section and row */}
+                    {section.section === "Back" && rowData.row === "G" ? (
                       <Exit position="left" />
-                    ) : section.section === "Balcony" && rowData.row === "A" ? (
+                    ) : section.section === "Front" && rowData.row === "A" ? (
+                      <Exit position="left" />
+                    ) : section.section === "Balcony" && rowData.row === "O" ? (
                       <Exit position="left" />
                     ) : (
                       /* For all other rows, add a placeholder for alignment */
                       <div className="w-[62px]"></div>
                     )}
+                    
                     <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                       {rowData.row}
                     </span>
 
-                    <div className="flex gap-3 relative">
-                      {/* Aisle/Exit markers will be added elsewhere */}
-
-                      {Array.from({ length: Math.max(...rowData.seats) }).map(
-                        (_, seatIndex) => {
-                          const seatNumber = seatIndex + 1;
-                          const prefix =
-                            section.section === "Balcony" ? "B" : "D";
-                          const seatId = `${prefix}${rowData.row}${seatNumber}`;
-
-                          // Only render seats that exist in this row
-                          if (!rowData.seats.includes(seatNumber)) {
-                            return <div key={seatId} className="w-8" />;
-                          }
-
-
-                          // Check if this seat is in the user's own reservation FOR THIS SHOW
-                          const isUserReservation = userReservations.some(reservation => {
-                            // First check if the reservation is for this specific show
-                            if (reservation.showId !== parseInt(showId)) {
-                              return false;
-                            }
-                            
-                            try {
-                              const seats = typeof reservation.seatNumbers === 'string'
-                                ? (reservation.seatNumbers.startsWith('[')
-                                  ? JSON.parse(reservation.seatNumbers)
-                                  : reservation.seatNumbers.split(',').map(s => s.trim()))
-                                : reservation.seatNumbers || [];
+                    <div className="flex flex-wrap gap-1 relative">
+                      {/* Front section with aisle in middle (9 seats on each side) */}
+                      {section.section === "Front" && (
+                        <>
+                          {/* First half (1-9) */}
+                          <div className="flex gap-1 mr-4">
+                            {Array.from({ length: 9 }).map((_, idx) => {
+                              const seatNumber = idx + 1;
+                              const prefix = "F"; // Front section prefix
+                              const seatId = `${prefix}${rowData.row}${seatNumber}`;
                               
-                              return Array.isArray(seats) && seats.includes(seatId);
-                            } catch (e) {
-                              console.error("Error parsing user reservation seats:", e);
-                              return false;
-                            }
-                          });
+                              // Check if this seat is reserved by the user
+                              const isUserReservation = userReservations.some(reservation => {
+                                if (reservation.showId !== parseInt(showId)) return false;
+                                
+                                try {
+                                  const seats = typeof reservation.seatNumbers === 'string'
+                                    ? (reservation.seatNumbers.startsWith('[')
+                                      ? JSON.parse(reservation.seatNumbers)
+                                      : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                    : reservation.seatNumbers || [];
+                                  
+                                  return Array.isArray(seats) && seats.includes(seatId);
+                                } catch (e) {
+                                  console.error("Error parsing user reservation seats:", e);
+                                  return false;
+                                }
+                              });
 
-                          return (
-                            <Seat
-                              key={seatId}
-                              seatId={seatId}
-                              isReserved={reservedSeats.has(seatId)}
-                              isBlocked={blockedSeats.has(seatId)}
-                              isSelected={selectedSeats.includes(seatId)}
-                              isUserReservation={isUserReservation}
-                              onSelect={handleSeatSelect}
-                            />
-                          );
-                        },
+                              return (
+                                <Seat
+                                  key={seatId}
+                                  seatId={seatId}
+                                  isReserved={reservedSeats.has(seatId)}
+                                  isBlocked={blockedSeats.has(seatId)}
+                                  isSelected={selectedSeats.includes(seatId)}
+                                  isUserReservation={isUserReservation}
+                                  onSelect={handleSeatSelect}
+                                />
+                              );
+                            })}
+                          </div>
+                          
+                          {/* Center aisle */}
+                          <div className="w-4"></div>
+                          
+                          {/* Second half (10-18) */}
+                          <div className="flex gap-1">
+                            {Array.from({ length: 9 }).map((_, idx) => {
+                              const seatNumber = idx + 10;
+                              const prefix = "F"; // Front section prefix
+                              const seatId = `${prefix}${rowData.row}${seatNumber}`;
+                              
+                              const isUserReservation = userReservations.some(reservation => {
+                                if (reservation.showId !== parseInt(showId)) return false;
+                                
+                                try {
+                                  const seats = typeof reservation.seatNumbers === 'string'
+                                    ? (reservation.seatNumbers.startsWith('[')
+                                      ? JSON.parse(reservation.seatNumbers)
+                                      : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                    : reservation.seatNumbers || [];
+                                  
+                                  return Array.isArray(seats) && seats.includes(seatId);
+                                } catch (e) {
+                                  console.error("Error parsing user reservation seats:", e);
+                                  return false;
+                                }
+                              });
+
+                              return (
+                                <Seat
+                                  key={seatId}
+                                  seatId={seatId}
+                                  isReserved={reservedSeats.has(seatId)}
+                                  isBlocked={blockedSeats.has(seatId)}
+                                  isSelected={selectedSeats.includes(seatId)}
+                                  isUserReservation={isUserReservation}
+                                  onSelect={handleSeatSelect}
+                                />
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
+                      
+                      {/* Back section with 4 groups of 4 seats */}
+                      {section.section === "Back" && (
+                        <>
+                          {/* Special case for row N with server room */}
+                          {rowData.row === "N" ? (
+                            <>
+                              {/* First group (1-4) */}
+                              <div className="flex gap-1 mr-2">
+                                {Array.from({ length: 4 }).map((_, idx) => {
+                                  const seatNumber = idx + 1;
+                                  const prefix = "R"; // Back section prefix
+                                  const seatId = `${prefix}${rowData.row}${seatNumber}`;
+                                  
+                                  const isUserReservation = userReservations.some(reservation => {
+                                    if (reservation.showId !== parseInt(showId)) return false;
+                                    
+                                    try {
+                                      const seats = typeof reservation.seatNumbers === 'string'
+                                        ? (reservation.seatNumbers.startsWith('[')
+                                          ? JSON.parse(reservation.seatNumbers)
+                                          : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                        : reservation.seatNumbers || [];
+                                      
+                                      return Array.isArray(seats) && seats.includes(seatId);
+                                    } catch (e) {
+                                      console.error("Error parsing user reservation seats:", e);
+                                      return false;
+                                    }
+                                  });
+
+                                  return (
+                                    <Seat
+                                      key={seatId}
+                                      seatId={seatId}
+                                      isReserved={reservedSeats.has(seatId)}
+                                      isBlocked={blockedSeats.has(seatId)}
+                                      isSelected={selectedSeats.includes(seatId)}
+                                      isUserReservation={isUserReservation}
+                                      onSelect={handleSeatSelect}
+                                    />
+                                  );
+                                })}
+                              </div>
+                              
+                              {/* Server room placeholder */}
+                              <div className="flex items-center justify-center mx-2 px-2 bg-gray-300 rounded text-xs text-gray-600 h-8 font-medium">
+                                Server Room
+                              </div>
+                              
+                              {/* Third and fourth groups (9-16) */}
+                              <div className="flex gap-1 ml-2">
+                                {Array.from({ length: 8 }).map((_, idx) => {
+                                  const seatNumber = idx + 9;
+                                  const prefix = "R"; // Back section prefix
+                                  const seatId = `${prefix}${rowData.row}${seatNumber}`;
+                                  
+                                  const isUserReservation = userReservations.some(reservation => {
+                                    if (reservation.showId !== parseInt(showId)) return false;
+                                    
+                                    try {
+                                      const seats = typeof reservation.seatNumbers === 'string'
+                                        ? (reservation.seatNumbers.startsWith('[')
+                                          ? JSON.parse(reservation.seatNumbers)
+                                          : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                        : reservation.seatNumbers || [];
+                                      
+                                      return Array.isArray(seats) && seats.includes(seatId);
+                                    } catch (e) {
+                                      console.error("Error parsing user reservation seats:", e);
+                                      return false;
+                                    }
+                                  });
+
+                                  return (
+                                    <Seat
+                                      key={seatId}
+                                      seatId={seatId}
+                                      isReserved={reservedSeats.has(seatId)}
+                                      isBlocked={blockedSeats.has(seatId)}
+                                      isSelected={selectedSeats.includes(seatId)}
+                                      isUserReservation={isUserReservation}
+                                      onSelect={handleSeatSelect}
+                                    />
+                                  );
+                                })}
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              {/* First group (1-4) */}
+                              <div className="flex gap-1 mr-2">
+                                {Array.from({ length: 4 }).map((_, idx) => {
+                                  const seatNumber = idx + 1;
+                                  const prefix = "R"; // Back section prefix
+                                  const seatId = `${prefix}${rowData.row}${seatNumber}`;
+                                  
+                                  const isUserReservation = userReservations.some(reservation => {
+                                    if (reservation.showId !== parseInt(showId)) return false;
+                                    
+                                    try {
+                                      const seats = typeof reservation.seatNumbers === 'string'
+                                        ? (reservation.seatNumbers.startsWith('[')
+                                          ? JSON.parse(reservation.seatNumbers)
+                                          : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                        : reservation.seatNumbers || [];
+                                      
+                                      return Array.isArray(seats) && seats.includes(seatId);
+                                    } catch (e) {
+                                      console.error("Error parsing user reservation seats:", e);
+                                      return false;
+                                    }
+                                  });
+
+                                  return (
+                                    <Seat
+                                      key={seatId}
+                                      seatId={seatId}
+                                      isReserved={reservedSeats.has(seatId)}
+                                      isBlocked={blockedSeats.has(seatId)}
+                                      isSelected={selectedSeats.includes(seatId)}
+                                      isUserReservation={isUserReservation}
+                                      onSelect={handleSeatSelect}
+                                    />
+                                  );
+                                })}
+                              </div>
+                              
+                              {/* Aisle */}
+                              <div className="w-2"></div>
+                              
+                              {/* Second group (5-8) */}
+                              <div className="flex gap-1 mr-2">
+                                {Array.from({ length: 4 }).map((_, idx) => {
+                                  const seatNumber = idx + 5;
+                                  const prefix = "R"; // Back section prefix
+                                  const seatId = `${prefix}${rowData.row}${seatNumber}`;
+                                  
+                                  const isUserReservation = userReservations.some(reservation => {
+                                    if (reservation.showId !== parseInt(showId)) return false;
+                                    
+                                    try {
+                                      const seats = typeof reservation.seatNumbers === 'string'
+                                        ? (reservation.seatNumbers.startsWith('[')
+                                          ? JSON.parse(reservation.seatNumbers)
+                                          : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                        : reservation.seatNumbers || [];
+                                      
+                                      return Array.isArray(seats) && seats.includes(seatId);
+                                    } catch (e) {
+                                      console.error("Error parsing user reservation seats:", e);
+                                      return false;
+                                    }
+                                  });
+
+                                  return (
+                                    <Seat
+                                      key={seatId}
+                                      seatId={seatId}
+                                      isReserved={reservedSeats.has(seatId)}
+                                      isBlocked={blockedSeats.has(seatId)}
+                                      isSelected={selectedSeats.includes(seatId)}
+                                      isUserReservation={isUserReservation}
+                                      onSelect={handleSeatSelect}
+                                    />
+                                  );
+                                })}
+                              </div>
+                              
+                              {/* Aisle */}
+                              <div className="w-2"></div>
+                              
+                              {/* Third group (9-12) */}
+                              <div className="flex gap-1 mr-2">
+                                {Array.from({ length: 4 }).map((_, idx) => {
+                                  const seatNumber = idx + 9;
+                                  const prefix = "R"; // Back section prefix
+                                  const seatId = `${prefix}${rowData.row}${seatNumber}`;
+                                  
+                                  const isUserReservation = userReservations.some(reservation => {
+                                    if (reservation.showId !== parseInt(showId)) return false;
+                                    
+                                    try {
+                                      const seats = typeof reservation.seatNumbers === 'string'
+                                        ? (reservation.seatNumbers.startsWith('[')
+                                          ? JSON.parse(reservation.seatNumbers)
+                                          : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                        : reservation.seatNumbers || [];
+                                      
+                                      return Array.isArray(seats) && seats.includes(seatId);
+                                    } catch (e) {
+                                      console.error("Error parsing user reservation seats:", e);
+                                      return false;
+                                    }
+                                  });
+
+                                  return (
+                                    <Seat
+                                      key={seatId}
+                                      seatId={seatId}
+                                      isReserved={reservedSeats.has(seatId)}
+                                      isBlocked={blockedSeats.has(seatId)}
+                                      isSelected={selectedSeats.includes(seatId)}
+                                      isUserReservation={isUserReservation}
+                                      onSelect={handleSeatSelect}
+                                    />
+                                  );
+                                })}
+                              </div>
+                              
+                              {/* Aisle */}
+                              <div className="w-2"></div>
+                              
+                              {/* Fourth group (13-16) */}
+                              <div className="flex gap-1">
+                                {Array.from({ length: 4 }).map((_, idx) => {
+                                  const seatNumber = idx + 13;
+                                  const prefix = "R"; // Back section prefix
+                                  const seatId = `${prefix}${rowData.row}${seatNumber}`;
+                                  
+                                  const isUserReservation = userReservations.some(reservation => {
+                                    if (reservation.showId !== parseInt(showId)) return false;
+                                    
+                                    try {
+                                      const seats = typeof reservation.seatNumbers === 'string'
+                                        ? (reservation.seatNumbers.startsWith('[')
+                                          ? JSON.parse(reservation.seatNumbers)
+                                          : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                        : reservation.seatNumbers || [];
+                                      
+                                      return Array.isArray(seats) && seats.includes(seatId);
+                                    } catch (e) {
+                                      console.error("Error parsing user reservation seats:", e);
+                                      return false;
+                                    }
+                                  });
+
+                                  return (
+                                    <Seat
+                                      key={seatId}
+                                      seatId={seatId}
+                                      isReserved={reservedSeats.has(seatId)}
+                                      isBlocked={blockedSeats.has(seatId)}
+                                      isSelected={selectedSeats.includes(seatId)}
+                                      isUserReservation={isUserReservation}
+                                      onSelect={handleSeatSelect}
+                                    />
+                                  );
+                                })}
+                              </div>
+                            </>
+                          )}
+                        </>
+                      )}
+                      
+                      {/* Balcony section with 3 groups of 3 seats */}
+                      {section.section === "Balcony" && (
+                        <>
+                          {/* First group (1-3) */}
+                          <div className="flex gap-1 mr-2">
+                            {Array.from({ length: 3 }).map((_, idx) => {
+                              const seatNumber = idx + 1;
+                              const prefix = "B"; // Balcony section prefix
+                              const seatId = `${prefix}${rowData.row}${seatNumber}`;
+                              
+                              const isUserReservation = userReservations.some(reservation => {
+                                if (reservation.showId !== parseInt(showId)) return false;
+                                
+                                try {
+                                  const seats = typeof reservation.seatNumbers === 'string'
+                                    ? (reservation.seatNumbers.startsWith('[')
+                                      ? JSON.parse(reservation.seatNumbers)
+                                      : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                    : reservation.seatNumbers || [];
+                                  
+                                  return Array.isArray(seats) && seats.includes(seatId);
+                                } catch (e) {
+                                  console.error("Error parsing user reservation seats:", e);
+                                  return false;
+                                }
+                              });
+
+                              return (
+                                <Seat
+                                  key={seatId}
+                                  seatId={seatId}
+                                  isReserved={reservedSeats.has(seatId)}
+                                  isBlocked={blockedSeats.has(seatId)}
+                                  isSelected={selectedSeats.includes(seatId)}
+                                  isUserReservation={isUserReservation}
+                                  onSelect={handleSeatSelect}
+                                />
+                              );
+                            })}
+                          </div>
+                          
+                          {/* Gap between groups */}
+                          <div className="w-2"></div>
+                          
+                          {/* Second group (5-7) */}
+                          <div className="flex gap-1 mr-2">
+                            {Array.from({ length: 3 }).map((_, idx) => {
+                              const seatNumber = idx + 5;
+                              const prefix = "B"; // Balcony section prefix
+                              const seatId = `${prefix}${rowData.row}${seatNumber}`;
+                              
+                              const isUserReservation = userReservations.some(reservation => {
+                                if (reservation.showId !== parseInt(showId)) return false;
+                                
+                                try {
+                                  const seats = typeof reservation.seatNumbers === 'string'
+                                    ? (reservation.seatNumbers.startsWith('[')
+                                      ? JSON.parse(reservation.seatNumbers)
+                                      : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                    : reservation.seatNumbers || [];
+                                  
+                                  return Array.isArray(seats) && seats.includes(seatId);
+                                } catch (e) {
+                                  console.error("Error parsing user reservation seats:", e);
+                                  return false;
+                                }
+                              });
+
+                              return (
+                                <Seat
+                                  key={seatId}
+                                  seatId={seatId}
+                                  isReserved={reservedSeats.has(seatId)}
+                                  isBlocked={blockedSeats.has(seatId)}
+                                  isSelected={selectedSeats.includes(seatId)}
+                                  isUserReservation={isUserReservation}
+                                  onSelect={handleSeatSelect}
+                                />
+                              );
+                            })}
+                          </div>
+                          
+                          {/* Gap between groups */}
+                          <div className="w-2"></div>
+                          
+                          {/* Third group (9-11) */}
+                          <div className="flex gap-1">
+                            {Array.from({ length: 3 }).map((_, idx) => {
+                              const seatNumber = idx + 9;
+                              const prefix = "B"; // Balcony section prefix
+                              const seatId = `${prefix}${rowData.row}${seatNumber}`;
+                              
+                              const isUserReservation = userReservations.some(reservation => {
+                                if (reservation.showId !== parseInt(showId)) return false;
+                                
+                                try {
+                                  const seats = typeof reservation.seatNumbers === 'string'
+                                    ? (reservation.seatNumbers.startsWith('[')
+                                      ? JSON.parse(reservation.seatNumbers)
+                                      : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                    : reservation.seatNumbers || [];
+                                  
+                                  return Array.isArray(seats) && seats.includes(seatId);
+                                } catch (e) {
+                                  console.error("Error parsing user reservation seats:", e);
+                                  return false;
+                                }
+                              });
+
+                              return (
+                                <Seat
+                                  key={seatId}
+                                  seatId={seatId}
+                                  isReserved={reservedSeats.has(seatId)}
+                                  isBlocked={blockedSeats.has(seatId)}
+                                  isSelected={selectedSeats.includes(seatId)}
+                                  isUserReservation={isUserReservation}
+                                  onSelect={handleSeatSelect}
+                                />
+                              );
+                            })}
+                          </div>
+                        </>
                       )}
                     </div>
-
-                    
 
                     <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
                       {rowData.row}
                     </span>
 
                     {/* Exits on the right side */}
-                    {section.section === "Downstairs" && rowData.row === "G" ? (
+                    {section.section === "Back" && rowData.row === "G" ? (
+                      <Exit position="right" />
+                    ) : section.section === "Front" && rowData.row === "A" ? (
                       <Exit position="right" />
                     ) : (
                       <div className="w-[62px]"></div>
@@ -384,8 +805,8 @@ export function SeatGrid() {
                   </div>
                 ))}
 
-                {/* Bottom exits for Downstairs section */}
-                {section.section === "Downstairs" && (
+                {/* Exits between Front and Back sections */}
+                {section.section === "Front" && (
                   <div className="flex justify-between mt-4">
                     <Exit position="left" />
                     <div className="flex-grow"></div>
@@ -393,7 +814,8 @@ export function SeatGrid() {
                   </div>
                 )}
 
-                {section.section === "Downstairs" && (
+                {/* Screen for Front section */}
+                {section.section === "Front" && (
                   <div className="mt-8 flex justify-center items-center">
                     <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
                     <div className="px-4 py-1 border-2 border-primary/50 rounded text-sm font-bold mx-2">
