@@ -714,17 +714,37 @@ function EditShowDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Blocked Seats</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter seats to block (e.g., BA1,BB2,DN1)"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  <p className="text-sm text-muted-foreground">
-                    Enter comma-separated seat numbers to block (e.g.,
-                    BA1,BB2,DN1)
-                  </p>
+                  <div className="space-y-2">
+                    <FormControl>
+                      <Input
+                        placeholder="Enter seats to block (e.g., A1,B2,N1,BO4)"
+                        {...field}
+                      />
+                    </FormControl>
+                    <div className="flex justify-end">
+                      <Button 
+                        type="button" 
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          if (field.value) {
+                            updateBlockedSeatsMutation.mutate(field.value);
+                          }
+                        }}
+                        disabled={updateBlockedSeatsMutation.isPending}
+                      >
+                        {updateBlockedSeatsMutation.isPending && (
+                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                        )}
+                        Update Seats Only
+                      </Button>
+                    </div>
+                    <FormMessage />
+                    <p className="text-sm text-muted-foreground">
+                      Enter comma-separated seat numbers to block (e.g.,
+                      A1,B2,N1,BO4). You can update just the blocked seats by clicking the button above, or update all show details by using the Update Show button below.
+                    </p>
+                  </div>
                 </FormItem>
               )}
             />

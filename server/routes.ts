@@ -288,13 +288,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).send("Show not found");
     }
     
+    // Ensure price is a number by using a default value of 0
+    const price = typeof show.price === 'number' ? show.price : 0;
+    
     // Create a minimal update object with just the blockedSeats property
     const updatedShow = await storage.updateShow(showId, { 
       blockedSeats: safeBlockedSeats,
       // We need these to satisfy schema requirements, but use existing values
       title: show.title,
       date: show.date,
-      price: show.price // Include the required price field
+      price: price // Include the required price field with a default of 0
     });
     
     res.json(updatedShow);
