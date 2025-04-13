@@ -30,28 +30,33 @@ export const shows = sqliteTable("shows", {
     {
       section: "Balcony",
       rows: [
-        { row: "C", seats: Array.from({length: 12}, (_, i) => i + 1), total_seats: 12 },
-        { row: "B", seats: Array.from({length: 12}, (_, i) => i + 1), total_seats: 12 },
-        { row: "A", seats: [9, 10, 11, 12], total_seats: 4 }
+        { row: "P", seats: [1, 2, 3, 5, 6, 7, 9, 10, 11], total_seats: 9 },
+        { row: "O", seats: [1, 2, 3, 5, 6, 7, 9, 10, 11], total_seats: 9 }
       ],
-      total_section_seats: 28
+      total_section_seats: 18
     },
     {
-      section: "Downstairs",
+      section: "Back",
       rows: [
-        { row: "N", seats: [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16], total_seats: 12 },
+        { row: "N", seats: [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16], total_seats: 12 }, // Row N missing 5-8 (server room)
         ...["M", "L", "K", "J", "I", "H", "G"].map(row => ({
           row,
           seats: Array.from({length: 16}, (_, i) => i + 1),
           total_seats: 16
-        })),
+        }))
+      ],
+      total_section_seats: 124
+    },
+    {
+      section: "Front",
+      rows: [
         ...["F", "E", "D", "C", "B", "A"].map(row => ({
           row,
           seats: Array.from({length: 18}, (_, i) => i + 1),
           total_seats: 18
         }))
       ],
-      total_section_seats: 232
+      total_section_seats: 108
     }
   ])),
 });
@@ -101,23 +106,25 @@ export const insertShowSchema = createInsertSchema(shows).extend({
     if (Array.isArray(val)) {
       // Validate each blocked seat
       val.forEach(seat => {
-        if (!/^[BD][A-N][0-9]{1,2}$/.test(seat)) {
-          throw new Error(`Invalid seat format: ${seat}. Format should be like BA1, DB2, etc.`);
+        if (!/^[BFR][A-P][0-9]{1,2}$/.test(seat)) {
+          throw new Error(`Invalid seat format: ${seat}. Format should be like BA1, FB2, RF3, etc.`);
         }
         const [section, row, number] = [seat[0], seat[1], parseInt(seat.slice(2))];
         const isValid = (
-          // Balcony
+          // Balcony section (prefix B)
           (section === 'B' && 
-            ((row === 'C' || row === 'B') && number >= 1 && number <= 12) || // Balcony B, C rows
-            (row === 'A' && number >= 9 && number <= 12) // Balcony A row (only 9-12)
+            ((row === 'P' || row === 'O') && [1, 2, 3, 5, 6, 7, 9, 10, 11].includes(number))
           ) ||
-          // Downstairs
-          (section === 'D' && (
-            // Row N specific seats
+          // Back section (prefix R)
+          (section === 'R' && (
+            // Row N with server room (missing 5-8)
             (row === 'N' && [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)) ||
-            // Middle section (G-M)
-            (row >= 'G' && row <= 'M' && number >= 1 && number <= 16) ||
-            // Lower section (A-F)
+            // Rows G-M with full 16 seats
+            (row >= 'G' && row <= 'M' && number >= 1 && number <= 16)
+          )) ||
+          // Front section (prefix F)
+          (section === 'F' && (
+            // Rows A-F with 18 seats
             (row >= 'A' && row <= 'F' && number >= 1 && number <= 18)
           ))
         );
