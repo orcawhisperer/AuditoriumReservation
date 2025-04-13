@@ -628,7 +628,7 @@ export function SeatGrid() {
                               </div>
                               
                               {/* Aisle */}
-                              <div className="w-2"></div>
+                              <div className="w-1 sm:w-1.5 md:w-2"></div>
                               
                               {/* Fourth group (13-16) */}
                               <div className="flex gap-1">
@@ -714,7 +714,7 @@ export function SeatGrid() {
                           </div>
                           
                           {/* Gap between groups */}
-                          <div className="w-2"></div>
+                          <div className="w-1 sm:w-1.5 md:w-2"></div>
                           
                           {/* Second group (5-7) */}
                           <div className="flex gap-1 mr-2">
@@ -755,7 +755,7 @@ export function SeatGrid() {
                           </div>
                           
                           {/* Gap between groups */}
-                          <div className="w-2"></div>
+                          <div className="w-1 sm:w-1.5 md:w-2"></div>
                           
                           {/* Third group (9-11) */}
                           <div className="flex gap-1">
