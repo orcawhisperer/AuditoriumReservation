@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Loader2, AlertTriangle, Clock } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type SeatProps = {
   seatId: string;
@@ -88,6 +89,7 @@ export function SeatGrid() {
   const { user } = useAuth();
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
 
   const { data: show, isLoading: showLoading } = useQuery<Show>({
     queryKey: [`/api/shows/${showId}`],
@@ -300,8 +302,8 @@ export function SeatGrid() {
                  "(Prefix: F)"}
               </span>
             </h3>
-            <div className="w-full bg-muted/30 p-4 md:p-8 rounded-lg shadow-inner overflow-x-auto">
-              <div className="space-y-3 min-w-max">
+            <div className="w-full bg-muted/30 p-2 sm:p-4 md:p-8 rounded-lg shadow-inner overflow-x-auto">
+              <div className={`space-y-2 md:space-y-3 ${isMobile ? 'min-w-[800px]' : 'min-w-max'}`}>
                 {/* Balcony section header */}
                 {section.section === "Balcony" && (
                   <div className="flex justify-center mb-4">
@@ -544,7 +546,7 @@ export function SeatGrid() {
                               </div>
                               
                               {/* Aisle */}
-                              <div className="w-2"></div>
+                              <div className="w-1 sm:w-1.5 md:w-2"></div>
                               
                               {/* Second group (5-8) */}
                               <div className="flex gap-1 mr-2">
@@ -585,7 +587,7 @@ export function SeatGrid() {
                               </div>
                               
                               {/* Aisle */}
-                              <div className="w-2"></div>
+                              <div className="w-1 sm:w-1.5 md:w-2"></div>
                               
                               {/* Third group (9-12) */}
                               <div className="flex gap-1 mr-2">
