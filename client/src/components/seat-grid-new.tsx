@@ -83,12 +83,34 @@ function Exit({ position }: { position: "left" | "right" | "top" | "bottom" }) {
   );
 }
 
-export function SeatGrid() {
+export function SeatGrid({ 
+  showId: propShowId,
+  selectedSeats: propSelectedSeats,
+  onSeatSelect: propOnSeatSelect,
+  userReservation: propUserReservation,
+  hideActionButtons = false,
+  isAdminMode = false,
+  className,
+}: { 
+  showId?: string;
+  selectedSeats?: string[];
+  onSeatSelect?: (seatId: string) => void;
+  userReservation?: any;
+  hideActionButtons?: boolean;
+  isAdminMode?: boolean;
+  className?: string;
+}) {
   const [, setLocation] = useLocation();
-  const { showId } = useParams<{ showId: string }>();
+  const params = useParams<{ showId: string }>();
+  const urlShowId = params.showId;
+  // Use prop showId if provided, otherwise use the one from URL params
+  const showId = propShowId || urlShowId;
+  
   const { toast } = useToast();
   const { user } = useAuth();
-  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [internalSelectedSeats, setInternalSelectedSeats] = useState<string[]>([]);
+  // Use props selectedSeats if provided, otherwise use internal state
+  const selectedSeats = propSelectedSeats || internalSelectedSeats;
   const { t } = useTranslation();
   const isMobile = useIsMobile();
 
@@ -242,9 +264,16 @@ export function SeatGrid() {
   );
 
   const handleSeatSelect = (seatId: string) => {
+    // If we have an external seat selection handler, use it
+    if (propOnSeatSelect) {
+      propOnSeatSelect(seatId);
+      return;
+    }
+    
+    // Otherwise, handle seat selection internally
     // If the seat is already selected, remove it (toggle off)
-    if (selectedSeats.includes(seatId)) {
-      setSelectedSeats(selectedSeats.filter((id) => id !== seatId));
+    if (internalSelectedSeats.includes(seatId)) {
+      setInternalSelectedSeats(internalSelectedSeats.filter((id) => id !== seatId));
       return;
     }
 
@@ -253,7 +282,7 @@ export function SeatGrid() {
     // Admins have no seat limit
     if (!user?.isAdmin) {
       const seatLimit = user?.seatLimit || 4;
-      if (selectedSeats.length >= seatLimit) {
+      if (internalSelectedSeats.length >= seatLimit) {
         toast({
           title: "Maximum seats reached",
           description: `You can only reserve up to ${seatLimit} seats`,
@@ -265,62 +294,69 @@ export function SeatGrid() {
     }
 
     // Add the new seat and sort the array
-    setSelectedSeats([...selectedSeats, seatId].sort());
+    setInternalSelectedSeats([...internalSelectedSeats, seatId].sort());
   };
 
   const seatLimit = user?.seatLimit || 4;
 
+  // Use user reservations or provided reservation in admin mode
+  const reservationsToUse = isAdminMode && propUserReservation ? [propUserReservation] : userReservations;
+  
+  // We need to customize the rendering based on whether we're in admin mode or not
+  // and whether we should hide certain parts of the UI
   return (
-    <div className="space-y-8">
-      <div>
-        <div className="flex items-center gap-2">
-          <h2 className="text-2xl font-bold">{show.title}</h2>
-          <span className="text-sm text-muted-foreground bg-primary/10 px-2 py-1 rounded">
-            Shahbaaz Auditorium
-          </span>
-        </div>
-        <p className="text-muted-foreground">
-          {format(new Date(show.date), "PPP")} at{" "}
-          {format(new Date(show.date), "p")}
-        </p>
-        <p className="mt-2 text-sm border rounded-md p-2 bg-accent/20 inline-block">
-          {user?.isAdmin ? (
-            <>
-              As an admin, you can book <strong>unlimited</strong> seats.
-            </>
-          ) : (
-            <>
-              You can book up to <strong>{seatLimit}</strong> seats for this
-              show.
-            </>
-          )}
-        </p>
-
-        {/* Cutoff time alert */}
-        {isPastCutoffTime && (
-          <Alert variant="destructive" className="mt-4">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Reservation Cutoff Time</AlertTitle>
-            <AlertDescription>
-              Online reservations are closed 30 minutes before the show starts.
-              Please contact the admin at the venue for last-minute
-              reservations.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {show.poster && (
-          <div className="mt-4 relative w-full max-w-md mx-auto overflow-hidden rounded-lg border">
-            <div className="relative aspect-video">
-              <img
-                src={show.poster}
-                alt={`Poster for ${show.title}`}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            </div>
+    <div className={`space-y-8 ${className || ''}`}>
+      {!hideActionButtons && (
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-bold">{show.title}</h2>
+            <span className="text-sm text-muted-foreground bg-primary/10 px-2 py-1 rounded">
+              Shahbaaz Auditorium
+            </span>
           </div>
-        )}
-      </div>
+          <p className="text-muted-foreground">
+            {format(new Date(show.date), "PPP")} at{" "}
+            {format(new Date(show.date), "p")}
+          </p>
+          <p className="mt-2 text-sm border rounded-md p-2 bg-accent/20 inline-block">
+            {user?.isAdmin ? (
+              <>
+                As an admin, you can book <strong>unlimited</strong> seats.
+              </>
+            ) : (
+              <>
+                You can book up to <strong>{seatLimit}</strong> seats for this
+                show.
+              </>
+            )}
+          </p>
+
+          {/* Cutoff time alert */}
+          {isPastCutoffTime && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Reservation Cutoff Time</AlertTitle>
+              <AlertDescription>
+                Online reservations are closed 30 minutes before the show starts.
+                Please contact the admin at the venue for last-minute
+                reservations.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {show.poster && (
+            <div className="mt-4 relative w-full max-w-md mx-auto overflow-hidden rounded-lg border">
+              <div className="relative aspect-video">
+                <img
+                  src={show.poster}
+                  alt={`Poster for ${show.title}`}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="space-y-6">
         {/* Render all sections based on the new layout */}
