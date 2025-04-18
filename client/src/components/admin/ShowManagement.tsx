@@ -47,28 +47,28 @@ import {
 } from "@/components/ui/alert-dialog";
 import { SeatGrid } from "@/components/seat-grid-new";
 
-// Create Show Dialog Component
-const CreateShowDialog = React.memo(() => {
+// Create Show Dialog
+const CreateShowDialog = () => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string>("");
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [isTemplateSelectOpen, setIsTemplateSelectOpen] = useState<boolean>(false);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isTemplateSelectOpen, setIsTemplateSelectOpen] = useState(false);
   const { t } = useTranslation();
 
-  // Fetch all existing shows to use as templates
+  // Fetch existing shows for templates
   const { data: existingShows = [] } = useQuery<Show[]>({
     queryKey: ["/api/shows"],
   });
   
-  // Filter shows based on search term
+  // Filter shows based on search
   const filteredShows = useMemo(() => {
     if (!searchTerm.trim()) return existingShows;
     
     const lowerSearch = searchTerm.toLowerCase();
     return existingShows.filter(show => 
       show.title.toLowerCase().includes(lowerSearch) ||
-      show.description?.toLowerCase().includes(lowerSearch)
+      (show.description?.toLowerCase() || "").includes(lowerSearch)
     );
   }, [existingShows, searchTerm]);
 
@@ -98,7 +98,7 @@ const CreateShowDialog = React.memo(() => {
     }
   };
   
-  // Function to load template data from an existing show
+  // Load template data from existing show
   const loadTemplateData = useCallback((templateShow: Show) => {
     form.setValue("title", templateShow.title);
     form.setValue("description", templateShow.description || "");
@@ -166,6 +166,7 @@ const CreateShowDialog = React.memo(() => {
             {t('translation.admin.addShowDescription')}
           </DialogDescription>
         </DialogHeader>
+        
         <Form {...form}>
           <div className="mb-4">
             <Dialog open={isTemplateSelectOpen} onOpenChange={setIsTemplateSelectOpen}>
@@ -421,9 +422,9 @@ const CreateShowDialog = React.memo(() => {
       </DialogContent>
     </Dialog>
   );
-});
+};
 
-// EditShowDialog component
+// Edit Show Dialog
 function EditShowDialog({ show, open, onClose }: { show: Show; open: boolean; onClose: () => void }) {
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -716,7 +717,7 @@ function ShowPreviewDialog({ show, open, onClose }: { show: Show; open: boolean;
   );
 }
 
-// ShowList component with all Show management interactions
+// Show List component
 function ShowList() {
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -757,9 +758,9 @@ function ShowList() {
     {
       header: "",
       accessorKey: "emoji",
-      cell: (show: Show) => (
+      cell: (row: Show) => (
         <div className="flex items-center">
-          <span className="text-xl">{show.emoji || "🎭"}</span>
+          <span className="text-xl">{row.emoji || "🎭"}</span>
         </div>
       ),
     },
@@ -770,22 +771,22 @@ function ShowList() {
     {
       header: t('translation.common.date'),
       accessorKey: "date",
-      cell: (show: Show) => format(new Date(show.date), "PPP"),
+      cell: (row: Show) => format(new Date(row.date), "PPP"),
     },
     {
       header: t('translation.admin.totalSeats'),
       accessorKey: "id",
-      cell: (show: Show) => "32" // This would ideally be calculated based on the layout
+      cell: () => "32" // This would ideally be calculated from the layout
     },
     {
       header: t('translation.admin.actions'),
       accessorKey: "actions",
-      cell: (show: Show) => (
+      cell: (row: Show) => (
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setPreviewShow(show)}
+            onClick={() => setPreviewShow(row)}
             title={t('translation.admin.viewShow')}
           >
             <Eye className="h-4 w-4" />
@@ -793,7 +794,7 @@ function ShowList() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setEditingShow(show)}
+            onClick={() => setEditingShow(row)}
             title={t('translation.admin.editShow')}
           >
             <Edit className="h-4 w-4" />
@@ -802,7 +803,7 @@ function ShowList() {
             variant="ghost"
             size="icon"
             className="text-destructive hover:text-destructive"
-            onClick={() => setShowToDelete(show)}
+            onClick={() => setShowToDelete(row)}
             title={t('translation.admin.deleteShow')}
           >
             <Trash2 className="h-4 w-4" />

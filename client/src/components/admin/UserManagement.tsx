@@ -1,13 +1,13 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { useTranslation } from "react-i18next";
 import { User, insertUserSchema } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Trash2, Edit, UserPlus, Lock, Power } from "lucide-react";
-import { DataTable } from "./DataTable";
+import { Users, Key, UserPlus, UserCheck, UserX, ShieldCheck, ShieldX, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -15,6 +15,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -25,15 +33,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { DataTable } from "./DataTable";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,15 +45,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { UserAvatar } from "@/components/user-avatar";
 
-// Optimize with React.memo to prevent unnecessary re-renders
-const CreateUserDialog = React.memo(() => {
+const CreateUserDialog = () => {
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
   const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(insertUserSchema),
@@ -61,7 +58,6 @@ const CreateUserDialog = React.memo(() => {
       password: "",
       isAdmin: false,
       isEnabled: true,
-      seatLimit: 4,
     },
   });
 
@@ -96,25 +92,22 @@ const CreateUserDialog = React.memo(() => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          className="flex items-center gap-2"
-        >
+        <Button variant="outline" className="flex items-center gap-2">
           <UserPlus className="h-4 w-4" />
-          {t('translation.admin.createNewUser')}
+          {t('translation.admin.createUser')}
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('translation.admin.createNewUser')}</DialogTitle>
+          <DialogTitle>{t('translation.admin.addUser')}</DialogTitle>
           <DialogDescription>
-            {t('translation.admin.createNewUserDescription')}
+            {t('translation.admin.addUserDescription')}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => createUserMutation.mutate(data))}
-            className="space-y-4 pt-4"
+            className="space-y-4"
           >
             <FormField
               control={form.control}
@@ -123,15 +116,16 @@ const CreateUserDialog = React.memo(() => {
                 <FormItem>
                   <FormLabel>{t('translation.common.username')}</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder={t('translation.admin.enterUsername')}
-                      {...field} 
+                    <Input
+                      placeholder={t('translation.auth.usernamePlaceholder')}
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="password"
@@ -139,45 +133,26 @@ const CreateUserDialog = React.memo(() => {
                 <FormItem>
                   <FormLabel>{t('translation.common.password')}</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="password" 
-                      placeholder={t('translation.admin.enterPassword')}
-                      {...field} 
+                    <Input
+                      type="password"
+                      placeholder={t('translation.auth.passwordPlaceholder')}
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="seatLimit"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('translation.admin.seatLimit')}</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      min={1} 
-                      max={20} 
-                      {...field} 
-                      onChange={(e) => field.onChange(parseInt(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    {t('translation.admin.seatLimitDescription')}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
             <FormField
               control={form.control}
               name="isAdmin"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <FormLabel>{t('translation.admin.adminPrivileges')}</FormLabel>
+                    <FormLabel className="text-base">
+                      {t('translation.admin.adminPrivileges')}
+                    </FormLabel>
                     <FormDescription>
                       {t('translation.admin.adminPrivilegesDescription')}
                     </FormDescription>
@@ -191,6 +166,30 @@ const CreateUserDialog = React.memo(() => {
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="isEnabled"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">
+                      {t('translation.admin.enabledAccount')}
+                    </FormLabel>
+                    <FormDescription>
+                      {t('translation.admin.enabledAccountDescription')}
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
             <div className="flex justify-end gap-2 pt-4">
               <Button 
                 type="button" 
@@ -209,7 +208,7 @@ const CreateUserDialog = React.memo(() => {
                     {t('translation.common.creating')}
                   </div>
                 ) : (
-                  t('translation.common.create')
+                  t('translation.admin.createUser')
                 )}
               </Button>
             </div>
@@ -218,29 +217,24 @@ const CreateUserDialog = React.memo(() => {
       </DialogContent>
     </Dialog>
   );
-});
+};
 
-// EditUserDialog component
-function EditUserDialog({ user, open, onClose }: { user: User; open: boolean; onClose: () => void }) {
+const ResetPasswordDialog = ({ user, open, onClose }: { user: User; open: boolean; onClose: () => void }) => {
   const { toast } = useToast();
   const { t } = useTranslation();
   
   const form = useForm({
-    resolver: zodResolver(insertUserSchema.omit({ password: true })),
+    resolver: zodResolver(
+      insertUserSchema.pick({ password: true })
+    ),
     defaultValues: {
-      username: user.username,
-      isAdmin: user.isAdmin,
-      isEnabled: user.isEnabled,
-      seatLimit: user.seatLimit || 4,
+      password: "",
     },
   });
 
-  const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
-
-  const updateUserMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await fetch(`/api/users/${user.id}`, {
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (data: { password: string }) => {
+      const res = await fetch(`/api/users/${user.id}/password`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -249,35 +243,8 @@ function EditUserDialog({ user, open, onClose }: { user: User; open: boolean; on
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      form.reset();
       onClose();
-      toast({
-        title: "Success",
-        description: "User updated successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to update user",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const resetPasswordMutation = useMutation({
-    mutationFn: async () => {
-      const res = await fetch(`/api/users/${user.id}/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: newPassword }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      return res.json();
-    },
-    onSuccess: () => {
-      setResetPasswordOpen(false);
-      setNewPassword("");
       toast({
         title: "Success",
         description: "Password reset successfully",
@@ -293,197 +260,83 @@ function EditUserDialog({ user, open, onClose }: { user: User; open: boolean; on
   });
 
   return (
-    <>
-      <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('translation.admin.editUser')}</DialogTitle>
-            <DialogDescription>
-              {t('translation.admin.editUserDescription')}
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit((data) => updateUserMutation.mutate(data))}
-              className="space-y-4 pt-4"
-            >
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('translation.common.username')}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="seatLimit"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('translation.admin.seatLimit')}</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min={1} 
-                        max={20} 
-                        {...field} 
-                        onChange={(e) => field.onChange(parseInt(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="isAdmin"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                    <div className="space-y-0.5">
-                      <FormLabel>{t('translation.admin.adminPrivileges')}</FormLabel>
-                      <FormDescription>
-                        {t('translation.admin.adminPrivilegesDescription')}
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="isEnabled"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                    <div className="space-y-0.5">
-                      <FormLabel>{t('translation.admin.accountEnabled')}</FormLabel>
-                      <FormDescription>
-                        {t('translation.admin.accountEnabledDescription')}
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <div className="flex flex-col sm:flex-row justify-between gap-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex items-center gap-2"
-                  onClick={() => setResetPasswordOpen(true)}
-                >
-                  <Lock className="h-4 w-4" />
-                  {t('translation.admin.resetPassword')}
-                </Button>
-                <div className="flex gap-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={onClose}
-                  >
-                    {t('translation.common.cancel')}
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={updateUserMutation.isPending}
-                  >
-                    {updateUserMutation.isPending ? (
-                      <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                        {t('translation.common.updating')}
-                      </div>
-                    ) : (
-                      t('translation.common.save')
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t('translation.admin.resetPassword')}</DialogTitle>
+          <DialogDescription>
+            {t('translation.admin.resetPasswordFor')} {user.username}
+          </DialogDescription>
+        </DialogHeader>
 
-      <Dialog open={resetPasswordOpen} onOpenChange={setResetPasswordOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('translation.admin.resetUserPassword')}</DialogTitle>
-            <DialogDescription>
-              {t('translation.admin.resetUserPasswordFor')} <strong>{user.username}</strong>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div className="space-y-2">
-              <label htmlFor="newPassword" className="text-sm font-medium">
-                {t('translation.admin.newPassword')}
-              </label>
-              <Input
-                id="newPassword"
-                type="text"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder={t('translation.admin.enterNewPassword')}
-              />
-              <p className="text-sm text-muted-foreground">
-                {t('translation.admin.passwordSecurityNote')}
-              </p>
-            </div>
-            <div className="flex justify-end gap-2">
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit((data) => resetPasswordMutation.mutate(data))}
+            className="space-y-4"
+          >
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('translation.common.newPassword')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder={t('translation.auth.passwordPlaceholder')}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end gap-2 pt-4">
               <Button 
+                type="button" 
                 variant="outline" 
-                onClick={() => setResetPasswordOpen(false)}
+                onClick={onClose}
               >
                 {t('translation.common.cancel')}
               </Button>
               <Button 
-                variant="destructive"
-                disabled={!newPassword || resetPasswordMutation.isPending}
-                onClick={() => resetPasswordMutation.mutate()}
+                type="submit" 
+                disabled={resetPasswordMutation.isPending}
               >
                 {resetPasswordMutation.isPending ? (
                   <div className="flex items-center gap-2">
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    {t('translation.admin.resetting')}
+                    {t('translation.common.resetting')}
                   </div>
                 ) : (
                   t('translation.admin.resetPassword')
                 )}
               </Button>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
-}
+};
 
-// Main UserManagement component
 export function UserManagement() {
   const { toast } = useToast();
   const { t } = useTranslation();
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [resetPasswordUser, setResetPasswordUser] = useState<User | null>(null);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
-  const { data: users = [], isLoading } = useQuery<User[]>({
+  // Fetch users
+  const { data: users = [] } = useQuery<User[]>({
     queryKey: ["/api/users"],
   });
 
+  // Toggle user status (enabled/disabled)
   const toggleUserStatusMutation = useMutation({
     mutationFn: async ({ userId, isEnabled }: { userId: number; isEnabled: boolean }) => {
-      const res = await fetch(`/api/users/${userId}/toggle-status`, {
-        method: "POST",
+      const res = await fetch(`/api/users/${userId}/status`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isEnabled }),
       });
@@ -506,29 +359,53 @@ export function UserManagement() {
     },
   });
 
-  const toggleUserAdminMutation = useMutation({
+  // Toggle admin status
+  const toggleAdminStatusMutation = useMutation({
     mutationFn: async ({ userId, isAdmin }: { userId: number; isAdmin: boolean }) => {
-      const res = await fetch(`/api/users/${userId}/toggle-admin`, {
-        method: "POST",
+      const res = await fetch(`/api/users/${userId}/admin`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isAdmin }),
       });
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData<User[]>(["/api/users"], (oldUsers) => {
-        if (!oldUsers) return [data];
-        return oldUsers.map((user) => (user.id === data.id ? data : user));
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       toast({
         title: "Success",
-        description: "User admin status updated successfully",
+        description: "Admin status updated successfully",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to update user admin status",
+        title: "Failed to update admin status",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete user
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      const res = await fetch(`/api/users/${userId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      setUserToDelete(null);
+      toast({
+        title: "Success",
+        description: "User deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete user",
         description: error.message,
         variant: "destructive",
       });
@@ -537,116 +414,154 @@ export function UserManagement() {
 
   const columns = [
     {
-      header: t('translation.common.user'),
-      accessorKey: (user: User) => (
-        <div className="flex items-center gap-2">
-          <UserAvatar user={user} />
-          <div className="flex flex-col">
-            <span className="font-medium">{user.username}</span>
-            <div className="flex gap-1">
-              {user.isAdmin && (
-                <Badge variant="outline" className="bg-primary/10 text-xs">
-                  {t('translation.common.admin')}
-                </Badge>
-              )}
-              {!user.isEnabled && (
-                <Badge variant="outline" className="bg-destructive/10 text-xs text-destructive">
-                  {t('translation.admin.disabled')}
-                </Badge>
-              )}
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      header: t('translation.admin.seatLimit'),
-      accessorKey: (user: User) => user.seatLimit || 4,
+      header: t('translation.common.username'),
+      accessorKey: "username",
     },
     {
       header: t('translation.admin.status'),
-      accessorKey: (user: User) => (
-        <div className="flex items-center justify-end">
-          <Switch
-            checked={user.isEnabled}
-            onCheckedChange={(isEnabled) => {
-              toggleUserStatusMutation.mutate({ userId: user.id, isEnabled });
-            }}
-          />
-        </div>
+      accessorKey: "isEnabled",
+      cell: (row: User) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => toggleUserStatusMutation.mutate({
+            userId: row.id,
+            isEnabled: !row.isEnabled,
+          })}
+          className={row.isEnabled ? "text-green-500" : "text-red-500"}
+        >
+          {row.isEnabled ? (
+            <div className="flex items-center gap-2">
+              <UserCheck className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('translation.admin.enabled')}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <UserX className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('translation.admin.disabled')}</span>
+            </div>
+          )}
+        </Button>
+      ),
+    },
+    {
+      header: t('translation.admin.role'),
+      accessorKey: "isAdmin",
+      cell: (row: User) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => toggleAdminStatusMutation.mutate({
+            userId: row.id,
+            isAdmin: !row.isAdmin,
+          })}
+          className={row.isAdmin ? "text-blue-500" : "text-gray-500"}
+        >
+          {row.isAdmin ? (
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('translation.admin.adminUser')}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <ShieldX className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('translation.admin.regularUser')}</span>
+            </div>
+          )}
+        </Button>
       ),
     },
     {
       header: t('translation.admin.actions'),
-      accessorKey: (user: User) => (
-        <div className="flex items-center gap-2 justify-end">
+      accessorKey: "actions",
+      cell: (row: User) => (
+        <div className="flex items-center gap-2">
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
-            onClick={() => setEditingUser(user)}
-            title={t('translation.common.edit')}
+            onClick={() => setResetPasswordUser(row)}
+            title={t('translation.admin.resetPassword')}
           >
-            <Edit className="h-4 w-4" />
+            <Key className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
-            onClick={() => {
-              toggleUserAdminMutation.mutate({
-                userId: user.id,
-                isAdmin: !user.isAdmin,
-              });
-            }}
-            title={user.isAdmin ? t('translation.admin.removeAdmin') : t('translation.admin.makeAdmin')}
+            className="text-destructive hover:text-destructive"
+            onClick={() => setUserToDelete(row)}
+            title={t('translation.admin.deleteUser')}
           >
-            <Shield className={`h-4 w-4 ${user.isAdmin ? "text-primary" : "text-muted-foreground"}`} />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => {
-              toggleUserStatusMutation.mutate({
-                userId: user.id,
-                isEnabled: !user.isEnabled,
-              });
-            }}
-            title={user.isEnabled ? t('translation.admin.disableUser') : t('translation.admin.enableUser')}
-          >
-            <Power className={`h-4 w-4 ${!user.isEnabled ? "text-destructive" : "text-muted-foreground"}`} />
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       ),
     },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-32">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-current border-t-transparent" />
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="flex justify-end">
+    <Card className="w-full">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            {t('translation.admin.manageUsers')}
+          </CardTitle>
+          <CardDescription>
+            {t('translation.admin.manageUsersDescription')}
+          </CardDescription>
+        </div>
         <CreateUserDialog />
-      </div>
-      
-      <DataTable
-        data={users}
-        columns={columns}
-        searchable
-        searchKeys={["username"]}
-      />
-
-      {editingUser && (
-        <EditUserDialog
-          user={editingUser}
-          open={!!editingUser}
-          onClose={() => setEditingUser(null)}
+      </CardHeader>
+      <CardContent>
+        <DataTable
+          data={users}
+          columns={columns}
+          searchable
+          searchKeys={["username"]}
         />
-      )}
-    </div>
+
+        {/* Reset Password Dialog */}
+        {resetPasswordUser && (
+          <ResetPasswordDialog
+            user={resetPasswordUser}
+            open={!!resetPasswordUser}
+            onClose={() => setResetPasswordUser(null)}
+          />
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog 
+          open={!!userToDelete} 
+          onOpenChange={(isOpen) => !isOpen && setUserToDelete(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('translation.admin.confirmDelete')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t('translation.admin.deleteUserWarning')} 
+                <strong>{userToDelete?.username}</strong>?
+                {t('translation.admin.deleteUserWarningDetail')}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('translation.common.cancel')}</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => userToDelete && deleteUserMutation.mutate(userToDelete.id)}
+                className="bg-destructive hover:bg-destructive/90"
+              >
+                {deleteUserMutation.isPending ? (
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    {t('translation.common.deleting')}
+                  </div>
+                ) : (
+                  t('translation.common.delete')
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </CardContent>
+    </Card>
   );
 }
