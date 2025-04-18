@@ -44,15 +44,21 @@ export function Seat({
     <button
       className={cn(
         "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm",
-        // Only apply user reservation style if not in admin mode or if not selected
-        isUserReservation && (!isAdminMode || !isSelected) &&
+        // Apply selected style first
+        isSelected && "bg-primary border-primary text-primary-foreground",
+        
+        // In admin mode, only show user reservation style if the seat is not currently selected
+        isUserReservation && !isSelected && (isAdminMode ? false : true) &&
           "bg-blue-100 border-blue-300 text-blue-700",
+        
+        // Other reservations (not user's)
         isReserved &&
-          !isUserReservation &&
+          !isUserReservation && !isSelected &&
           "bg-red-100 border-red-200 text-red-500 cursor-not-allowed",
+          
+        // Blocked seats
         isBlocked &&
           "bg-yellow-100 border-yellow-200 text-yellow-500 cursor-not-allowed",
-        isSelected && "bg-primary border-primary text-primary-foreground",
         !isDisabled &&
           !isSelected &&
           "hover:bg-accent hover:border-accent hover:text-accent-foreground active:scale-95",
