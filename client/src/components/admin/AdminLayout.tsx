@@ -7,11 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface AdminLayoutProps {
   children: ReactNode;
-  activeTab: string;
-  onTabChange: (value: string) => void;
+  title: string;
 }
 
-export function AdminLayout({ children, activeTab, onTabChange }: AdminLayoutProps) {
+export function AdminLayout({ children, title }: AdminLayoutProps) {
   const [, setLocation] = useLocation();
   const { t } = useTranslation();
 
@@ -21,7 +20,7 @@ export function AdminLayout({ children, activeTab, onTabChange }: AdminLayoutPro
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between h-auto sm:h-16 py-4 sm:py-0 px-4 sm:px-8">
           <div className="flex items-center gap-2 mb-4 sm:mb-0">
             <Shield className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">{t('translation.common.appName')} {t('translation.common.admin')}</h1>
+            <h1 className="text-2xl font-bold">{title}</h1>
           </div>
           <div className="flex items-center gap-4">
             <Button
