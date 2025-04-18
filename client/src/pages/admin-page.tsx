@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { ReusableSeatGrid } from "@/components/reusable-seat-grid";
 import {
   Card,
   CardContent,
@@ -121,12 +120,14 @@ function Seat({
   isReserved,
   isBlocked,
   isSelected,
+  isUserReservation,
   onSelect,
 }: {
   seatId: string;
   isReserved: boolean;
   isBlocked: boolean;
   isSelected: boolean;
+  isUserReservation?: boolean;
   onSelect: (seatId: string) => void;
 }) {
   // Extract just the seat number from the end of the seatId
@@ -136,7 +137,10 @@ function Seat({
     <button
       className={cn(
         "w-6 h-6 rounded border-2 text-xs font-medium transition-colors shadow-sm",
+        isUserReservation &&
+          "bg-blue-100 border-blue-300 text-blue-700 cursor-not-allowed",
         isReserved &&
+          !isUserReservation &&
           "bg-red-100 border-red-200 text-red-500 cursor-not-allowed",
         isBlocked &&
           "bg-yellow-100 border-yellow-200 text-yellow-500 cursor-not-allowed",
@@ -148,6 +152,7 @@ function Seat({
       )}
       disabled={isReserved || isBlocked}
       onClick={() => onSelect(seatId)}
+      title={isUserReservation ? "Your reservation" : ""}
     >
       {seatNumber}
     </button>
@@ -2209,18 +2214,267 @@ function EditReservationDialog({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-6 pt-0">
-          {/* Use our new reusable seat grid component */}
-          <ReusableSeatGrid
-            show={currentShow}
-            showReservations={showReservations.filter(r => r.id !== reservation.id)}
-            userReservations={[reservation]} // Just pass the current reservation as a user reservation
-            selectedSeats={selectedSeats}
-            onSeatSelect={handleSeatSelect}
-            hideHeader={true}
-            hideActionButtons={true}
-            isAdminMode={true}
-            currentUserId={reservation.userId}
-          />
+          <div className="space-y-4">
+            {/* Add the original seat grid layout */}
+            <div>
+              <h3 className="font-medium mb-2">Balcony <span className="text-sm text-muted-foreground">(Prefix: B)</span></h3>
+              <div className="bg-muted/30 p-4 rounded-lg shadow-inner overflow-x-auto">
+                <div className="w-full flex items-center justify-center text-sm text-muted-foreground mb-4">
+                  UPSTAIRS BALCONY
+                </div>
+                <div className="space-y-2">
+                  {["P", "O"].map((row) => (
+                    <div key={row} className="flex items-center justify-center gap-2">
+                      <span className="w-6 text-center">{row}</span>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5, 6, 7, 9].map((num) => {
+                          const seatId = `B${row}${num}`;
+                          const isSpecialBlocked = row === "O" && [4, 8, 12].includes(num);
+                          
+                          // Check if this seat is in the current reservation being edited
+                          const isUserReservation = (() => {
+                            try {
+                              const currentReservationSeats = typeof reservation.seatNumbers === 'string'
+                                ? (reservation.seatNumbers.startsWith('[')
+                                    ? JSON.parse(reservation.seatNumbers)
+                                    : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                : Array.isArray(reservation.seatNumbers)
+                                    ? reservation.seatNumbers
+                                    : [];
+                              return Array.isArray(currentReservationSeats) && currentReservationSeats.includes(seatId);
+                            } catch (e) {
+                              console.error("Error parsing user reservation seats:", e);
+                              return false;
+                            }
+                          })();
+                          
+                          return (
+                            <Seat
+                              key={seatId}
+                              seatId={seatId}
+                              isReserved={showReservations
+                                .filter(r => r.id !== reservation.id)
+                                .some(r => {
+                                  try {
+                                    const seats = typeof r.seatNumbers === 'string' 
+                                      ? (r.seatNumbers.startsWith('[') 
+                                          ? JSON.parse(r.seatNumbers) 
+                                          : r.seatNumbers.split(',').map(s => s.trim()))
+                                      : Array.isArray(r.seatNumbers) 
+                                          ? r.seatNumbers 
+                                          : [];
+                                    return Array.isArray(seats) && seats.includes(seatId);
+                                  } catch (e) {
+                                    console.error("Error parsing seat numbers:", e);
+                                    return false;
+                                  }
+                                })}
+                              isBlocked={(() => {
+                                // Check if this seat is blocked in the show settings
+                                try {
+                                  const blockedSeats = Array.isArray(currentShow.blockedSeats)
+                                    ? currentShow.blockedSeats
+                                    : (typeof currentShow.blockedSeats === 'string'
+                                        ? (currentShow.blockedSeats.startsWith('[') 
+                                            ? JSON.parse(currentShow.blockedSeats)
+                                            : currentShow.blockedSeats.split(',').map(s => s.trim()))
+                                        : []);
+                                  return (Array.isArray(blockedSeats) && blockedSeats.includes(seatId)) || isSpecialBlocked;
+                                } catch (e) {
+                                  console.error("Error parsing blocked seats:", e);
+                                  return false;
+                                }
+                              })()}
+                              isSelected={selectedSeats.includes(seatId)}
+                              isUserReservation={isUserReservation}
+                              onSelect={handleSeatSelect}
+                            />
+                          );
+                        })}
+                      </div>
+                      <span className="w-6 text-center">{row}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="font-medium mb-2">Back <span className="text-sm text-muted-foreground">(Prefix: R)</span></h3>
+              <div className="bg-muted/30 p-4 rounded-lg shadow-inner overflow-x-auto">
+                <div className="space-y-2">
+                  {["N", "M", "L", "K", "J", "I", "H", "G"].map((row) => (
+                    <div key={row} className="flex items-center justify-center gap-2">
+                      <span className="w-6 text-center">{row}</span>
+                      <div className="flex gap-1">
+                        {row === "N" 
+                          ? [...Array.from({length: 4}, (_, i) => i + 1), ...Array.from({length: 8}, (_, i) => i + 9)].map((num) => {
+                              const seatId = `R${row}${num}`;
+                              const isSpecialBlocked = row === "N" && num >= 5 && num <= 8;
+                              return (
+                                <Seat
+                                  key={seatId}
+                                  seatId={seatId}
+                                  isReserved={showReservations
+                                    .filter(r => r.id !== reservation.id)
+                                    .some(r => {
+                                      try {
+                                        const seats = typeof r.seatNumbers === 'string' 
+                                          ? (r.seatNumbers.startsWith('[') 
+                                              ? JSON.parse(r.seatNumbers) 
+                                              : r.seatNumbers.split(',').map(s => s.trim()))
+                                          : Array.isArray(r.seatNumbers) 
+                                              ? r.seatNumbers 
+                                              : [];
+                                        return Array.isArray(seats) && seats.includes(seatId);
+                                      } catch (e) {
+                                        console.error("Error parsing seat numbers:", e);
+                                        return false;
+                                      }
+                                    })}
+                                  isBlocked={(() => {
+                                    // Check if this seat is blocked in the show settings
+                                    try {
+                                      const blockedSeats = Array.isArray(currentShow.blockedSeats)
+                                        ? currentShow.blockedSeats
+                                        : (typeof currentShow.blockedSeats === 'string'
+                                            ? (currentShow.blockedSeats.startsWith('[') 
+                                                ? JSON.parse(currentShow.blockedSeats)
+                                                : currentShow.blockedSeats.split(',').map(s => s.trim()))
+                                            : []);
+                                      return (Array.isArray(blockedSeats) && blockedSeats.includes(seatId)) || isSpecialBlocked;
+                                    } catch (e) {
+                                      console.error("Error parsing blocked seats:", e);
+                                      return false;
+                                    }
+                                  })()}
+                                  isSelected={selectedSeats.includes(seatId)}
+                                  onSelect={handleSeatSelect}
+                                />
+                              );
+                            })
+                          : Array.from({length: 16}, (_, i) => i + 1).map((num) => {
+                              const seatId = `R${row}${num}`;
+                              return (
+                                <Seat
+                                  key={seatId}
+                                  seatId={seatId}
+                                  isReserved={showReservations
+                                    .filter(r => r.id !== reservation.id)
+                                    .some(r => {
+                                      try {
+                                        const seats = typeof r.seatNumbers === 'string' 
+                                          ? (r.seatNumbers.startsWith('[') 
+                                              ? JSON.parse(r.seatNumbers) 
+                                              : r.seatNumbers.split(',').map(s => s.trim()))
+                                          : Array.isArray(r.seatNumbers) 
+                                              ? r.seatNumbers 
+                                              : [];
+                                        return Array.isArray(seats) && seats.includes(seatId);
+                                      } catch (e) {
+                                        console.error("Error parsing seat numbers:", e);
+                                        return false;
+                                      }
+                                    })}
+                                  isBlocked={(() => {
+                                    // Check if this seat is blocked in the show settings
+                                    try {
+                                      const blockedSeats = Array.isArray(currentShow.blockedSeats)
+                                        ? currentShow.blockedSeats
+                                        : (typeof currentShow.blockedSeats === 'string'
+                                            ? (currentShow.blockedSeats.startsWith('[') 
+                                                ? JSON.parse(currentShow.blockedSeats)
+                                                : currentShow.blockedSeats.split(',').map(s => s.trim()))
+                                            : []);
+                                      return (Array.isArray(blockedSeats) && blockedSeats.includes(seatId));
+                                    } catch (e) {
+                                      console.error("Error parsing blocked seats:", e);
+                                      return false;
+                                    }
+                                  })()}
+                                  isSelected={selectedSeats.includes(seatId)}
+                                  onSelect={handleSeatSelect}
+                                />
+                              );
+                            })
+                        }
+                      </div>
+                      <span className="w-6 text-center">{row}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="font-medium mb-2">Front <span className="text-sm text-muted-foreground">(Prefix: F)</span></h3>
+              <div className="bg-muted/30 p-4 rounded-lg shadow-inner overflow-x-auto">
+                <div className="space-y-2">
+                  {["F", "E", "D", "C", "B", "A"].map((row) => (
+                    <div key={row} className="flex items-center justify-center gap-2">
+                      <span className="w-6 text-center">{row}</span>
+                      <div className="flex gap-1">
+                        {Array.from({length: 18}, (_, i) => i + 1).map((num) => {
+                          const seatId = `F${row}${num}`;
+                          return (
+                            <Seat
+                              key={seatId}
+                              seatId={seatId}
+                              isReserved={showReservations
+                                .filter(r => r.id !== reservation.id)
+                                .some(r => {
+                                  try {
+                                    const seats = typeof r.seatNumbers === 'string' 
+                                      ? (r.seatNumbers.startsWith('[') 
+                                          ? JSON.parse(r.seatNumbers) 
+                                          : r.seatNumbers.split(',').map(s => s.trim()))
+                                      : Array.isArray(r.seatNumbers) 
+                                          ? r.seatNumbers 
+                                          : [];
+                                    return Array.isArray(seats) && seats.includes(seatId);
+                                  } catch (e) {
+                                    console.error("Error parsing seat numbers:", e);
+                                    return false;
+                                  }
+                                })}
+                              isBlocked={(() => {
+                                // Check if this seat is blocked in the show settings
+                                try {
+                                  const blockedSeats = Array.isArray(currentShow.blockedSeats)
+                                    ? currentShow.blockedSeats
+                                    : (typeof currentShow.blockedSeats === 'string'
+                                        ? (currentShow.blockedSeats.startsWith('[') 
+                                            ? JSON.parse(currentShow.blockedSeats)
+                                            : currentShow.blockedSeats.split(',').map(s => s.trim()))
+                                        : []);
+                                  return (Array.isArray(blockedSeats) && blockedSeats.includes(seatId));
+                                } catch (e) {
+                                  console.error("Error parsing blocked seats:", e);
+                                  return false;
+                                }
+                              })()}
+                              isSelected={selectedSeats.includes(seatId)}
+                              onSelect={handleSeatSelect}
+                            />
+                          );
+                        })}
+                      </div>
+                      <span className="w-6 text-center">{row}</span>
+                    </div>
+                  ))}
+                  
+                  {/* Add screen at the bottom */}
+                  <div className="mt-8 flex justify-center items-center">
+                    <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
+                    <div className="px-4 py-1 border-2 border-primary/50 rounded text-sm font-bold mx-2">
+                      SCREEN
+                    </div>
+                    <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="border-t p-6">
