@@ -1,12 +1,9 @@
 import { ReactNode } from "react";
 import { useLocation } from "wouter";
-import { Shield } from "lucide-react";
+import { Shield, CalendarPlus, Users, Ticket } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShowManagement } from "./ShowManagement";
-import { UserManagement } from "./UserManagement";
-import { ReservationManagement } from "./ReservationManagement";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -65,27 +62,30 @@ export function AdminTabs({
       <div className="flex items-center justify-between">
         <TabsList className="grid w-full sm:w-auto grid-cols-3 sm:grid-cols-none sm:flex gap-2">
           <TabsTrigger value="shows" className="flex items-center gap-2">
+            <CalendarPlus className="h-4 w-4" />
             <span className="hidden sm:inline">{t('translation.show.showDetails')}</span>
           </TabsTrigger>
           <TabsTrigger value="users" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
             <span className="hidden sm:inline">{t('translation.admin.manageUsers')}</span>
           </TabsTrigger>
           <TabsTrigger value="reservations" className="flex items-center gap-2">
+            <Ticket className="h-4 w-4" />
             <span className="hidden sm:inline">{t('translation.admin.manageReservations')}</span>
           </TabsTrigger>
         </TabsList>
       </div>
 
       <TabsContent value="shows" className="space-y-4">
-        <ShowManagement />
+        {children}
       </TabsContent>
 
       <TabsContent value="users">
-        <UserManagement />
+        {children}
       </TabsContent>
 
       <TabsContent value="reservations">
-        <ReservationManagement />
+        {children}
       </TabsContent>
     </Tabs>
   );

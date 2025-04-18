@@ -176,7 +176,8 @@ const ReservationList = React.memo(() => {
   const columns = [
     {
       header: t('translation.common.user'),
-      accessorKey: (reservation: ReservationWithUser) => (
+      accessorKey: 'userId',
+      cell: (reservation: ReservationWithUser) => (
         <div className="flex items-center gap-2">
           <UserAvatar user={reservation.user} />
           <span>{reservation.user?.username}</span>
@@ -185,7 +186,8 @@ const ReservationList = React.memo(() => {
     },
     {
       header: t('translation.common.show'),
-      accessorKey: (reservation: ReservationWithUser) => (
+      accessorKey: 'showId',
+      cell: (reservation: ReservationWithUser) => (
         <div className="flex items-center gap-1">
           <span>{reservation.show?.emoji || "🎭"}</span>
           <span>{reservation.show?.title}</span>
@@ -194,16 +196,19 @@ const ReservationList = React.memo(() => {
     },
     {
       header: t('translation.common.date'),
-      accessorKey: (reservation: ReservationWithUser) => 
+      accessorKey: 'showId',
+      cell: (reservation: ReservationWithUser) => 
         reservation.show ? format(new Date(reservation.show.date), "PPP") : "-",
     },
     {
       header: t('translation.admin.seats'),
-      accessorKey: (reservation: ReservationWithUser) => formatSeats(reservation.seatNumbers),
+      accessorKey: 'seatNumbers',
+      cell: (reservation: ReservationWithUser) => formatSeats(reservation.seatNumbers),
     },
     {
       header: t('translation.admin.actions'),
-      accessorKey: (reservation: ReservationWithUser) => (
+      accessorKey: 'id',
+      cell: (reservation: ReservationWithUser) => (
         <div className="flex items-center gap-2 justify-end">
           <Button
             variant="outline"
@@ -250,7 +255,7 @@ const ReservationList = React.memo(() => {
         data={combinedReservations}
         columns={columns}
         searchable
-        searchKeys={["user?.username", "show?.title"]}
+        searchKeys={["userId", "showId"]}
       />
 
       {/* Preview Dialog */}

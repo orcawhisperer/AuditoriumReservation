@@ -25,33 +25,27 @@ export default function AdminPageNew() {
     );
   }
 
+  // Render the appropriate content based on the active tab
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "shows":
+        return <ShowManagement />;
+      case "users":
+        return <UserManagement />;
+      case "reservations":
+        return <ReservationManagement />;
+      default:
+        return <ShowManagement />;
+    }
+  };
+
   return (
     <AdminLayout activeTab={activeTab} onTabChange={setActiveTab}>
       <AdminTabs
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        showsTab={
-          <div className="flex items-center gap-2">
-            <CalendarPlus className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('translation.show.showDetails')}</span>
-          </div>
-        }
-        usersTab={
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('translation.admin.manageUsers')}</span>
-          </div>
-        }
-        reservationsTab={
-          <div className="flex items-center gap-2">
-            <Ticket className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('translation.admin.manageReservations')}</span>
-          </div>
-        }
       >
-        <ShowManagement />
-        <UserManagement />
-        <ReservationManagement />
+        {renderTabContent()}
       </AdminTabs>
     </AdminLayout>
   );
