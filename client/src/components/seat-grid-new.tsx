@@ -31,7 +31,7 @@ export function Seat({
   isUserReservation,
   onSelect,
   isAdminMode = false
-}: SeatProps & { isAdminMode?: boolean }) {
+}: SeatProps) {
   // Extract just the seat number from the end of the seatId (remove section prefix and row)
   const seatNumber = seatId.match(/\d+$/)?.[0] || seatId;
   
@@ -311,6 +311,23 @@ export function SeatGrid({
   // Use user reservations or provided reservation in admin mode
   const reservationsToUse = isAdminMode && propUserReservation ? [propUserReservation] : userReservations;
   
+  // Helper function to render a seat consistently throughout the component
+  const renderSeat = (seatId: string, isUserRes: boolean) => {
+    return (
+      <Seat
+        key={seatId}
+        seatId={seatId}
+        isReserved={reservedSeats.has(seatId)}
+        isBlocked={blockedSeats.has(seatId)}
+        isSelected={selectedSeats.includes(seatId)}
+        isUserReservation={isUserRes}
+        onSelect={handleSeatSelect}
+                                  isAdminMode={isAdminMode}
+        isAdminMode={isAdminMode}
+      />
+    );
+  };
+  
   // Helper function to check if a seat is part of user reservation
   const checkIfUserReservation = (seatId: string) => {
     // Admin mode with specific reservation
@@ -485,6 +502,7 @@ export function SeatGrid({
                                   isSelected={selectedSeats.includes(seatId)}
                                   isUserReservation={isUserReservation}
                                   onSelect={handleSeatSelect}
+                                  isAdminMode={isAdminMode}
                                 />
                               );
                             })}
@@ -540,6 +558,7 @@ export function SeatGrid({
                                   isSelected={selectedSeats.includes(seatId)}
                                   isUserReservation={isUserReservation}
                                   onSelect={handleSeatSelect}
+                                  isAdminMode={isAdminMode}
                                 />
                               );
                             })}
@@ -605,6 +624,7 @@ export function SeatGrid({
                                       )}
                                       isUserReservation={isUserReservation}
                                       onSelect={handleSeatSelect}
+                                  isAdminMode={isAdminMode}
                                     />
                                   );
                                 })}
@@ -667,6 +687,7 @@ export function SeatGrid({
                                       )}
                                       isUserReservation={isUserReservation}
                                       onSelect={handleSeatSelect}
+                                  isAdminMode={isAdminMode}
                                     />
                                   );
                                 })}
@@ -727,6 +748,7 @@ export function SeatGrid({
                                       )}
                                       isUserReservation={isUserReservation}
                                       onSelect={handleSeatSelect}
+                                  isAdminMode={isAdminMode}
                                     />
                                   );
                                 })}
@@ -786,6 +808,7 @@ export function SeatGrid({
                                       )}
                                       isUserReservation={isUserReservation}
                                       onSelect={handleSeatSelect}
+                                  isAdminMode={isAdminMode}
                                     />
                                   );
                                 })}
@@ -846,6 +869,7 @@ export function SeatGrid({
                                       )}
                                       isUserReservation={isUserReservation}
                                       onSelect={handleSeatSelect}
+                                  isAdminMode={isAdminMode}
                                     />
                                   );
                                 })}
@@ -906,6 +930,7 @@ export function SeatGrid({
                                       )}
                                       isUserReservation={isUserReservation}
                                       onSelect={handleSeatSelect}
+                                  isAdminMode={isAdminMode}
                                     />
                                   );
                                 })}
@@ -966,6 +991,7 @@ export function SeatGrid({
                                       )}
                                       isUserReservation={isUserReservation}
                                       onSelect={handleSeatSelect}
+                                  isAdminMode={isAdminMode}
                                     />
                                   );
                                 })}
@@ -1025,6 +1051,7 @@ export function SeatGrid({
                                   isSelected={selectedSeats.includes(seatId)}
                                   isUserReservation={isUserReservation}
                                   onSelect={handleSeatSelect}
+                                  isAdminMode={isAdminMode}
                                 />
                               );
                             })}
@@ -1087,6 +1114,7 @@ export function SeatGrid({
                                   isSelected={selectedSeats.includes(seatId)}
                                   isUserReservation={isUserReservation}
                                   onSelect={handleSeatSelect}
+                                  isAdminMode={isAdminMode}
                                 />
                               );
                             })}
@@ -1149,6 +1177,7 @@ export function SeatGrid({
                                   isSelected={selectedSeats.includes(seatId)}
                                   isUserReservation={isUserReservation}
                                   onSelect={handleSeatSelect}
+                                  isAdminMode={isAdminMode}
                                 />
                               );
                             })}
