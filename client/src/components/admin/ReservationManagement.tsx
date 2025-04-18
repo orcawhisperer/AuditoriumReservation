@@ -39,6 +39,162 @@ interface ReservationWithDetails extends Reservation {
   user?: User;
 }
 
+function EditReservationDialog({ 
+  reservation, 
+  open, 
+  onClose 
+}: { 
+  reservation: ReservationWithDetails; 
+  open: boolean; 
+  onClose: () => void 
+}) {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const [selectedSeats, setSelectedSeats] = useState<string[]>([reservation.seatNumbers]);
+  
+  // For tracking initial seats to compare changes
+  const initialSeats = reservation.seatNumbers;
+  
+  const handleSeatSelect = (seatId: string) => {
+    // In admin mode, we replace the existing selection with the new selection
+    setSelectedSeats([seatId]);
+  };
+  
+  const editReservationMutation = useMutation({
+    mutationFn: async ({id, seatNumbers}: {id: number, seatNumbers: string}) => {
+      const res = await fetch(`/api/reservations/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ seatNumbers }),
+      });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || "Failed to update reservation");
+      }
+      
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/reservations"] });
+      toast({
+        title: t('translation.admin.reservationUpdated'),
+        description: t('translation.admin.reservationUpdatedDescription'),
+      });
+      onClose();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: t('translation.admin.failedToUpdateReservation'),
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const handleSave = () => {
+    if (!selectedSeats.length) {
+      toast({
+        title: t('translation.admin.noSeatsSelected'),
+        description: t('translation.admin.selectAtLeastOneSeat'),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (selectedSeats[0] === initialSeats) {
+      toast({
+        title: t('translation.admin.noChanges'),
+        description: t('translation.admin.selectDifferentSeats'),
+      });
+      return;
+    }
+    
+    editReservationMutation.mutate({
+      id: reservation.id,
+      seatNumbers: selectedSeats[0]
+    });
+  };
+  
+  if (!reservation.show) {
+    return null;
+  }
+  
+  return (
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Pencil className="h-5 w-5" />
+            {t('translation.admin.editReservation')}
+          </DialogTitle>
+          <DialogDescription>
+            {t('translation.admin.editReservationDescription')}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="space-y-1">
+              <div className="text-sm font-medium">{t('translation.common.show')}</div>
+              <div className="flex items-center gap-2">
+                <span className="text-xl">{reservation.show.emoji || "🎭"}</span>
+                <span className="font-medium">{reservation.show.title}</span>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {format(new Date(reservation.show.date), "PPP p")}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-sm font-medium">{t('translation.common.user')}</div>
+              <div className="font-medium">
+                {reservation.user?.username || t('translation.common.unknown')}
+              </div>
+              <div className="text-sm">
+                {t('translation.admin.currentSeat')}: 
+                <span className="font-semibold ml-1">{formatSeatNumbers(reservation.seatNumbers)}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="rounded-md border p-4">
+            <h3 className="font-medium mb-2">{t('translation.admin.seatLayout')}</h3>
+            <div className="text-sm text-muted-foreground mb-2">
+              {t('translation.admin.selectNewSeatDescription')}
+            </div>
+            <SeatGrid
+              showId={reservation.showId?.toString() || ""}
+              selectedSeats={selectedSeats}
+              onSeatSelect={handleSeatSelect}
+              userReservation={reservation}
+              isAdminMode={true}
+              className="max-h-[300px] overflow-y-auto"
+            />
+          </div>
+          
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={onClose}>
+              {t('translation.common.cancel')}
+            </Button>
+            <Button 
+              onClick={handleSave}
+              disabled={editReservationMutation.isPending || !selectedSeats.length || selectedSeats[0] === initialSeats}
+            >
+              {editReservationMutation.isPending ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  {t('translation.common.saving')}
+                </div>
+              ) : (
+                t('translation.common.save')
+              )}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function ReservationDetailsDialog({ 
   reservation, 
   open, 
@@ -326,6 +482,15 @@ export function ReservationManagement() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        
+        {/* Edit Reservation Dialog */}
+        {reservationToEdit && (
+          <EditReservationDialog
+            reservation={reservationToEdit}
+            open={!!reservationToEdit}
+            onClose={() => setReservationToEdit(null)}
+          />
+        )}
       </CardContent>
     </Card>
   );

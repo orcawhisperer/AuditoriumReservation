@@ -26,36 +26,33 @@ export function DataPagination<T>({
   onCurrentPageChange,
 }: DataPaginationProps<T>) {
   const { t } = useTranslation();
-  const [currentPage, setCurrentPage] = useState(externalCurrentPage || 1);
+  const [internalCurrentPage, setInternalCurrentPage] = useState(externalCurrentPage || 1);
+  
+  // Use the correct current page value
+  const currentPage = externalCurrentPage !== undefined ? externalCurrentPage : internalCurrentPage;
   
   // Calculate total pages
   const totalPages = Math.ceil(data.length / itemsPerPage);
   
-  // Update external current page if provided
-  useEffect(() => {
-    if (externalCurrentPage !== undefined && externalCurrentPage !== currentPage) {
-      setCurrentPage(externalCurrentPage);
-    }
-  }, [externalCurrentPage]);
-  
   // Get current items
   useEffect(() => {
+    if (!onPageChange) return;
+    
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+    const slicedItems = data.slice(indexOfFirstItem, indexOfLastItem);
     
-    if (onPageChange) {
-      onPageChange(currentItems);
-    }
+    onPageChange(slicedItems);
   }, [data, currentPage, itemsPerPage, onPageChange]);
   
   // Handle page change
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
     
-    setCurrentPage(page);
     if (onCurrentPageChange) {
       onCurrentPageChange(page);
+    } else {
+      setInternalCurrentPage(page);
     }
   };
   
@@ -63,8 +60,8 @@ export function DataPagination<T>({
   if (totalPages <= 1) return null;
   
   // Generate page numbers for display
-  const getPageNumbers = () => {
-    const pageNumbers = [];
+  const pageNumbers = (() => {
+    const numbers = [];
     const maxPageButtons = 5; // Max number of page buttons to show
     
     let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
@@ -77,11 +74,11 @@ export function DataPagination<T>({
     
     // Add page numbers
     for (let i = startPage; i <= endPage; i++) {
-      pageNumbers.push(i);
+      numbers.push(i);
     }
     
-    return pageNumbers;
-  };
+    return numbers;
+  })();
   
   return (
     <div className="flex items-center justify-between py-4">
@@ -93,11 +90,9 @@ export function DataPagination<T>({
         <Select
           value={itemsPerPage.toString()}
           onValueChange={(value) => {
-            const newItemsPerPage = parseInt(value, 10);
-            const newTotalPages = Math.ceil(data.length / newItemsPerPage);
-            const newCurrentPage = Math.min(currentPage, newTotalPages);
-            
-            handlePageChange(newCurrentPage);
+            // This only changes items per page, not the current page
+            // The parent component should handle changing itemsPerPage
+            console.log(`Items per page changed to ${value}`);
           }}
         >
           <SelectTrigger className="h-8 w-[70px]">
@@ -122,7 +117,7 @@ export function DataPagination<T>({
           <ChevronLeft className="h-4 w-4" />
         </Button>
         
-        {getPageNumbers().map((page) => (
+        {pageNumbers.map((page) => (
           <Button
             key={page}
             variant={page === currentPage ? "default" : "outline"}
