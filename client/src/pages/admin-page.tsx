@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { ReusableSeatGrid } from "@/components/reusable-seat-grid";
 import {
   Card,
   CardContent,
@@ -2187,9 +2188,6 @@ function EditReservationDialog({
   };
 
   if (!currentShow) return null;
-  
-  // Import our new reusable seat grid component
-  const { ReusableSeatGrid } = require("@/components/reusable-seat-grid");
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -2204,119 +2202,25 @@ function EditReservationDialog({
               {reservationUser?.username || "Unknown"}
               <span className="ml-4 font-medium">Seat Limit:</span>{" "}
               {currentAdmin?.isAdmin ? "Unlimited (Admin)" : userSeatLimit}
+              <span className="ml-4 font-medium">Selected Seats:</span>{" "}
+              {selectedSeats.join(", ")}
             </div>
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-6 pt-0">
-          <div className="space-y-4">
-            {layout.map((section: any) => (
-              <div key={section.section} className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  {section.section}
-                  <span className="text-sm text-muted-foreground font-normal">
-                    {section.section === "Balcony"
-                      ? "(Prefix: B)"
-                      : "(Prefix: D)"}
-                  </span>
-                </h3>
-                <div className="w-full bg-muted/30 p-4 sm:p-8 rounded-lg shadow-inner overflow-x-auto">
-                  <div className="space-y-3 min-w-fit">
-                    {section.section === "Balcony" && (
-                      <div className="flex justify-center mb-4">
-                        <div className="text-sm text-muted-foreground">
-                          UPSTAIRS BALCONY
-                        </div>
-                      </div>
-                    )}
-
-                    {section.rows.map((rowData: any) => (
-                      <div
-                        key={rowData.row}
-                        className="flex gap-3 justify-center"
-                      >
-                        {/* Exit on left for specific rows */}
-                        {section.section === "Downstairs" && rowData.row === "G" ? (
-                          <Exit position="left" />
-                        ) : section.section === "Balcony" && rowData.row === "A" ? (
-                          <Exit position="left" />
-                        ) : (
-                          /* For all other rows, add a placeholder for alignment */
-                          <div className="w-[62px]"></div>
-                        )}
-
-                        <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
-                          {rowData.row}
-                        </span>
-
-                        <div className="flex gap-2 sm:gap-3">
-                          {Array.from({
-                            length: Math.max(...rowData.seats),
-                          }).map((_, seatIndex) => {
-                            const seatNumber = seatIndex + 1;
-                            const prefix =
-                              section.section === "Balcony" ? "B" : "D";
-                            const seatId = `${prefix}${rowData.row}${seatNumber}`;
-
-                            if (!rowData.seats.includes(seatNumber)) {
-                              return (
-                                <div key={seatId} className="w-6" > 
-                                
-                                </div>
-                              );
-                            }
-
-                            return (
-                              <Seat
-                                key={seatId}
-                                seatId={seatId}
-                                isReserved={reservedSeats.has(seatId)}
-                                isBlocked={blockedSeats.has(seatId)}
-                                isSelected={selectedSeats.includes(seatId)}
-                                onSelect={handleSeatSelect}
-                              />
-                            );
-                          })}
-                        </div>
-
-                        <span className="w-6 flex items-center justify-center text-sm text-muted-foreground">
-                          {rowData.row}
-                        </span>
-
-                        {/* Exit on right for row G in Downstairs */}
-                        {section.section === "Downstairs" &&
-                          rowData.row === "G" ? (
-                          <Exit position="right" />
-                        ) : (
-                          /* For all other rows, add a placeholder for alignment */
-                          <div className="w-[62px]"></div>
-                        )}
-                      </div>
-                    ))}
-
-                    {/* Bottom exits for Downstairs section */}
-                    {section.section === "Downstairs" && (
-                      <div className="flex justify-between mt-4">
-                        <Exit position="left" />
-                        <div className="flex-grow"></div>
-                        <Exit position="right" />
-                      </div>
-                    )}
-
-                    {section.section === "Downstairs" && (
-                      <div className="mt-8 flex justify-center items-center">
-                        <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
-                        <div className="px-4 py-1 border-2 border-primary/50 rounded text-sm font-bold mx-2">
-                          SCREEN
-                        </div>
-                        <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          {/* Use our new reusable seat grid component */}
+          <ReusableSeatGrid
+            show={currentShow}
+            showReservations={showReservations.filter(r => r.id !== reservation.id)}
+            userReservations={[reservation]} // Just pass the current reservation as a user reservation
+            selectedSeats={selectedSeats}
+            onSeatSelect={handleSeatSelect}
+            hideHeader={true}
+            hideActionButtons={true}
+            isAdminMode={true}
+            currentUserId={reservation.userId}
+          />
         </div>
 
         <div className="border-t p-6">
@@ -2335,6 +2239,10 @@ function EditReservationDialog({
                 <span>Reserved</span>
               </div>
               <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-blue-100 border-2 border-blue-300" />
+                <span>Your Reservation</span>
+              </div>
+              <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded bg-yellow-100 border-2 border-yellow-200" />
                 <span>Blocked</span>
               </div>
@@ -2346,31 +2254,29 @@ function EditReservationDialog({
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <div className="text-sm text-muted-foreground">
-                Selected: {selectedSeats.join(", ")}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClose}
-                  className="flex-1 sm:flex-none"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="default"
-                  onClick={() => setShowConfirm(true)}
-                  disabled={
-                    editReservationMutation.isPending ||
-                    selectedSeats.length === 0
-                  }
-                  className="flex-1 sm:flex-none"
-                >
-                  Update Reservation
-                </Button>
-              </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                className="flex-1 sm:flex-none"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => setShowConfirm(true)}
+                disabled={
+                  editReservationMutation.isPending ||
+                  selectedSeats.length === 0
+                }
+                className="flex-1 sm:flex-none"
+              >
+                {editReservationMutation.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                )}
+                Update Reservation
+              </Button>
             </div>
           </div>
         </div>
