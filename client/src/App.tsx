@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import HomePage from "@/pages/home-page";
 import AdminPage from "@/pages/admin-page";
+import AdminPageNew from "@/pages/admin-page-new";
 import ProfilePage from "@/pages/profile-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import ShowPage from "@/pages/show-page";
@@ -25,7 +26,10 @@ function Router() {
         <ProtectedRoute path="/" component={HomePage} />
       </Route>
       <Route path="/admin">
-        <ProtectedRoute path="/admin" component={AdminPage} />
+        <ProtectedRoute path="/admin" component={AdminPageNew} />
+      </Route>
+      <Route path="/admin-old">
+        <ProtectedRoute path="/admin-old" component={AdminPage} />
       </Route>
       <Route path="/profile">
         <ProtectedRoute path="/profile" component={ProfilePage} />

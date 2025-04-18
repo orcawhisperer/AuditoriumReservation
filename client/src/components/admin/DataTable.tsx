@@ -19,7 +19,7 @@ import { Search } from "lucide-react";
 
 interface DataTableColumn<T> {
   header: string;
-  accessorKey: keyof T | ((item: T) => ReactNode);
+  accessorKey: keyof T | string | ((item: T) => ReactNode);
   cell?: (item: T) => ReactNode;
 }
 
@@ -112,7 +112,7 @@ export function DataTable<T>({
                         ? column.cell(item)
                         : typeof column.accessorKey === 'function'
                           ? column.accessorKey(item)
-                          : String(item[column.accessorKey] || '')}
+                          : "Value"}
                     </TableCell>
                   ))}
                 </TableRow>

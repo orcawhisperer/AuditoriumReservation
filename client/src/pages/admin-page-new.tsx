@@ -1,52 +1,41 @@
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useAuth } from "@/hooks/use-auth";
-import { AdminLayout, AdminTabs } from "@/components/admin/AdminLayout";
-import { ShowManagement } from "@/components/admin/ShowManagement";
+import { useEffect } from "react";
+import { useLocation, useNavigate } from "wouter";
+import { useAuth } from "../hooks/use-auth";
 import { UserManagement } from "@/components/admin/UserManagement";
+import { ShowManagement } from "@/components/admin/ShowManagement";
 import { ReservationManagement } from "@/components/admin/ReservationManagement";
-import { CalendarPlus, Users, Ticket } from "lucide-react";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import { useTranslation } from "react-i18next";
 
 export default function AdminPageNew() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  const [, navigate] = useLocation();
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState("shows");
-
-  if (!user || !user.isAdmin) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh]">
-        <div className="text-xl font-semibold mb-2">
-          {t('translation.admin.adminAccessRequired')}
-        </div>
-        <div className="text-muted-foreground">
-          {t('translation.admin.youNeedAdminPermissions')}
-        </div>
-      </div>
-    );
-  }
-
-  // Render the appropriate content based on the active tab
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case "shows":
-        return <ShowManagement />;
-      case "users":
-        return <UserManagement />;
-      case "reservations":
-        return <ReservationManagement />;
-      default:
-        return <ShowManagement />;
+  
+  // Redirect non-admin users
+  useEffect(() => {
+    if (!isLoading && user && !user.isAdmin) {
+      navigate("/");
     }
-  };
-
+    if (!isLoading && !user) {
+      navigate("/auth");
+    }
+  }, [user, isLoading, navigate]);
+  
+  // Don't render anything while checking auth status
+  if (isLoading || !user) {
+    return null;
+  }
+  
   return (
-    <AdminLayout activeTab={activeTab} onTabChange={setActiveTab}>
-      <AdminTabs
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      >
-        {renderTabContent()}
-      </AdminTabs>
+    <AdminLayout title={t('translation.admin.adminPanel')}>
+      <div className="space-y-6">
+        <ShowManagement />
+        
+        <ReservationManagement />
+        
+        <UserManagement />
+      </div>
     </AdminLayout>
   );
 }

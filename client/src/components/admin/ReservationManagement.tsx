@@ -255,7 +255,7 @@ const ReservationList = React.memo(() => {
         data={combinedReservations}
         columns={columns}
         searchable
-        searchKeys={["userId", "showId"]}
+        searchKeys={["userId", "showId"] as Array<keyof ReservationWithUser>}
       />
 
       {/* Preview Dialog */}
@@ -286,7 +286,7 @@ const ReservationList = React.memo(() => {
               </div>
               <div className="p-2 rounded-md border">
                 <SeatGrid
-                  showId={previewReservation.showId.toString()}
+                  showId={previewReservation.showId?.toString() || "0"}
                   hideActionButtons={true}
                   userReservation={previewReservation}
                   isAdminMode={true}
@@ -332,7 +332,7 @@ const ReservationList = React.memo(() => {
               </div>
               <div className="rounded-md border">
                 <SeatGrid
-                  showId={editingReservation.showId.toString()}
+                  showId={editingReservation.showId?.toString() || "0"}
                   selectedSeats={selectedSeats}
                   onSeatSelect={handleSeatSelect}
                   userReservation={editingReservation}
