@@ -37,9 +37,6 @@ import { SeatGrid } from "@/components/seat-grid-new";
 interface ReservationWithDetails extends Reservation {
   show?: Show;
   user?: User;
-  
-  // Ensure compatibility with the schema type
-  seatNumber: string; // This field exists in the Reservation type from the schema
 }
 
 function ReservationDetailsDialog({ 
@@ -88,7 +85,7 @@ function ReservationDetailsDialog({
               </div>
               <div className="text-sm">
                 {t('translation.admin.seatNumber')}: 
-                <span className="font-semibold ml-1">{reservation.seatNumber}</span>
+                <span className="font-semibold ml-1">{reservation.seatNumbers}</span>
               </div>
             </div>
           </div>
@@ -96,8 +93,8 @@ function ReservationDetailsDialog({
           <div className="rounded-md border p-4">
             <h3 className="font-medium mb-2">{t('translation.admin.seatLayout')}</h3>
             <SeatGrid
-              showId={reservation.showId.toString()}
-              selectedSeats={[reservation.seatNumber]}
+              showId={reservation.showId?.toString() || ""}
+              selectedSeats={[reservation.seatNumbers]}
               hideActionButtons={true}
               className="max-h-[300px] overflow-y-auto"
             />
@@ -197,10 +194,10 @@ export function ReservationManagement() {
     },
     {
       header: t('translation.admin.seat'),
-      accessorKey: "seatNumber",
+      accessorKey: "seatNumbers",
       cell: (row: ReservationWithDetails) => (
         <div className="font-mono bg-muted px-2 py-1 rounded inline-block">
-          {row.seatNumber}
+          {row.seatNumbers}
         </div>
       ),
     },
@@ -271,7 +268,7 @@ export function ReservationManagement() {
                 {reservationToDelete?.show && (
                   <>
                     <strong>{reservationToDelete.show.title}</strong>,
-                    {t('translation.admin.seat')} <strong>{reservationToDelete.seatNumber}</strong>
+                    {t('translation.admin.seat')} <strong>{reservationToDelete.seatNumbers}</strong>
                   </>
                 )}
                 ?
