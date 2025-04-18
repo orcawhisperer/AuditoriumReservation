@@ -20,6 +20,7 @@ type SeatProps = {
   isSelected: boolean;
   isUserReservation: boolean; // Add this to indicate seats reserved by the current user
   onSelect: (seatId: string) => void;
+  isAdminMode?: boolean; // Add this to allow seat unselection in admin mode
 };
 
 export function Seat({
@@ -29,30 +30,36 @@ export function Seat({
   isSelected,
   isUserReservation,
   onSelect,
-}: SeatProps) {
+  isAdminMode = false
+}: SeatProps & { isAdminMode?: boolean }) {
   // Extract just the seat number from the end of the seatId (remove section prefix and row)
   const seatNumber = seatId.match(/\d+$/)?.[0] || seatId;
-  console.log(isBlocked);
+  
+  // In admin mode, we want to be able to select/unselect all seats including user reservations
+  const isDisabled = isAdminMode 
+    ? isBlocked // Only blocked seats are disabled in admin mode
+    : (isReserved || isBlocked); // In normal mode, both reserved and blocked are disabled
+    
   return (
     <button
       className={cn(
         "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm",
-        isUserReservation &&
-          "bg-blue-100 border-blue-300 text-blue-700 cursor-not-allowed",
+        // Only apply user reservation style if not in admin mode or if not selected
+        isUserReservation && (!isAdminMode || !isSelected) &&
+          "bg-blue-100 border-blue-300 text-blue-700",
         isReserved &&
           !isUserReservation &&
           "bg-red-100 border-red-200 text-red-500 cursor-not-allowed",
         isBlocked &&
           "bg-yellow-100 border-yellow-200 text-yellow-500 cursor-not-allowed",
         isSelected && "bg-primary border-primary text-primary-foreground",
-        !isReserved &&
-          !isBlocked &&
+        !isDisabled &&
           !isSelected &&
           "hover:bg-accent hover:border-accent hover:text-accent-foreground active:scale-95",
       )}
-      disabled={isReserved || isBlocked}
+      disabled={isDisabled}
       onClick={() => onSelect(seatId)}
-      title={isUserReservation ? "Your reservation" : ""}
+      title={isUserReservation ? "User reservation" : ""}
     >
       {seatNumber}
     </button>
@@ -83,6 +90,16 @@ function Exit({ position }: { position: "left" | "right" | "top" | "bottom" }) {
   );
 }
 
+export type SeatGridProps = { 
+  showId?: string;
+  selectedSeats?: string[];
+  onSeatSelect?: (seatId: string) => void;
+  userReservation?: any;
+  hideActionButtons?: boolean;
+  isAdminMode?: boolean;
+  className?: string;
+};
+
 export function SeatGrid({ 
   showId: propShowId,
   selectedSeats: propSelectedSeats,
@@ -91,15 +108,7 @@ export function SeatGrid({
   hideActionButtons = false,
   isAdminMode = false,
   className,
-}: { 
-  showId?: string;
-  selectedSeats?: string[];
-  onSeatSelect?: (seatId: string) => void;
-  userReservation?: any;
-  hideActionButtons?: boolean;
-  isAdminMode?: boolean;
-  className?: string;
-}) {
+}: SeatGridProps) {
   const [, setLocation] = useLocation();
   const params = useParams<{ showId: string }>();
   const urlShowId = params.showId;
