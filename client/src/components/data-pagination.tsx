@@ -39,11 +39,16 @@ export function DataPagination<T>({
     
     setCurrentItems(slicedData);
     
-    // Call the callback with the current page items, but only if it changes
-    if (onPageChange && JSON.stringify(slicedData) !== JSON.stringify(currentItems)) {
-      onPageChange(slicedData);
-    }
+    // Call the callback with the current page items, but only if the component has mounted
+    // This prevents triggering the callback on every render
   }, [data, currentPage, itemsPerPage]);
+  
+  // Separate effect to handle onPageChange callback to avoid infinite loops
+  useEffect(() => {
+    if (onPageChange && currentItems.length > 0) {
+      onPageChange(currentItems);
+    }
+  }, [currentItems]);
 
   // Sync with external current page if provided
   useEffect(() => {

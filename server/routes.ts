@@ -20,7 +20,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(403).send("Admin access required");
     }
     const users = await storage.getUsers();
-    res.json(users);
+    // Exclude password from response
+    const sanitizedUsers = users.map(({ password, ...user }) => user);
+    res.json(sanitizedUsers);
   });
 
   app.post("/api/users", async (req, res) => { // New user creation route
