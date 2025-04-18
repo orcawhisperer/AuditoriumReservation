@@ -57,8 +57,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo, useEffect } from "react";
 import { DataPagination } from "@/components/data-pagination";
 import { useTranslation } from "react-i18next";
-import { LanguageSwitcher } from "@/components/language-switcher";
-import { ThemeToggle } from "@/components/theme-toggle";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -2350,8 +2349,6 @@ export default function AdminPage() {
             <h1 className="text-2xl font-bold">{t('translation.common.appName')} {t('translation.common.admin')}</h1>
           </div>
           <div className="flex items-center gap-4">
-            <ThemeToggle />
-            <LanguageSwitcher />
             <Button
               variant="outline"
               onClick={() => setLocation("/")}
