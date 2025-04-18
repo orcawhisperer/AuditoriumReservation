@@ -36,7 +36,7 @@ export function DataPagination<T>({
     if (externalCurrentPage !== undefined && externalCurrentPage !== currentPage) {
       setCurrentPage(externalCurrentPage);
     }
-  }, [externalCurrentPage, currentPage]);
+  }, [externalCurrentPage]);
   
   // Get current items
   useEffect(() => {

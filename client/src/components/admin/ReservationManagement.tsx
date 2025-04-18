@@ -5,7 +5,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { Reservation, Show, User } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { Ticket, Eye, Trash2 } from "lucide-react";
+import { Ticket, Eye, Trash2, Pencil } from "lucide-react";
 import { DataTable } from "./DataTable";
 import { Button } from "@/components/ui/button";
 import {
@@ -85,7 +85,7 @@ function ReservationDetailsDialog({
               </div>
               <div className="text-sm">
                 {t('translation.admin.seatNumber')}: 
-                <span className="font-semibold ml-1">{reservation.seatNumbers}</span>
+                <span className="font-semibold ml-1">{formatSeatNumbers(reservation.seatNumbers)}</span>
               </div>
             </div>
           </div>
@@ -105,11 +105,36 @@ function ReservationDetailsDialog({
   );
 }
 
+// Format seat numbers to make them more readable
+// Converts strings like "A10A9B10B9C10C9D10D9E10E9F10F9" to "A10, A9, B10, B9, C10, C9, D10, D9, E10, E9, F10, F9"
+function formatSeatNumbers(seatNumbers: string): string {
+  // Extract individual seat IDs by alternating letter and number pattern
+  const seats: string[] = [];
+  let i = 0;
+  while (i < seatNumbers.length) {
+    // Get the row letter
+    const row = seatNumbers[i++];
+    
+    // Extract the seat number (could be one or more digits)
+    let seatNum = "";
+    while (i < seatNumbers.length && !isNaN(parseInt(seatNumbers[i]))) {
+      seatNum += seatNumbers[i++];
+    }
+    
+    if (row && seatNum) {
+      seats.push(`${row}${seatNum}`);
+    }
+  }
+  
+  return seats.join(", ");
+}
+
 export function ReservationManagement() {
   const { toast } = useToast();
   const { t } = useTranslation();
   const [selectedReservation, setSelectedReservation] = useState<ReservationWithDetails | null>(null);
   const [reservationToDelete, setReservationToDelete] = useState<ReservationWithDetails | null>(null);
+  const [reservationToEdit, setReservationToEdit] = useState<ReservationWithDetails | null>(null);
   
   // Fetch all reservations
   const { data: reservations = [] } = useQuery<Reservation[]>({
@@ -197,7 +222,7 @@ export function ReservationManagement() {
       accessorKey: "seatNumbers",
       cell: (row: ReservationWithDetails) => (
         <div className="font-mono bg-muted px-2 py-1 rounded inline-block">
-          {row.seatNumbers}
+          {formatSeatNumbers(row.seatNumbers)}
         </div>
       ),
     },
@@ -213,6 +238,14 @@ export function ReservationManagement() {
             title={t('translation.admin.viewDetails')}
           >
             <Eye className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setReservationToEdit(row)}
+            title={t('translation.admin.editReservation')}
+          >
+            <Pencil className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
