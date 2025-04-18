@@ -420,6 +420,7 @@ const extendedEnCommon: ExtendedCommonTranslation = {
   date: "Date",
   time: "Time",
   price: "Price",
+  saving: "Saving...",
 };
 
 const extendedHiCommon: ExtendedCommonTranslation = {
@@ -435,6 +436,7 @@ const extendedHiCommon: ExtendedCommonTranslation = {
   date: "दिनांक",
   time: "समय",
   price: "मूल्य",
+  saving: "सहेजा जा रहा है...",
 };
 
 // Replace the common objects with the extended versions

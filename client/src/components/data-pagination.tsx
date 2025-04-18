@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -26,15 +26,22 @@ export function DataPagination<T>({
   onCurrentPageChange,
 }: DataPaginationProps<T>) {
   const { t } = useTranslation();
-  const [internalCurrentPage, setInternalCurrentPage] = useState(externalCurrentPage || 1);
+  const [internalCurrentPage, setInternalCurrentPage] = useState(1);
   
-  // Use the correct current page value
-  const currentPage = externalCurrentPage !== undefined ? externalCurrentPage : internalCurrentPage;
+  // Use the correct current page value - either external if provided, or internal
+  const currentPage = externalCurrentPage ?? internalCurrentPage;
   
   // Calculate total pages
-  const totalPages = Math.ceil(data.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(data.length / itemsPerPage));
   
-  // Get current items
+  // Update internal page when external page changes
+  useEffect(() => {
+    if (externalCurrentPage !== undefined) {
+      setInternalCurrentPage(externalCurrentPage);
+    }
+  }, [externalCurrentPage]);
+  
+  // Calculate current items
   useEffect(() => {
     if (!onPageChange) return;
     
@@ -60,7 +67,7 @@ export function DataPagination<T>({
   if (totalPages <= 1) return null;
   
   // Generate page numbers for display
-  const pageNumbers = (() => {
+  const pageNumbers = useMemo(() => {
     const numbers = [];
     const maxPageButtons = 5; // Max number of page buttons to show
     
@@ -78,7 +85,7 @@ export function DataPagination<T>({
     }
     
     return numbers;
-  })();
+  }, [currentPage, totalPages]);
   
   return (
     <div className="flex items-center justify-between py-4">
@@ -86,25 +93,6 @@ export function DataPagination<T>({
         <p className="text-sm text-muted-foreground">
           {t('pagination.showing')} {Math.min((currentPage - 1) * itemsPerPage + 1, data.length)} - {Math.min(currentPage * itemsPerPage, data.length)} {t('pagination.of')} {data.length}
         </p>
-        
-        <Select
-          value={itemsPerPage.toString()}
-          onValueChange={(value) => {
-            // This only changes items per page, not the current page
-            // The parent component should handle changing itemsPerPage
-            console.log(`Items per page changed to ${value}`);
-          }}
-        >
-          <SelectTrigger className="h-8 w-[70px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="5">5</SelectItem>
-            <SelectItem value="10">10</SelectItem>
-            <SelectItem value="20">20</SelectItem>
-            <SelectItem value="50">50</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
       
       <div className="flex items-center space-x-2">
