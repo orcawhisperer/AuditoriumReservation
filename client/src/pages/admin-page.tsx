@@ -2311,6 +2311,24 @@ function EditReservationDialog({
                           ? [...Array.from({length: 4}, (_, i) => i + 1), ...Array.from({length: 8}, (_, i) => i + 9)].map((num) => {
                               const seatId = `R${row}${num}`;
                               const isSpecialBlocked = row === "N" && num >= 5 && num <= 8;
+                              
+                              // Check if this seat is in the current reservation being edited
+                              const isUserReservation = (() => {
+                                try {
+                                  const currentReservationSeats = typeof reservation.seatNumbers === 'string'
+                                    ? (reservation.seatNumbers.startsWith('[')
+                                        ? JSON.parse(reservation.seatNumbers)
+                                        : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                    : Array.isArray(reservation.seatNumbers)
+                                        ? reservation.seatNumbers
+                                        : [];
+                                  return Array.isArray(currentReservationSeats) && currentReservationSeats.includes(seatId);
+                                } catch (e) {
+                                  console.error("Error parsing user reservation seats:", e);
+                                  return false;
+                                }
+                              })();
+                              
                               return (
                                 <Seat
                                   key={seatId}
@@ -2349,12 +2367,31 @@ function EditReservationDialog({
                                     }
                                   })()}
                                   isSelected={selectedSeats.includes(seatId)}
+                                  isUserReservation={isUserReservation}
                                   onSelect={handleSeatSelect}
                                 />
                               );
                             })
                           : Array.from({length: 16}, (_, i) => i + 1).map((num) => {
                               const seatId = `R${row}${num}`;
+                              
+                              // Check if this seat is in the current reservation being edited
+                              const isUserReservation = (() => {
+                                try {
+                                  const currentReservationSeats = typeof reservation.seatNumbers === 'string'
+                                    ? (reservation.seatNumbers.startsWith('[')
+                                        ? JSON.parse(reservation.seatNumbers)
+                                        : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                    : Array.isArray(reservation.seatNumbers)
+                                        ? reservation.seatNumbers
+                                        : [];
+                                  return Array.isArray(currentReservationSeats) && currentReservationSeats.includes(seatId);
+                                } catch (e) {
+                                  console.error("Error parsing user reservation seats:", e);
+                                  return false;
+                                }
+                              })();
+                              
                               return (
                                 <Seat
                                   key={seatId}
@@ -2393,6 +2430,7 @@ function EditReservationDialog({
                                     }
                                   })()}
                                   isSelected={selectedSeats.includes(seatId)}
+                                  isUserReservation={isUserReservation}
                                   onSelect={handleSeatSelect}
                                 />
                               );
@@ -2416,6 +2454,24 @@ function EditReservationDialog({
                       <div className="flex gap-1">
                         {Array.from({length: 18}, (_, i) => i + 1).map((num) => {
                           const seatId = `F${row}${num}`;
+                          
+                          // Check if this seat is in the current reservation being edited
+                          const isUserReservation = (() => {
+                            try {
+                              const currentReservationSeats = typeof reservation.seatNumbers === 'string'
+                                ? (reservation.seatNumbers.startsWith('[')
+                                    ? JSON.parse(reservation.seatNumbers)
+                                    : reservation.seatNumbers.split(',').map(s => s.trim()))
+                                : Array.isArray(reservation.seatNumbers)
+                                    ? reservation.seatNumbers
+                                    : [];
+                              return Array.isArray(currentReservationSeats) && currentReservationSeats.includes(seatId);
+                            } catch (e) {
+                              console.error("Error parsing user reservation seats:", e);
+                              return false;
+                            }
+                          })();
+                          
                           return (
                             <Seat
                               key={seatId}
@@ -2454,6 +2510,7 @@ function EditReservationDialog({
                                 }
                               })()}
                               isSelected={selectedSeats.includes(seatId)}
+                              isUserReservation={isUserReservation}
                               onSelect={handleSeatSelect}
                             />
                           );
