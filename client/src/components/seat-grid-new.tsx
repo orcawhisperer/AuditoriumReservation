@@ -322,7 +322,6 @@ export function SeatGrid({
         isSelected={selectedSeats.includes(seatId)}
         isUserReservation={isUserRes}
         onSelect={handleSeatSelect}
-                                  isAdminMode={isAdminMode}
         isAdminMode={isAdminMode}
       />
     );
@@ -336,7 +335,7 @@ export function SeatGrid({
         const seatNums = typeof propUserReservation.seatNumbers === 'string'
           ? (propUserReservation.seatNumbers.startsWith('[')
             ? JSON.parse(propUserReservation.seatNumbers)
-            : propUserReservation.seatNumbers.split(',').map(s => s.trim()))
+            : propUserReservation.seatNumbers.split(',').map((s: string) => s.trim()))
           : Array.isArray(propUserReservation.seatNumbers)
             ? propUserReservation.seatNumbers
             : [];
@@ -358,7 +357,7 @@ export function SeatGrid({
           typeof reservation.seatNumbers === "string"
             ? reservation.seatNumbers.startsWith("[")
               ? JSON.parse(reservation.seatNumbers)
-              : reservation.seatNumbers.split(",").map((s) => s.trim())
+              : reservation.seatNumbers.split(",").map((s: string) => s.trim())
             : reservation.seatNumbers || [];
 
         return Array.isArray(seats) && seats.includes(seatId);
