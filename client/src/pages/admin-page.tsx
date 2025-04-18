@@ -2113,26 +2113,11 @@ function EditReservationDialog({
     },
   });
 
-  const reservedSeats = useMemo(() => {
-    return new Set(
-      showReservations
-        .filter((r) => r.id !== reservation.id)
-        .flatMap((r) => {
-          try {
-            return typeof r.seatNumbers === 'string' 
-              ? (r.seatNumbers.startsWith('[') 
-                  ? JSON.parse(r.seatNumbers) 
-                  : r.seatNumbers.split(',').map(s => s.trim()))
-              : Array.isArray(r.seatNumbers) 
-                  ? r.seatNumbers 
-                  : [];
-          } catch (e) {
-            console.error("Error parsing seat numbers:", e);
-            return [];
-          }
-        }),
-    );
-  }, [showReservations, reservation.id]);
+  // Fetch user reservations 
+  const { data: userReservations = [] } = useQuery<Reservation[]>({
+    queryKey: ["/api/reservations/user"],
+    staleTime: 0,
+  });
 
   // Use the Auth hook to get the current admin user
   const { user: currentAdmin } = useAuth();
@@ -2179,6 +2164,7 @@ function EditReservationDialog({
       queryClient.invalidateQueries({
         queryKey: [`/api/reservations/show/${reservation.showId}`],
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/reservations/user"] });
       setOpen(false);
       onClose();
       toast({
@@ -2201,20 +2187,9 @@ function EditReservationDialog({
   };
 
   if (!currentShow) return null;
-
-  const layout = typeof currentShow.seatLayout === 'string' 
-    ? JSON.parse(currentShow.seatLayout) 
-    : currentShow.seatLayout;
-    
-  const blockedSeats = new Set(
-    Array.isArray(currentShow.blockedSeats)
-      ? currentShow.blockedSeats
-      : (typeof currentShow.blockedSeats === 'string'
-          ? (currentShow.blockedSeats.startsWith('[') 
-              ? JSON.parse(currentShow.blockedSeats)
-              : currentShow.blockedSeats.split(',').map(s => s.trim()))
-          : [])
-  );
+  
+  // Import our new reusable seat grid component
+  const { ReusableSeatGrid } = require("@/components/reusable-seat-grid");
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
