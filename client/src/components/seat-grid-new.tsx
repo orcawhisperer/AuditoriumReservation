@@ -302,6 +302,47 @@ export function SeatGrid({
   // Use user reservations or provided reservation in admin mode
   const reservationsToUse = isAdminMode && propUserReservation ? [propUserReservation] : userReservations;
   
+  // Helper function to check if a seat is part of user reservation
+  const checkIfUserReservation = (seatId: string) => {
+    // Admin mode with specific reservation
+    if (isAdminMode && propUserReservation) {
+      try {
+        const seatNums = typeof propUserReservation.seatNumbers === 'string'
+          ? (propUserReservation.seatNumbers.startsWith('[')
+            ? JSON.parse(propUserReservation.seatNumbers)
+            : propUserReservation.seatNumbers.split(',').map(s => s.trim()))
+          : Array.isArray(propUserReservation.seatNumbers)
+            ? propUserReservation.seatNumbers
+            : [];
+        
+        return Array.isArray(seatNums) && seatNums.includes(seatId);
+      } catch (e) {
+        console.error("Error parsing admin user reservation seats:", e);
+        return false;
+      }
+    }
+    
+    // Normal mode with user reservations
+    return reservationsToUse.some((reservation) => {
+      if (reservation.showId !== parseInt(showId))
+        return false;
+
+      try {
+        const seats =
+          typeof reservation.seatNumbers === "string"
+            ? reservation.seatNumbers.startsWith("[")
+              ? JSON.parse(reservation.seatNumbers)
+              : reservation.seatNumbers.split(",").map((s) => s.trim())
+            : reservation.seatNumbers || [];
+
+        return Array.isArray(seats) && seats.includes(seatId);
+      } catch (e) {
+        console.error("Error parsing user reservation seats:", e);
+        return false;
+      }
+    });
+  };
+  
   // We need to customize the rendering based on whether we're in admin mode or not
   // and whether we should hide certain parts of the UI
   return (
@@ -424,37 +465,7 @@ export function SeatGrid({
                               );
 
                               // Check if this seat is reserved by the user
-                              const isUserReservation = userReservations.some(
-                                (reservation) => {
-                                  if (reservation.showId !== parseInt(showId))
-                                    return false;
-
-                                  try {
-                                    const seats =
-                                      typeof reservation.seatNumbers ===
-                                      "string"
-                                        ? reservation.seatNumbers.startsWith(
-                                            "[",
-                                          )
-                                          ? JSON.parse(reservation.seatNumbers)
-                                          : reservation.seatNumbers
-                                              .split(",")
-                                              .map((s) => s.trim())
-                                        : reservation.seatNumbers || [];
-
-                                    return (
-                                      Array.isArray(seats) &&
-                                      seats.includes(seatId)
-                                    );
-                                  } catch (e) {
-                                    console.error(
-                                      "Error parsing user reservation seats:",
-                                      e,
-                                    );
-                                    return false;
-                                  }
-                                },
-                              );
+                              const isUserReservation = checkIfUserReservation(seatId);
 
                               return (
                                 <Seat
