@@ -52,6 +52,7 @@ export function Footer() {
           <div className="text-right">
             <h3 className="font-semibold text-sm mb-2">{t("translation.common.contactUs")}</h3>
             <p className="text-sm text-muted-foreground">support@militaryreservation.gov</p>
+            <p className="text-sm text-muted-foreground mt-1">+1 (555) 123-4567</p>
           </div>
         </div>
         

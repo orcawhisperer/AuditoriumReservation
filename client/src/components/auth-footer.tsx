@@ -13,8 +13,10 @@ export function AuthFooter() {
           <Shield className="h-4 w-4 text-primary" />
           <span>{t("translation.common.appName")} &copy; {currentYear}</span>
         </div>
-        <div>
-          {t("translation.common.militaryVenue")}
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-center">
+          <span>{t("translation.common.militaryVenue")}</span>
+          <span className="hidden sm:inline">•</span>
+          <span>+1 (555) 123-4567</span>
         </div>
       </div>
     </footer>
