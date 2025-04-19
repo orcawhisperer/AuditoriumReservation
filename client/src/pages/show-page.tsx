@@ -22,7 +22,7 @@ export default function ShowPage() {
   // Base layout for all states
   const Layout = ({ children }: { children: React.ReactNode }) => (
     <div className="min-h-screen bg-gradient-to-br from-[#4B5320]/10 to-[#4B5320]/5">
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b bg-white/80 dark:bg-gray-800/90 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between h-auto sm:h-16 py-4 sm:py-0 px-4 sm:px-8">
           <div className="flex items-center gap-2 mb-4 sm:mb-0">
             <Shield className="h-6 w-6 text-primary" />

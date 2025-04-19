@@ -206,7 +206,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
+      <header className="border-b bg-background dark:bg-gray-800">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between h-auto sm:h-16 py-4 sm:py-0 px-4 sm:px-8">
           <h1 className="text-2xl font-bold mb-4 sm:mb-0">
             {t("translation.common.appName")}
