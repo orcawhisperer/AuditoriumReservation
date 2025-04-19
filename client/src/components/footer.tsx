@@ -30,20 +30,24 @@ export function Footer({ variant = 'full' }: FooterProps) {
                 {t("translation.common.about")}
               </button>
               <span className="hidden sm:inline text-muted-foreground">•</span>
-              <span className="text-xs text-muted-foreground">support@militaryreservation.gov • +1 (555) 123-4567</span>
+              <div className="text-xs text-muted-foreground text-center sm:text-left">
+                <span className="sm:hidden block">support@militaryreservation.gov</span>
+                <span className="sm:hidden block">+1 (555) 123-4567</span>
+                <span className="hidden sm:inline">support@militaryreservation.gov • +1 (555) 123-4567</span>
+              </div>
             </div>
           </div>
         ) : (
           // Full footer variant
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 md:gap-4">
               {/* Logo and basic information */}
-              <div className="flex flex-col">
+              <div className="flex flex-col items-center md:items-start">
                 <div className="flex items-center gap-2 mb-1">
                   <Shield className="h-4 w-4 text-primary" />
                   <h2 className="font-bold text-sm">{t("translation.common.appName")}</h2>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground text-center md:text-left">
                   {t("translation.common.militaryVenue")}
                 </p>
               </div>
@@ -51,7 +55,7 @@ export function Footer({ variant = 'full' }: FooterProps) {
               {/* Quick links */}
               <div className="flex flex-col items-center">
                 <h3 className="font-semibold text-xs mb-1">{t("translation.common.quickLinks")}</h3>
-                <div className="flex gap-4">
+                <div className="flex flex-wrap justify-center gap-4">
                   <button 
                     onClick={() => setLocation("/")}
                     className="text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -74,9 +78,13 @@ export function Footer({ variant = 'full' }: FooterProps) {
               </div>
               
               {/* Contact information - simplified */}
-              <div className="text-right">
+              <div className="text-center md:text-right">
                 <h3 className="font-semibold text-xs mb-1">{t("translation.common.contactUs")}</h3>
-                <p className="text-xs text-muted-foreground">support@militaryreservation.gov • +1 (555) 123-4567</p>
+                <p className="text-xs text-muted-foreground">
+                  <span className="md:hidden block">support@militaryreservation.gov</span>
+                  <span className="md:hidden block">+1 (555) 123-4567</span>
+                  <span className="hidden md:inline">support@militaryreservation.gov • +1 (555) 123-4567</span>
+                </p>
               </div>
             </div>
             
