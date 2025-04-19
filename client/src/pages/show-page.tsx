@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SeatGridSkeleton } from "@/components/ui/skeleton-loaders";
 import { useTranslation } from "react-i18next";
+import { Footer } from "@/components/footer";
 
 export default function ShowPage() {
   const [, setLocation] = useLocation();
@@ -38,6 +39,7 @@ export default function ShowPage() {
           {children}
         </div>
       </main>
+      <Footer />
     </div>
   );
 

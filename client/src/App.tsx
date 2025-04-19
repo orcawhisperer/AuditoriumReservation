@@ -9,6 +9,7 @@ import AuthPage from "@/pages/auth-page";
 import HomePage from "@/pages/home-page";
 import AdminPage from "@/pages/admin-page";
 import ProfilePage from "@/pages/profile-page";
+import AboutPage from "@/pages/about-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import ShowPage from "@/pages/show-page";
 import { FloatingControls } from "@/components/floating-controls";
@@ -33,6 +34,7 @@ function Router() {
       <Route path="/show/:showId">
         <ProtectedRoute path="/show/:showId" component={ShowPage} />
       </Route>
+      <Route path="/about" component={AboutPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

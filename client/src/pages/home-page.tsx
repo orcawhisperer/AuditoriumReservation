@@ -34,6 +34,7 @@ import {
   ReservationCardSkeleton,
 } from "@/components/ui/skeleton-loaders";
 import { UserAvatar } from "@/components/user-avatar";
+import { Footer } from "@/components/footer";
 
 function ShowCard({
   show,
@@ -335,6 +336,7 @@ export default function HomePage() {
           </Card>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

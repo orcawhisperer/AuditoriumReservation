@@ -17,6 +17,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
+import { Footer } from "@/components/footer";
 import {
   Form,
   FormControl,
@@ -379,18 +381,19 @@ function ProfileUpdateCard() {
 export default function ProfilePage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const { t } = useTranslation();
 
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p>Please login to view your profile</p>
+        <p>{t("translation.common.pleaseLogin")}</p>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
+      <header className="border-b bg-background dark:bg-gray-800">
         <div className="container mx-auto h-16 px-4 sm:px-8 flex items-center">
           <Button
             variant="ghost"
@@ -398,19 +401,21 @@ export default function ProfilePage() {
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Home
+            {t("translation.admin.backToHome")}
           </Button>
         </div>
       </header>
 
       <main className="container mx-auto py-8 px-4 sm:px-8">
-        <h1 className="text-2xl font-bold mb-8">User Profile</h1>
+        <h1 className="text-2xl font-bold mb-8">{t("translation.common.userProfile")}</h1>
 
         <div className="max-w-md mx-auto space-y-8">
           <ProfileUpdateCard />
           <ChangePasswordCard />
         </div>
       </main>
+      
+      <Footer />
     </div>
   );
 }
