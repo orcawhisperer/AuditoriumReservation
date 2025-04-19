@@ -392,7 +392,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-32">
       <header className="border-b bg-background dark:bg-gray-800">
         <div className="container mx-auto h-16 px-4 sm:px-8 flex items-center">
           <Button
@@ -415,7 +415,7 @@ export default function ProfilePage() {
         </div>
       </main>
       
-      <Footer />
+      <Footer variant="simple" />
     </div>
   );
 }

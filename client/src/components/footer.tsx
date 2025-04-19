@@ -23,7 +23,12 @@ export function Footer({ variant = 'full' }: FooterProps) {
               <span className="text-xs">{t("translation.common.appName")} &copy; {currentYear}</span>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-center">
-              <span className="text-xs text-muted-foreground">{t("translation.common.militaryVenue")}</span>
+              <button 
+                onClick={() => setLocation("/about")}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {t("translation.common.about")}
+              </button>
               <span className="hidden sm:inline text-muted-foreground">•</span>
               <span className="text-xs text-muted-foreground">support@militaryreservation.gov • +1 (555) 123-4567</span>
             </div>
