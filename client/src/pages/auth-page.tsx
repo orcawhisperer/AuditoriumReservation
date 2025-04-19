@@ -23,7 +23,7 @@ import { useLocation } from "wouter";
 import { Shield, Lock } from "lucide-react";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
-import { AuthFooter } from "@/components/auth-footer";
+import { Footer } from "@/components/footer";
 
 export default function AuthPage() {
   const { user } = useAuth();
@@ -84,7 +84,7 @@ export default function AuthPage() {
           </Card>
         </div>
       </div>
-      <AuthFooter />
+      <Footer variant="simple" />
     </div>
   );
 }
