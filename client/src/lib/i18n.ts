@@ -315,6 +315,14 @@ interface ExtendedCommonTranslation
   actions: string;
   view: string;
   morePages: string;
+  about: string;
+  contactUs: string;
+  quickLinks: string;
+  reservationSystem: string;
+  militaryVenue: string;
+  allRightsReserved: string;
+  pleaseLogin: string;
+  userProfile: string;
 }
 
 // Now update the common translations with the new keys
@@ -331,6 +339,14 @@ const extendedEnCommon: ExtendedCommonTranslation = {
   date: "Date",
   time: "Time",
   price: "Price",
+  about: "About",
+  contactUs: "Contact Us",
+  quickLinks: "Quick Links",
+  reservationSystem: "Auditorium Reservation System",
+  militaryVenue: "Military Command Center Venue",
+  allRightsReserved: "All Rights Reserved",
+  pleaseLogin: "Please login to view your profile",
+  userProfile: "User Profile",
 };
 
 const extendedHiCommon: ExtendedCommonTranslation = {
@@ -346,6 +362,14 @@ const extendedHiCommon: ExtendedCommonTranslation = {
   date: "दिनांक",
   time: "समय",
   price: "मूल्य",
+  about: "हमारे बारे में",
+  contactUs: "संपर्क करें",
+  quickLinks: "त्वरित लिंक",
+  reservationSystem: "ऑडिटोरियम आरक्षण प्रणाली",
+  militaryVenue: "सैन्य कमांड सेंटर स्थल",
+  allRightsReserved: "सर्वाधिकार सुरक्षित",
+  pleaseLogin: "अपनी प्रोफ़ाइल देखने के लिए कृपया लॉगिन करें",
+  userProfile: "उपयोगकर्ता प्रोफ़ाइल",
 };
 
 // Replace the common objects with the extended versions
