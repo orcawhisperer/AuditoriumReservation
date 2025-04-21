@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/skeleton-loaders";
 import { UserAvatar } from "@/components/user-avatar";
 import { Footer } from "@/components/footer";
+import { MobileNavDrawer } from "@/components/mobile-nav-drawer";
 
 function ShowCard({
   show,
