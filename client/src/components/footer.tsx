@@ -29,9 +29,10 @@ export function Footer({ variant = 'full' }: FooterProps) {
               >
                 {t("translation.common.about")}
               </button>
-              <span className="text-xs text-muted-foreground hidden sm:inline">
-                support@militaryreservation.gov
-              </span>
+              <div className="text-xs text-muted-foreground hidden sm:block">
+                <span className="hidden md:inline">support@militaryreservation.gov • </span>
+                <span>+1 (555) 123-4567</span>
+              </div>
             </div>
           </div>
         ) : (
@@ -68,10 +69,16 @@ export function Footer({ variant = 'full' }: FooterProps) {
               >
                 {t("translation.common.profile")}
               </button>
+              <span className="text-xs text-muted-foreground sm:hidden">
+                +1 555-123-4567
+              </span>
             </div>
             
-            {/* Right column - copyright */}
-            <div className="hidden sm:flex justify-end items-center">
+            {/* Right column - contact & copyright */}
+            <div className="hidden sm:flex flex-col items-end justify-center">
+              <span className="text-xs text-muted-foreground">
+                support@militaryreservation.gov • +1 (555) 123-4567
+              </span>
               <span className="text-xs text-muted-foreground">
                 &copy; {currentYear} {t("translation.common.allRightsReserved")}
               </span>
