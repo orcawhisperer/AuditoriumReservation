@@ -31,6 +31,7 @@ const enTranslations = {
     view: "View",
     seats: "Seats",
     morePages: "More pages",
+    contact: "Contact",
   },
   auth: {
     username: "Username",
@@ -168,6 +169,7 @@ const hiTranslations = {
     view: "देखें",
     seats: "सीटें",
     morePages: "अधिक पृष्ठ",
+    contact: "संपर्क",
   },
   auth: {
     username: "उपयोगकर्ता नाम",
