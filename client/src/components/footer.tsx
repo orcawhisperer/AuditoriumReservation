@@ -11,8 +11,6 @@ export function Footer({ variant = 'full' }: FooterProps) {
   const { t } = useTranslation();
   
   const currentYear = new Date().getFullYear();
-  const phoneNumber = "+1 (555) 123-4567";
-  const email = "support@militaryreservation.gov";
   const venueInfo = "Military Command Center Venue";
   
   const SimpleFooter = () => (
@@ -33,9 +31,9 @@ export function Footer({ variant = 'full' }: FooterProps) {
   );
   
   const DesktopFooter = () => (
-    <div className="hidden sm:grid sm:grid-cols-12 gap-x-4 py-1">
-      {/* Left column - Logo and venue info */}
-      <div className="flex items-center col-span-4">
+    <div className="hidden sm:flex justify-between items-center py-1">
+      {/* Left - Logo and venue info */}
+      <div className="flex items-center">
         <Shield className="h-3.5 w-3.5 text-primary mr-1.5" />
         <div>
           <span className="text-xs font-medium">{t("translation.common.appName")}</span>
@@ -45,33 +43,18 @@ export function Footer({ variant = 'full' }: FooterProps) {
         </div>
       </div>
       
-      {/* Middle column - navigation links */}
-      <div className="flex justify-center items-center space-x-4 col-span-4 mx-auto">
-        <button 
-          onClick={() => setLocation("/")}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {t("translation.common.home")}
-        </button>
+      {/* Center - About link */}
+      <div className="flex items-center">
         <button 
           onClick={() => setLocation("/about")}
           className="text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           {t("translation.common.about")}
         </button>
-        <button 
-          onClick={() => setLocation("/profile")}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {t("translation.common.profile")}
-        </button>
       </div>
       
-      {/* Right column - contact & copyright */}
-      <div className="flex flex-col items-end justify-center col-span-4">
-        <span className="text-xs text-muted-foreground">
-          {email} • {phoneNumber}
-        </span>
+      {/* Right - copyright */}
+      <div className="flex items-center">
         <span className="text-xs text-muted-foreground">
           &copy; {currentYear} {t("translation.common.allRightsReserved")}
         </span>
@@ -80,9 +63,9 @@ export function Footer({ variant = 'full' }: FooterProps) {
   );
   
   const MobileFooter = () => (
-    <div className="sm:hidden">
+    <div className="sm:hidden flex flex-col">
       {/* Top row - logo and venue */}
-      <div className="flex items-center py-1 text-center justify-center">
+      <div className="flex items-center justify-center py-1">
         <Shield className="h-3 w-3 text-primary mr-1.5" />
         <span className="text-xs font-medium">{t("translation.common.appName")}</span>
         <span className="text-xs text-muted-foreground ml-1">
@@ -90,31 +73,17 @@ export function Footer({ variant = 'full' }: FooterProps) {
         </span>
       </div>
       
-      {/* Bottom row - links and contact */}
+      {/* Bottom row - about and copyright */}
       <div className="flex justify-between items-center py-1">
-        <div className="flex space-x-4">
-          <button 
-            onClick={() => setLocation("/")}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {t("translation.common.home")}
-          </button>
-          <button 
-            onClick={() => setLocation("/about")}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {t("translation.common.about")}
-          </button>
-          <button 
-            onClick={() => setLocation("/profile")}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {t("translation.common.profile")}
-          </button>
-        </div>
-        <div className="text-xs text-muted-foreground">
-          {phoneNumber}
-        </div>
+        <button 
+          onClick={() => setLocation("/about")}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {t("translation.common.about")}
+        </button>
+        <span className="text-xs text-muted-foreground">
+          &copy; {currentYear}
+        </span>
       </div>
     </div>
   );

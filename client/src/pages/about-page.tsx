@@ -104,12 +104,22 @@ export default function AboutPage() {
             adheres to military-grade security standards for data protection.
           </p>
           
-          <h3>Technical Support</h3>
+          <h3>Contact & Technical Support</h3>
           
           <p>
-            For technical assistance or questions about the reservation system,
-            please contact the IT support desk at support@militaryreservation.gov
-            or call the support hotline at +1 (555) 123-4567.
+            For general inquiries, reservations, or technical assistance, 
+            please contact us:
+          </p>
+          
+          <ul>
+            <li><strong>Email:</strong> support@militaryreservation.gov</li>
+            <li><strong>Phone:</strong> +1 (555) 123-4567</li>
+            <li><strong>Hours:</strong> Monday-Friday, 0800-1700 Military Standard Time</li>
+          </ul>
+          
+          <p>
+            Our support team is available to assist with reservations, technical issues,
+            or any questions about the Shahbaaz Auditorium and upcoming events.
           </p>
           
           <h3>System Development</h3>
