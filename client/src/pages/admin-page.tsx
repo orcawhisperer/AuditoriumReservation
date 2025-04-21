@@ -2342,7 +2342,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-32">
+    <div className="min-h-screen bg-background pb-16">
       <header className="border-b bg-background dark:bg-gray-800">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between h-auto sm:h-16 py-4 sm:py-0 px-4 sm:px-8">
           <div className="flex items-center gap-2 mb-4 sm:mb-0">

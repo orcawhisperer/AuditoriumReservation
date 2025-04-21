@@ -13,87 +13,70 @@ export function Footer({ variant = 'full' }: FooterProps) {
   const currentYear = new Date().getFullYear();
   
   return (
-    <footer className="border-t bg-background/80 dark:bg-gray-800/90 py-4 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-10 w-full">
+    <footer className="border-t bg-background/80 dark:bg-gray-800/90 py-2 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-10 w-full">
       <div className="container mx-auto px-4 sm:px-8">
         {variant === 'simple' ? (
-          // Simple footer variant (similar to the old AuthFooter)
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
-            <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-primary" />
+          // Simple footer variant - streamlined for both mobile and desktop
+          <div className="flex flex-row justify-between items-center h-8">
+            <div className="flex items-center gap-1.5">
+              <Shield className="h-3 w-3 text-primary" />
               <span className="text-xs">{t("translation.common.appName")} &copy; {currentYear}</span>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-center">
+            <div className="flex items-center gap-3">
               <button 
                 onClick={() => setLocation("/about")}
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 {t("translation.common.about")}
               </button>
-              <span className="hidden sm:inline text-muted-foreground">•</span>
-              <div className="text-xs text-muted-foreground text-center sm:text-left">
-                <span className="sm:hidden block">support@militaryreservation.gov</span>
-                <span className="sm:hidden block">+1 (555) 123-4567</span>
-                <span className="hidden sm:inline">support@militaryreservation.gov • +1 (555) 123-4567</span>
-              </div>
+              <span className="text-xs text-muted-foreground hidden sm:inline">
+                support@militaryreservation.gov
+              </span>
             </div>
           </div>
         ) : (
-          // Full footer variant
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 md:gap-4">
-              {/* Logo and basic information */}
-              <div className="flex flex-col items-center md:items-start">
-                <div className="flex items-center gap-2 mb-1">
-                  <Shield className="h-4 w-4 text-primary" />
-                  <h2 className="font-bold text-sm">{t("translation.common.appName")}</h2>
-                </div>
-                <p className="text-xs text-muted-foreground text-center md:text-left">
-                  {t("translation.common.militaryVenue")}
-                </p>
-              </div>
-              
-              {/* Quick links */}
-              <div className="flex flex-col items-center">
-                <h3 className="font-semibold text-xs mb-1">{t("translation.common.quickLinks")}</h3>
-                <div className="flex flex-wrap justify-center gap-4">
-                  <button 
-                    onClick={() => setLocation("/")}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {t("translation.common.home")}
-                  </button>
-                  <button 
-                    onClick={() => setLocation("/about")}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {t("translation.common.about")}
-                  </button>
-                  <button 
-                    onClick={() => setLocation("/profile")}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {t("translation.common.profile")}
-                  </button>
-                </div>
-              </div>
-              
-              {/* Contact information - simplified */}
-              <div className="text-center md:text-right">
-                <h3 className="font-semibold text-xs mb-1">{t("translation.common.contactUs")}</h3>
-                <p className="text-xs text-muted-foreground">
-                  <span className="md:hidden block">support@militaryreservation.gov</span>
-                  <span className="md:hidden block">+1 (555) 123-4567</span>
-                  <span className="hidden md:inline">support@militaryreservation.gov • +1 (555) 123-4567</span>
-                </p>
+          // Full footer variant - more compact with optimized layout
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 py-1">
+            {/* Left column */}
+            <div className="flex items-center">
+              <Shield className="h-3.5 w-3.5 text-primary mr-1.5" />
+              <div>
+                <span className="text-xs font-medium">{t("translation.common.appName")}</span>
+                <span className="text-xs text-muted-foreground ml-1 hidden sm:inline">
+                  • {t("translation.common.militaryVenue")}
+                </span>
               </div>
             </div>
             
-            <div className="border-t border-border/40 mt-2 pt-2 text-center">
-              <p className="text-xs text-muted-foreground">
-                &copy; {currentYear} {t("translation.common.appName")}. {t("translation.common.allRightsReserved")}
-              </p>
+            {/* Middle column - quick links */}
+            <div className="flex justify-end sm:justify-center items-center space-x-4">
+              <button 
+                onClick={() => setLocation("/")}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {t("translation.common.home")}
+              </button>
+              <button 
+                onClick={() => setLocation("/about")}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {t("translation.common.about")}
+              </button>
+              <button 
+                onClick={() => setLocation("/profile")}
+                className="hidden sm:block text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {t("translation.common.profile")}
+              </button>
             </div>
-          </>
+            
+            {/* Right column - copyright */}
+            <div className="hidden sm:flex justify-end items-center">
+              <span className="text-xs text-muted-foreground">
+                &copy; {currentYear} {t("translation.common.allRightsReserved")}
+              </span>
+            </div>
+          </div>
         )}
       </div>
     </footer>
