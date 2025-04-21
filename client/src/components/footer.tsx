@@ -13,59 +13,59 @@ export function Footer({ variant = 'full' }: FooterProps) {
   const currentYear = new Date().getFullYear();
   const venueInfo = "Military Command Center Venue";
   
+  // Simple column-based footer with centered content for login/auth page
   const SimpleFooter = () => (
-    <div className="flex flex-row justify-between items-center h-8">
+    <div className="flex flex-col items-center justify-center space-y-1.5 py-1">
       <div className="flex items-center gap-1.5">
         <Shield className="h-3 w-3 text-primary" />
-        <span className="text-xs">{t("translation.common.appName")} &copy; {currentYear}</span>
+        <span className="text-xs font-medium">{t("translation.common.appName")}</span>
       </div>
-      <div className="flex items-center gap-3">
-        <button 
-          onClick={() => setLocation("/about")}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {t("translation.common.about")}
-        </button>
-      </div>
+      
+      <button 
+        onClick={() => setLocation("/about")}
+        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+      >
+        {t("translation.common.about")} / {t("translation.common.contact")}
+      </button>
+      
+      <span className="text-xs text-muted-foreground">
+        &copy; {currentYear}
+      </span>
     </div>
   );
   
+  // Column-based desktop footer with centered content
   const DesktopFooter = () => (
-    <div className="hidden sm:flex justify-between items-center py-1">
-      {/* Left - Logo and venue info */}
+    <div className="hidden sm:flex flex-col items-center justify-center space-y-1.5 py-1">
+      {/* Logo and venue info */}
       <div className="flex items-center">
         <Shield className="h-3.5 w-3.5 text-primary mr-1.5" />
-        <div>
-          <span className="text-xs font-medium">{t("translation.common.appName")}</span>
-          <span className="text-xs text-muted-foreground ml-1">
-            • {venueInfo}
-          </span>
-        </div>
-      </div>
-      
-      {/* Center - About link */}
-      <div className="flex items-center">
-        <button 
-          onClick={() => setLocation("/about")}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {t("translation.common.about")}
-        </button>
-      </div>
-      
-      {/* Right - copyright */}
-      <div className="flex items-center">
-        <span className="text-xs text-muted-foreground">
-          &copy; {currentYear} {t("translation.common.allRightsReserved")}
+        <span className="text-xs font-medium">{t("translation.common.appName")}</span>
+        <span className="text-xs text-muted-foreground ml-1">
+          • {venueInfo}
         </span>
       </div>
+      
+      {/* About/Contact link */}
+      <button 
+        onClick={() => setLocation("/about")}
+        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+      >
+        {t("translation.common.about")} / {t("translation.common.contact")}
+      </button>
+      
+      {/* Copyright */}
+      <span className="text-xs text-muted-foreground">
+        &copy; {currentYear} {t("translation.common.allRightsReserved")}
+      </span>
     </div>
   );
   
+  // Column-based mobile footer with centered content
   const MobileFooter = () => (
-    <div className="sm:hidden flex flex-col">
-      {/* Top row - logo and venue */}
-      <div className="flex items-center justify-center py-1">
+    <div className="sm:hidden flex flex-col items-center justify-center space-y-1 py-1">
+      {/* Logo and venue info */}
+      <div className="flex items-center">
         <Shield className="h-3 w-3 text-primary mr-1.5" />
         <span className="text-xs font-medium">{t("translation.common.appName")}</span>
         <span className="text-xs text-muted-foreground ml-1">
@@ -73,18 +73,18 @@ export function Footer({ variant = 'full' }: FooterProps) {
         </span>
       </div>
       
-      {/* Bottom row - about and copyright */}
-      <div className="flex justify-between items-center py-1">
-        <button 
-          onClick={() => setLocation("/about")}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {t("translation.common.about")}
-        </button>
-        <span className="text-xs text-muted-foreground">
-          &copy; {currentYear}
-        </span>
-      </div>
+      {/* About/Contact link */}
+      <button 
+        onClick={() => setLocation("/about")}
+        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+      >
+        {t("translation.common.about")} / {t("translation.common.contact")}
+      </button>
+      
+      {/* Copyright */}
+      <span className="text-xs text-muted-foreground">
+        &copy; {currentYear}
+      </span>
     </div>
   );
   
