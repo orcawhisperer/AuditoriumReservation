@@ -35,7 +35,6 @@ import {
 } from "@/components/ui/skeleton-loaders";
 import { UserAvatar } from "@/components/user-avatar";
 import { Footer } from "@/components/footer";
-import { MobileNavDrawer } from "@/components/mobile-nav-drawer";
 
 function ShowCard({
   show,
@@ -210,19 +209,12 @@ export default function HomePage() {
     <div className="min-h-screen bg-background pb-16">
       <header className="border-b bg-background dark:bg-gray-800">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between h-auto sm:h-16 py-4 sm:py-0 px-4 sm:px-8">
-          <div className="flex items-center justify-between w-full sm:w-auto mb-4 sm:mb-0">
-            <h1 className="text-2xl font-bold">
-              {t("translation.common.appName")}
-            </h1>
-            <MobileNavDrawer />
-          </div>
+          <h1 className="text-2xl font-bold mb-4 sm:mb-0">
+            {t("translation.common.appName")}
+          </h1>
           <div className="flex items-center gap-4">
             {user?.isAdmin && (
-              <Button 
-                variant="outline" 
-                onClick={() => setLocation("/admin")}
-                className="hidden sm:flex"
-              >
+              <Button variant="outline" onClick={() => setLocation("/admin")}>
                 {t("translation.admin.dashboard")}
               </Button>
             )}
