@@ -1,6 +1,6 @@
-# Shahbaaz Auditorium Deployment Guide
+# BaazCine Deployment Guide
 
-This document provides comprehensive instructions for deploying the Shahbaaz Auditorium Seat Reservation System on a VPS (Virtual Private Server) without Docker.
+This document provides comprehensive instructions for deploying the BaazCine Seat Reservation System on a VPS (Virtual Private Server) without Docker.
 
 **Note:** The system uses SQLite for simplified deployment. This guide has been updated to reflect direct VPS deployment.
 
@@ -275,16 +275,16 @@ PM2 is used to ensure your application stays running and restarts automatically:
 pm2 list
 
 # View application logs
-pm2 logs shahbaaz-auditorium
+pm2 logs baazcine
 
 # Restart application
-pm2 restart shahbaaz-auditorium
+pm2 restart baazcine
 
 # Stop application
-pm2 stop shahbaaz-auditorium
+pm2 stop baazcine
 
 # Start application if stopped
-pm2 start shahbaaz-auditorium
+pm2 start baazcine
 
 # Set up PM2 to start on system boot
 pm2 startup
@@ -297,7 +297,7 @@ pm2 save
 
 1. Check PM2 logs:
    ```bash
-   pm2 logs shahbaaz-auditorium
+   pm2 logs baazcine
    ```
 
 2. Check for port conflicts:
@@ -335,7 +335,7 @@ pm2 save
 
 4. Check PM2 logs for database errors:
    ```bash
-   pm2 logs shahbaaz-auditorium --lines 100
+   pm2 logs baazcine --lines 100
    ```
 
 ### Nginx issues

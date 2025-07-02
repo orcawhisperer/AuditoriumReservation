@@ -5,8 +5,8 @@ import LanguageDetector from "i18next-browser-languagedetector";
 // English translations
 const enTranslations = {
   common: {
-    appName: "Shahbaaz Auditorium",
-    welcome: "Welcome to Shahbaaz Auditorium",
+    appName: "BaazCine",
+    welcome: "Welcome to BaazCine",
     login: "Login",
     register: "Register",
     logout: "Logout",
@@ -143,8 +143,8 @@ const enTranslations = {
 // Hindi translations
 const hiTranslations = {
   common: {
-    appName: "शाहबाज़ ऑडिटोरियम",
-    welcome: "शाहबाज़ ऑडिटोरियम में आपका स्वागत है",
+    appName: "बाज़सिने",
+    welcome: "बाज़सिने में आपका स्वागत है",
     login: "लॉगिन",
     register: "रजिस्टर",
     logout: "लॉगआउट",
@@ -342,9 +342,10 @@ const extendedEnCommon: ExtendedCommonTranslation = {
   time: "Time",
   price: "Price",
   about: "About",
+  contact: "Contact",
   contactUs: "Contact Us",
   quickLinks: "Quick Links",
-  reservationSystem: "Auditorium Reservation System",
+  reservationSystem: "Cinema Reservation System",
   militaryVenue: "Military Command Center Venue",
   allRightsReserved: "All Rights Reserved",
   pleaseLogin: "Please login to view your profile",
@@ -365,9 +366,10 @@ const extendedHiCommon: ExtendedCommonTranslation = {
   time: "समय",
   price: "मूल्य",
   about: "हमारे बारे में",
+  contact: "संपर्क",
   contactUs: "संपर्क करें",
   quickLinks: "त्वरित लिंक",
-  reservationSystem: "ऑडिटोरियम आरक्षण प्रणाली",
+  reservationSystem: "सिनेमा आरक्षण प्रणाली",
   militaryVenue: "सैन्य कमांड सेंटर स्थल",
   allRightsReserved: "सर्वाधिकार सुरक्षित",
   pleaseLogin: "अपनी प्रोफ़ाइल देखने के लिए कृपया लॉगिन करें",

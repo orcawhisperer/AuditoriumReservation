@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Server Health Monitoring Script for Shahbaaz Auditorium VPS Deployment
+# Server Health Monitoring Script for BaazCine VPS Deployment
 # This script checks critical server components and the application status
 
 # Set colors for output formatting
@@ -9,31 +9,31 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-echo "===== Shahbaaz Auditorium Server Health Check ====="
+echo "===== BaazCine Server Health Check ====="
 echo "Date: $(date)"
 echo
 
 # Check if PM2 is running
 echo -e "${YELLOW}Checking PM2 process status...${NC}"
-if pm2 list | grep -q "shahbaaz-auditorium"; then
-    APP_STATUS=$(pm2 list | grep "shahbaaz-auditorium" | awk '{print $10}')
+if pm2 list | grep -q "baazcine"; then
+    APP_STATUS=$(pm2 list | grep "baazcine" | awk '{print $10}')
     if [ "$APP_STATUS" == "online" ]; then
         echo -e "${GREEN}✓ Application is running (PM2 status: online)${NC}"
         
         # Get uptime and resource usage
-        UPTIME=$(pm2 show shahbaaz-auditorium | grep -i uptime | awk '{print $2" "$3" "$4" "$5}')
+        UPTIME=$(pm2 show baazcine | grep -i uptime | awk '{print $2" "$3" "$4" "$5}')
         echo "  Uptime: $UPTIME"
         
-        CPU=$(pm2 show shahbaaz-auditorium | grep -i "cpu" | head -1 | awk '{print $4}')
-        MEMORY=$(pm2 show shahbaaz-auditorium | grep -i "memory" | head -1 | awk '{print $4}')
+        CPU=$(pm2 show baazcine | grep -i "cpu" | head -1 | awk '{print $4}')
+        MEMORY=$(pm2 show baazcine | grep -i "memory" | head -1 | awk '{print $4}')
         echo "  CPU: $CPU, Memory: $MEMORY"
     else
         echo -e "${RED}✗ Application is not running properly (PM2 status: $APP_STATUS)${NC}"
-        echo "  Run 'pm2 restart shahbaaz-auditorium' to attempt recovery"
+        echo "  Run 'pm2 restart baazcine' to attempt recovery"
     fi
 else
     echo -e "${RED}✗ Application is not registered with PM2${NC}"
-    echo "  Run 'cd $(pwd) && pm2 start npm --name \"shahbaaz-auditorium\" -- start' to start it"
+    echo "  Run 'cd $(pwd) && pm2 start npm --name \"baazcine\" -- start' to start it"
 fi
 echo
 

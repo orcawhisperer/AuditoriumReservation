@@ -1,4 +1,4 @@
--- SQLite initial schema for Shahbaaz Auditorium
+-- SQLite initial schema for BaazCine
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (

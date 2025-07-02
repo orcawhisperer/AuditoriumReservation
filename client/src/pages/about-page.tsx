@@ -24,13 +24,13 @@ export default function AboutPage() {
 
       <main className="container mx-auto py-8 px-4 sm:px-8 flex-grow">
         <div className="max-w-3xl mx-auto prose dark:prose-invert">
-          <h2>About Shahbaaz Auditorium Reservation System</h2>
+          <h2>About BaazCine Reservation System</h2>
           
           <p>
-            The Shahbaaz Auditorium Reservation System is a sophisticated
-            military-themed auditorium booking platform designed specifically for
-            military personnel and authorized civilians to reserve seats for events
-            and performances at the Shahbaaz Auditorium.
+            The BaazCine Reservation System is a sophisticated
+            military-themed cinema booking platform designed specifically for
+            military personnel and authorized civilians to reserve seats for movies
+            and special screenings at the BaazCine theater.
           </p>
           
           <h3>Guidelines for Use</h3>
@@ -119,15 +119,15 @@ export default function AboutPage() {
           
           <p>
             Our support team is available to assist with reservations, technical issues,
-            or any questions about the Shahbaaz Auditorium and upcoming events.
+            or any questions about the BaazCine theater and upcoming movies.
           </p>
           
           <h3>System Development</h3>
           
           <p>
-            The Shahbaaz Auditorium Reservation System was developed using modern
+            The BaazCine Reservation System was developed using modern
             web technologies to provide a responsive, accessible, and secure
-            platform for managing auditorium reservations. The system features
+            platform for managing cinema reservations. The system features
             a React frontend with Tailwind CSS for responsive interfaces,
             a robust backend with secure authentication, and multilingual support.
           </p>

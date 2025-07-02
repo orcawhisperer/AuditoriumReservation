@@ -1,11 +1,11 @@
-# Shahbaaz Auditorium - Reservation System
+# BaazCine - Reservation System
 
-A military-themed auditorium reservation system providing a comprehensive, user-friendly platform for event management and precise seat allocation.
+A military-themed cinema reservation system providing a comprehensive, user-friendly platform for movie screenings and precise seat allocation.
 
 ## Features
 
 - User management with admin privileges
-- Show/event management with pricing
+- Movie/screening management with pricing
 - Seat reservation and tracking
 - Multi-language support (English and Hindi)
 - Responsive design for all devices
@@ -89,7 +89,7 @@ npm start
 ./scripts/deploy-vps.sh
 
 # Setting up with PM2 for process management
-pm2 start npm --name "shahbaaz-auditorium" -- start
+pm2 start npm --name "baazcine" -- start
 pm2 startup
 pm2 save
 ```

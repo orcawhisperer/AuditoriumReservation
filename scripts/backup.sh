@@ -1,10 +1,10 @@
 #!/bin/bash
-# Database backup script for Shahbaaz Auditorium
+# Database backup script for BaazCine
 
 # Create a timestamp for the backup filename
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_DIR="/backups"
-BACKUP_FILE="$BACKUP_DIR/shahbaaz_backup_$TIMESTAMP.sql"
+BACKUP_FILE="$BACKUP_DIR/baazcine_backup_$TIMESTAMP.sql"
 
 # Make sure backup directory exists
 mkdir -p $BACKUP_DIR
@@ -28,11 +28,11 @@ fi
 echo "Backup completed: ${BACKUP_FILE}.gz"
 
 # Delete backups older than 30 days
-find $BACKUP_DIR -name "shahbaaz_backup_*.sql.gz" -type f -mtime +30 -delete
+find $BACKUP_DIR -name "baazcine_backup_*.sql.gz" -type f -mtime +30 -delete
 echo "Old backups cleaned up"
 
 # List current backups
 echo "Current backups:"
-ls -lh $BACKUP_DIR | grep "shahbaaz_backup_"
+ls -lh $BACKUP_DIR | grep "baazcine_backup_"
 
 exit 0
