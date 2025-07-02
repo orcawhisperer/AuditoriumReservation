@@ -146,7 +146,7 @@ For production deployment on a VPS, follow these steps:
 
 8. Start the application with PM2
    ```bash
-   pm2 start npm --name "shahbaaz-auditorium" -- start
+   pm2 start npm --name "cinebaaz" -- start
    ```
 
 9. Set up PM2 to start on system boot
@@ -209,7 +209,7 @@ Since we're using SQLite, database credentials are no longer needed. However, en
 Create an Nginx configuration file for your application:
 
 ```bash
-sudo nano /etc/nginx/sites-available/shahbaaz-auditorium
+sudo nano /etc/nginx/sites-available/cinebaaz
 ```
 
 Add the following configuration:
@@ -240,7 +240,7 @@ server {
 Enable the site and restart Nginx:
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/shahbaaz-auditorium /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/cinebaaz /etc/nginx/sites-enabled/
 sudo nginx -t  # Test configuration
 sudo systemctl restart nginx
 ```
@@ -361,7 +361,7 @@ If the SQLite database becomes corrupted:
 
 1. Stop the application:
    ```bash
-   pm2 stop shahbaaz-auditorium
+   pm2 stop cinebaaz
    ```
 
 2. Rename or remove the corrupted database file:
@@ -381,7 +381,7 @@ If the SQLite database becomes corrupted:
 
 5. Start the application:
    ```bash
-   pm2 start shahbaaz-auditorium
+   pm2 start cinebaaz
    ```
 
 ## Schema Migrations

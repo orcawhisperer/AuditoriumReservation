@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# VPS Deployment Script for Shahbaaz Auditorium
+# VPS Deployment Script for BaazCine
 # This script automates the production deployment process on a VPS
 
 # Set script to exit on error
 set -e
 
-echo "===== Starting Shahbaaz Auditorium Deployment ====="
+echo "===== Starting BaazCine Deployment ====="
 
 # Make sure we're in the project root
 if [ ! -f "./package.json" ]; then
@@ -51,12 +51,12 @@ if ! command -v pm2 &> /dev/null; then
 fi
 
 # Start or restart the application with PM2
-if pm2 list | grep -q "shahbaaz-auditorium"; then
+if pm2 list | grep -q "baazcine"; then
     echo "Restarting application with PM2..."
-    pm2 restart shahbaaz-auditorium
+    pm2 restart baazcine
 else
     echo "Starting application with PM2..."
-    pm2 start npm --name "shahbaaz-auditorium" -- start
+    pm2 start npm --name "baazcine" -- start
     
     # Save PM2 process list
     pm2 save
@@ -68,7 +68,7 @@ fi
 echo "===== Deployment Complete ====="
 echo "Your application is now running at http://localhost:5000"
 echo "To check application status, run: pm2 status"
-echo "To view logs, run: pm2 logs shahbaaz-auditorium"
+echo "To view logs, run: pm2 logs baazcine"
 echo ""
 echo "Important next steps:"
 echo "1. Configure Nginx as a reverse proxy if not already set up"
