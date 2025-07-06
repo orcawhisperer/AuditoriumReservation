@@ -44,7 +44,7 @@ export function Seat({
     
   const getBaseStyles = () => {
     if (seatType === "plastic") {
-      return "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm bg-gradient-to-br from-orange-50 to-orange-100 border-orange-300 text-orange-800";
+      return "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300 text-purple-800";
     }
     return "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm";
   };
@@ -477,7 +477,7 @@ export function SeatGrid({
                 {/* Plastic section header */}
                 {section.section === "Plastic" && (
                   <div className="flex justify-center mb-4">
-                    <div className="text-sm text-orange-600 font-medium bg-orange-50 px-3 py-1 rounded">
+                    <div className="text-sm text-purple-600 font-medium bg-purple-50 px-3 py-1 rounded">
                       PLASTIC SEATS SECTION
                     </div>
                   </div>
@@ -604,7 +604,7 @@ export function SeatGrid({
                           <div className="flex gap-1 mr-4">
                             {Array.from({ length: 9 }).map((_, idx) => {
                               const seatNumber = idx + 1;
-                              const seatId = `P${rowData.row}${seatNumber}`;
+                              const seatId = `${rowData.row}${seatNumber}`;
 
                               // Check if this seat is reserved by the user
                               const isUserReservation = checkIfUserReservation(seatId);
@@ -620,7 +620,7 @@ export function SeatGrid({
                           <div className="flex gap-1">
                             {Array.from({ length: 9 }).map((_, idx) => {
                               const seatNumber = idx + 10;
-                              const seatId = `P${rowData.row}${seatNumber}`;
+                              const seatId = `${rowData.row}${seatNumber}`;
 
                               // Check if this seat is reserved by the user
                               const isUserReservation = checkIfUserReservation(seatId);
@@ -1273,8 +1273,8 @@ export function SeatGrid({
                   </div>
                 )}
 
-                {/* Screen for Front section */}
-                {section.section === "Front" && (
+                {/* Screen for Plastic section */}
+                {section.section === "Plastic" && (
                   <div className="mt-8 flex justify-center items-center">
                     <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
                     <div className="px-4 py-1 border-2 border-primary/50 rounded text-sm font-bold mx-2">
