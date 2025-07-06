@@ -11,6 +11,16 @@ A military-themed cinema reservation system providing a comprehensive, user-frie
   - Added "About / Contact" link in footer to clearly indicate contact info location
   - Simplified footer by removing quick navigation links except About
   - Moved contact information from footer to About page
+- **2025-01-02**: Scripts folder cleanup and organization
+  - Removed obsolete PostgreSQL-focused scripts
+  - Removed one-time migration scripts no longer needed
+  - Created scripts/README.md for documentation
+  - Streamlined to essential scripts only
+- **2025-01-02**: Added plastic seats section
+  - Updated schema with new "Plastic" section containing 3 rows (R1, R2, R3)
+  - Added 54 plastic seats with same layout as Front section (18 seats per row)
+  - Implemented distinctive orange styling for plastic seats
+  - Added "PLASTIC SEATS SECTION" header and visual indicators
 
 ## Project Architecture
 - **Frontend**: React with TypeScript, Tailwind CSS, Shadcn UI

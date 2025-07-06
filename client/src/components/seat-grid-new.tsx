@@ -21,6 +21,7 @@ type SeatProps = {
   isUserReservation: boolean; // Add this to indicate seats reserved by the current user
   onSelect: (seatId: string) => void;
   isAdminMode?: boolean; // Add this to allow seat unselection in admin mode
+  seatType?: "plastic" | "regular"; // Add this to distinguish plastic seats
 };
 
 export function Seat({
@@ -30,7 +31,8 @@ export function Seat({
   isSelected,
   isUserReservation,
   onSelect,
-  isAdminMode = false
+  isAdminMode = false,
+  seatType = "regular"
 }: SeatProps) {
   // Extract just the seat number from the end of the seatId (remove section prefix and row)
   const seatNumber = seatId.match(/\d+$/)?.[0] || seatId;
@@ -40,11 +42,18 @@ export function Seat({
     ? isBlocked // Only blocked seats are disabled in admin mode
     : (isReserved || isBlocked); // In normal mode, both reserved and blocked are disabled
     
+  const getBaseStyles = () => {
+    if (seatType === "plastic") {
+      return "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm bg-gradient-to-br from-orange-50 to-orange-100 border-orange-300 text-orange-800";
+    }
+    return "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm";
+  };
+
   return (
     <button
       className={cn(
-        "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm",
-        // Apply selected style first
+        getBaseStyles(),
+        // Apply selected style first (overrides base styles)
         isSelected && "bg-primary border-primary text-primary-foreground",
         
         // In admin mode, only show user reservation style if the seat is not currently selected
@@ -65,7 +74,10 @@ export function Seat({
       )}
       disabled={isDisabled}
       onClick={() => onSelect(seatId)}
-      title={isUserReservation ? "User reservation" : ""}
+      title={seatType === "plastic" ? 
+        `Plastic Seat ${seatNumber}${isUserReservation ? " (Your reservation)" : ""}` : 
+        isUserReservation ? "User reservation" : ""
+      }
     >
       {seatNumber}
     </button>
@@ -318,7 +330,7 @@ export function SeatGrid({
   const reservationsToUse = isAdminMode && propUserReservation ? [propUserReservation] : userReservations;
   
   // Helper function to render a seat consistently throughout the component
-  const renderSeat = (seatId: string, isUserRes: boolean) => {
+  const renderSeat = (seatId: string, isUserRes: boolean, seatType: "plastic" | "regular" = "regular") => {
     return (
       <Seat
         key={seatId}
@@ -329,6 +341,7 @@ export function SeatGrid({
         isUserReservation={isUserRes}
         onSelect={handleSeatSelect}
         isAdminMode={isAdminMode}
+        seatType={seatType}
       />
     );
   };
@@ -441,7 +454,11 @@ export function SeatGrid({
                   ? "(Prefix: B)"
                   : section.section === "Back"
                     ? "(Prefix: R)"
-                    : "(Prefix: F)"}
+                    : section.section === "Front"
+                      ? "(Prefix: F)"
+                      : section.section === "Plastic"
+                        ? "(Prefix: P) - Plastic Seats"
+                        : ""}
               </span>
             </h3>
             <div className="w-full bg-muted/30 p-2 sm:p-4 md:p-8 rounded-lg shadow-inner overflow-x-auto">
@@ -453,6 +470,15 @@ export function SeatGrid({
                   <div className="flex justify-center mb-4">
                     <div className="text-sm text-muted-foreground">
                       UPSTAIRS BALCONY
+                    </div>
+                  </div>
+                )}
+
+                {/* Plastic section header */}
+                {section.section === "Plastic" && (
+                  <div className="flex justify-center mb-4">
+                    <div className="text-sm text-orange-600 font-medium bg-orange-50 px-3 py-1 rounded">
+                      PLASTIC SEATS SECTION
                     </div>
                   </div>
                 )}
@@ -566,6 +592,40 @@ export function SeatGrid({
                                   isAdminMode={isAdminMode}
                                 />
                               );
+                            })}
+                          </div>
+                        </>
+                      )}
+
+                      {/* Plastic section with aisle in middle (9 seats on each side) - same layout as Front */}
+                      {section.section === "Plastic" && (
+                        <>
+                          {/* First half (1-9) */}
+                          <div className="flex gap-1 mr-4">
+                            {Array.from({ length: 9 }).map((_, idx) => {
+                              const seatNumber = idx + 1;
+                              const seatId = `P${rowData.row}${seatNumber}`;
+
+                              // Check if this seat is reserved by the user
+                              const isUserReservation = checkIfUserReservation(seatId);
+
+                              return renderSeat(seatId, isUserReservation, "plastic");
+                            })}
+                          </div>
+
+                          {/* Center aisle */}
+                          <div className="w-2 sm:w-3 md:w-4"></div>
+
+                          {/* Second half (10-18) */}
+                          <div className="flex gap-1">
+                            {Array.from({ length: 9 }).map((_, idx) => {
+                              const seatNumber = idx + 10;
+                              const seatId = `P${rowData.row}${seatNumber}`;
+
+                              // Check if this seat is reserved by the user
+                              const isUserReservation = checkIfUserReservation(seatId);
+
+                              return renderSeat(seatId, isUserReservation, "plastic");
                             })}
                           </div>
                         </>

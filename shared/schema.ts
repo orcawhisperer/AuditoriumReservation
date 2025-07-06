@@ -73,6 +73,17 @@ export const shows = sqliteTable("shows", {
           ],
           total_section_seats: 108,
         },
+        {
+          section: "Plastic",
+          rows: [
+            ...["R1", "R2", "R3"].map((row) => ({
+              row,
+              seats: Array.from({ length: 18 }, (_, i) => i + 1),
+              total_seats: 18,
+            })),
+          ],
+          total_section_seats: 54,
+        },
       ]),
     ),
 });
