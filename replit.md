@@ -11,6 +11,8 @@ A military-themed cinema reservation system providing a comprehensive, user-frie
   - Added "About / Contact" link in footer to clearly indicate contact info location
   - Simplified footer by removing quick navigation links except About
   - Moved contact information from footer to About page
+  - Cleaned up scripts folder by removing obsolete PostgreSQL and one-time migration scripts
+  - Organized remaining scripts with clear documentation and purpose
 
 ## Project Architecture
 - **Frontend**: React with TypeScript, Tailwind CSS, Shadcn UI

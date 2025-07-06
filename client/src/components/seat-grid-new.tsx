@@ -21,6 +21,7 @@ type SeatProps = {
   isUserReservation: boolean; // Add this to indicate seats reserved by the current user
   onSelect: (seatId: string) => void;
   isAdminMode?: boolean; // Add this to allow seat unselection in admin mode
+  isPlasticChair?: boolean; // Add this to indicate plastic chair seats
 };
 
 export function Seat({
@@ -30,7 +31,8 @@ export function Seat({
   isSelected,
   isUserReservation,
   onSelect,
-  isAdminMode = false
+  isAdminMode = false,
+  isPlasticChair = false
 }: SeatProps) {
   // Extract just the seat number from the end of the seatId (remove section prefix and row)
   const seatNumber = seatId.match(/\d+$/)?.[0] || seatId;
@@ -43,7 +45,10 @@ export function Seat({
   return (
     <button
       className={cn(
-        "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm",
+        "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 border-2 text-xs font-medium transition-colors shadow-sm",
+        // Plastic chair specific styling
+        isPlasticChair ? "rounded-sm" : "rounded",
+        
         // Apply selected style first
         isSelected && "bg-primary border-primary text-primary-foreground",
         
@@ -59,13 +64,18 @@ export function Seat({
         // Blocked seats
         isBlocked &&
           "bg-yellow-100 border-yellow-200 text-yellow-500 cursor-not-allowed",
+          
+        // Plastic chair base styling (when not selected/reserved/blocked)
+        isPlasticChair && !isSelected && !isReserved && !isBlocked &&
+          "bg-orange-50 border-orange-200 text-orange-800",
+          
         !isDisabled &&
           !isSelected &&
           "hover:bg-accent hover:border-accent hover:text-accent-foreground active:scale-95",
       )}
       disabled={isDisabled}
       onClick={() => onSelect(seatId)}
-      title={isUserReservation ? "User reservation" : ""}
+      title={isPlasticChair ? (isUserReservation ? "Plastic chair - User reservation" : "Plastic chair") : (isUserReservation ? "User reservation" : "")}
     >
       {seatNumber}
     </button>
@@ -318,7 +328,7 @@ export function SeatGrid({
   const reservationsToUse = isAdminMode && propUserReservation ? [propUserReservation] : userReservations;
   
   // Helper function to render a seat consistently throughout the component
-  const renderSeat = (seatId: string, isUserRes: boolean) => {
+  const renderSeat = (seatId: string, isUserRes: boolean, isPlasticChair: boolean = false) => {
     return (
       <Seat
         key={seatId}
@@ -329,6 +339,7 @@ export function SeatGrid({
         isUserReservation={isUserRes}
         onSelect={handleSeatSelect}
         isAdminMode={isAdminMode}
+        isPlasticChair={isPlasticChair}
       />
     );
   };
@@ -439,8 +450,10 @@ export function SeatGrid({
               <span className="text-sm text-muted-foreground font-normal">
                 {section.section === "Balcony"
                   ? "(Prefix: B)"
-                  : section.section === "Back"
+                  : section.section === "Back Section"
                     ? "(Prefix: R)"
+                    : section.section === "Plastic Chairs"
+                    ? "(Plastic chairs - Prefix: R)"
                     : "(Prefix: F)"}
               </span>
             </h3>
@@ -481,7 +494,7 @@ export function SeatGrid({
 
                     <div className="flex flex-wrap gap-0.5 sm:gap-1 relative">
                       {/* Front section with aisle in middle (9 seats on each side) */}
-                      {section.section === "Front" && (
+                      {(section.section === "Front Section" || section.section === "Plastic Chairs") && (
                         <>
                           {/* First half (1-9) */}
                           <div className="flex gap-1 mr-4">
@@ -497,6 +510,7 @@ export function SeatGrid({
 
                               // Check if this seat is reserved by the user
                               const isUserReservation = checkIfUserReservation(seatId);
+                              const isPlasticChair = section.section === "Plastic Chairs";
 
                               return (
                                 <Seat
@@ -508,6 +522,7 @@ export function SeatGrid({
                                   isUserReservation={isUserReservation}
                                   onSelect={handleSeatSelect}
                                   isAdminMode={isAdminMode}
+                                  isPlasticChair={isPlasticChair}
                                 />
                               );
                             })}
@@ -522,37 +537,8 @@ export function SeatGrid({
                               const seatNumber = idx + 10;
                               const seatId = `${rowData.row}${seatNumber}`;
 
-                              const isUserReservation = userReservations.some(
-                                (reservation) => {
-                                  if (reservation.showId !== parseInt(showId))
-                                    return false;
-
-                                  try {
-                                    const seats =
-                                      typeof reservation.seatNumbers ===
-                                      "string"
-                                        ? reservation.seatNumbers.startsWith(
-                                            "[",
-                                          )
-                                          ? JSON.parse(reservation.seatNumbers)
-                                          : reservation.seatNumbers
-                                              .split(",")
-                                              .map((s) => s.trim())
-                                        : reservation.seatNumbers || [];
-
-                                    return (
-                                      Array.isArray(seats) &&
-                                      seats.includes(seatId)
-                                    );
-                                  } catch (e) {
-                                    console.error(
-                                      "Error parsing user reservation seats:",
-                                      e,
-                                    );
-                                    return false;
-                                  }
-                                },
-                              );
+                              const isUserReservation = checkIfUserReservation(seatId);
+                              const isPlasticChair = section.section === "Plastic Chairs";
 
                               return (
                                 <Seat
@@ -564,6 +550,7 @@ export function SeatGrid({
                                   isUserReservation={isUserReservation}
                                   onSelect={handleSeatSelect}
                                   isAdminMode={isAdminMode}
+                                  isPlasticChair={isPlasticChair}
                                 />
                               );
                             })}
@@ -572,7 +559,7 @@ export function SeatGrid({
                       )}
 
                       {/* Back section with 4 groups of 4 seats */}
-                      {section.section === "Back" && (
+                      {section.section === "Back Section" && (
                         <>
                           {/* Special case for row N with server room */}
                           {rowData.row === "N" ? (
@@ -875,6 +862,7 @@ export function SeatGrid({
                                       isUserReservation={isUserReservation}
                                       onSelect={handleSeatSelect}
                                   isAdminMode={isAdminMode}
+                                  isPlasticChair={false}
                                     />
                                   );
                                 })}
@@ -1214,7 +1202,7 @@ export function SeatGrid({
                 )}
 
                 {/* Screen for Front section */}
-                {section.section === "Front" && (
+                {section.section === "Front Section" && (
                   <div className="mt-8 flex justify-center items-center">
                     <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
                     <div className="px-4 py-1 border-2 border-primary/50 rounded text-sm font-bold mx-2">
@@ -1249,6 +1237,10 @@ export function SeatGrid({
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-yellow-100 border-2 border-yellow-200" />
               <span>Blocked</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-sm bg-orange-50 border-2 border-orange-200" />
+              <span>Plastic Chair</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="bg-red-500 text-white px-1 py-0.5 rounded text-xs">

@@ -318,6 +318,7 @@ interface ExtendedCommonTranslation
   view: string;
   morePages: string;
   about: string;
+  contact: string;
   contactUs: string;
   quickLinks: string;
   reservationSystem: string;
