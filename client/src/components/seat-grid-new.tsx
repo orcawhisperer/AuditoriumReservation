@@ -331,6 +331,7 @@ export function SeatGrid({
   
   // Helper function to render a seat consistently throughout the component
   const renderSeat = (seatId: string, isUserRes: boolean, seatType: "plastic" | "regular" = "regular") => {
+    console.log("Rendering seat:", seatId, isUserRes, seatType)
     return (
       <Seat
         key={seatId}
