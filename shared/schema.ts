@@ -37,6 +37,7 @@ export const shows = sqliteTable("shows", {
   price: integer("price").default(0),
   allowedCategories: text("allowed_categories").notNull().default('["single","family","fafa"]'), // JSON array of allowed categories
   fafaExclusiveRows: text("fafa_exclusive_rows").notNull().default("[]"), // JSON array of rows exclusive to FAFA users
+  foodMenu: text("food_menu"), // Base64 encoded food menu image
   seatLayout: text("seat_layout")
     .notNull()
     .default(
@@ -147,6 +148,7 @@ export const insertShowSchema = createInsertSchema(shows).extend({
   price: z.number().int().min(0, "Price cannot be negative").default(0),
   allowedCategories: z.array(z.enum(["single", "family", "fafa"])).default(["single", "family", "fafa"]),
   fafaExclusiveRows: z.array(z.string()).default([]), // Array of row identifiers like ["A", "B"] or ["R1", "R2"]
+  foodMenu: z.string().optional(), // Base64 encoded food menu image
   blockedSeats: z.union([z.string(), z.array(z.string())]).transform((val) => {
     // Common validation function for seat format
     const validateSeat = (seat: string): boolean => {

@@ -170,6 +170,7 @@ interface Reservation {
 function ShowForm() {
   const { toast } = useToast();
   const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [foodMenuPreview, setFoodMenuPreview] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isTemplateSelectOpen, setIsTemplateSelectOpen] = useState<boolean>(false);
 
@@ -199,6 +200,9 @@ function ShowForm() {
       themeColor: "#4B5320",
       emoji: "🎭",
       blockedSeats: "",
+      allowedCategories: ["single", "family", "fafa"],
+      fafaExclusiveRows: [],
+      foodMenu: "",
     },
   });
 
@@ -210,6 +214,19 @@ function ShowForm() {
         const base64String = reader.result as string;
         form.setValue("poster", base64String);
         setPreviewUrl(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFoodMenuChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        form.setValue("foodMenu", base64String);
+        setFoodMenuPreview(base64String);
       };
       reader.readAsDataURL(file);
     }
@@ -253,6 +270,7 @@ function ShowForm() {
       queryClient.invalidateQueries({ queryKey: ["/api/shows"] });
       form.reset();
       setPreviewUrl("");
+      setFoodMenuPreview("");
       toast({
         title: "Success",
         description: "Show created successfully",
@@ -471,6 +489,27 @@ function ShowForm() {
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Ticket Price (₹)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="0"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <FormField
@@ -505,6 +544,101 @@ function ShowForm() {
           )}
         />
 
+        <FormField
+          control={form.control}
+          name="foodMenu"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Food Menu Image</FormLabel>
+              <FormControl>
+                <div className="space-y-4">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFoodMenuChange}
+                    className="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium"
+                  />
+                  {foodMenuPreview && (
+                    <div className="relative w-full max-w-lg overflow-hidden rounded-lg border">
+                      <div className="relative aspect-video">
+                        <img
+                          src={foodMenuPreview}
+                          alt="Food menu preview"
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="allowedCategories"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Allowed User Categories</FormLabel>
+              <FormControl>
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    {["single", "family", "fafa"].map((category) => (
+                      <div key={category} className="flex items-center space-x-2">
+                        <Switch
+                          checked={field.value.includes(category)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              field.onChange([...field.value, category]);
+                            } else {
+                              field.onChange(field.value.filter((c: string) => c !== category));
+                            }
+                          }}
+                        />
+                        <label className="text-sm font-medium capitalize">
+                          {category}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Select which user categories can book tickets for this show
+                  </p>
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="fafaExclusiveRows"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>FAFA-Exclusive Rows (Optional)</FormLabel>
+              <FormControl>
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Enter row identifiers (e.g., A,B or R1,R2)"
+                    value={field.value.join(",")}
+                    onChange={(e) => {
+                      const rows = e.target.value.split(",").map(r => r.trim()).filter(r => r);
+                      field.onChange(rows);
+                    }}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Mark specific rows as FAFA-only. Only users with FAFA category can book these seats.
+                  </p>
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <Button
           type="submit"
           className="w-full"
@@ -530,6 +664,7 @@ function EditShowDialog({
   const { toast } = useToast();
   const [open, setOpen] = useState(true);
   const [previewUrl, setPreviewUrl] = useState<string>(show.poster || "");
+  const [foodMenuPreview, setFoodMenuPreview] = useState<string>(show.foodMenu || "");
   const isPastShow = new Date(show.date) < new Date();
 
   // Show warning if trying to edit a past show
@@ -552,11 +687,15 @@ function EditShowDialog({
       description: show.description || "",
       themeColor: show.themeColor || "#4B5320",
       emoji: show.emoji || "🎭",
+      price: show.price || 0,
       blockedSeats: Array.isArray(show.blockedSeats) 
         ? show.blockedSeats.join(",") 
         : (typeof show.blockedSeats === 'string' 
             ? (show.blockedSeats.includes('[') ? JSON.parse(show.blockedSeats).join(",") : show.blockedSeats) 
             : ""),
+      allowedCategories: show.allowedCategories ? JSON.parse(show.allowedCategories) : ["single", "family", "fafa"],
+      fafaExclusiveRows: show.fafaExclusiveRows ? JSON.parse(show.fafaExclusiveRows) : [],
+      foodMenu: show.foodMenu || "",
     },
   });
   
@@ -568,6 +707,19 @@ function EditShowDialog({
         const base64String = reader.result as string;
         form.setValue("poster", base64String);
         setPreviewUrl(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFoodMenuChangeEdit = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        form.setValue("foodMenu", base64String);
+        setFoodMenuPreview(base64String);
       };
       reader.readAsDataURL(file);
     }
