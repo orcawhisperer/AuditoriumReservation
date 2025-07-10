@@ -367,7 +367,16 @@ function ShowForm() {
       </div>
       
       <form
-        onSubmit={form.handleSubmit((data) => createShowMutation.mutate(data))}
+        onSubmit={form.handleSubmit((data) => {
+          // Transform fafaExclusiveRows from string to array
+          const transformedData = {
+            ...data,
+            fafaExclusiveRows: typeof data.fafaExclusiveRows === 'string' 
+              ? data.fafaExclusiveRows.split(',').map(r => r.trim()).filter(r => r)
+              : data.fafaExclusiveRows
+          };
+          createShowMutation.mutate(transformedData);
+        })}
         className="space-y-4"
       >
         <FormField
@@ -781,9 +790,16 @@ function EditShowDialog({
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((data) =>
-              editShowMutation.mutate(data),
-            )}
+            onSubmit={form.handleSubmit((data) => {
+              // Transform fafaExclusiveRows from string to array
+              const transformedData = {
+                ...data,
+                fafaExclusiveRows: typeof data.fafaExclusiveRows === 'string' 
+                  ? data.fafaExclusiveRows.split(',').map(r => r.trim()).filter(r => r)
+                  : data.fafaExclusiveRows
+              };
+              editShowMutation.mutate(transformedData);
+            })}
             className="space-y-4"
           >
             <FormField
