@@ -34,8 +34,18 @@ export function Seat({
   isAdminMode = false,
   seatType = "regular"
 }: SeatProps) {
-  // Extract just the seat number from the end of the seatId (remove section prefix and row)
-  const seatNumber = seatId.match(/\d+$/)?.[0] || seatId;
+  // Extract seat number - handle special case for plastic seats with R1, R2, R3 rows
+  const getSeatNumber = (id: string) => {
+    // For plastic seats like "R11", "R21", "R31" - extract the last digit(s) after the row identifier
+    if (id.match(/^R[123]\d+$/)) {
+      // Remove "R1", "R2", or "R3" from the beginning and return the remaining number
+      return id.replace(/^R[123]/, '');
+    }
+    // For other seats, extract the trailing number
+    return id.match(/\d+$/)?.[0] || id;
+  };
+  
+  const seatNumber = getSeatNumber(seatId);
   
   // In admin mode, we want to be able to select/unselect all seats including user reservations
   const isDisabled = isAdminMode 
