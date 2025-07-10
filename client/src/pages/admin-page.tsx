@@ -623,10 +623,18 @@ function ShowForm() {
                 <div className="space-y-2">
                   <Input
                     placeholder="Enter row identifiers (e.g., A,B or R1,R2)"
-                    value={field.value.join(",")}
+                    value={Array.isArray(field.value) ? field.value.join(",") : ""}
                     onChange={(e) => {
-                      const rows = e.target.value.split(",").map(r => r.trim().toUpperCase()).filter(r => r);
+                      const inputValue = e.target.value;
+                      // Allow typing commas and convert to array on change
+                      const rows = inputValue.split(",").map(r => r.trim().toUpperCase()).filter(r => r);
                       field.onChange(rows);
+                    }}
+                    onKeyDown={(e) => {
+                      // Explicitly allow comma key
+                      if (e.key === ',') {
+                        e.stopPropagation();
+                      }
                     }}
                   />
                   <p className="text-sm text-muted-foreground">
@@ -1040,10 +1048,18 @@ function EditShowDialog({
                     <div className="space-y-2">
                       <Input
                         placeholder="Enter row identifiers (e.g., A,B or R1,R2)"
-                        value={field.value.join(",")}
+                        value={Array.isArray(field.value) ? field.value.join(",") : ""}
                         onChange={(e) => {
-                          const rows = e.target.value.split(",").map(r => r.trim().toUpperCase()).filter(r => r);
+                          const inputValue = e.target.value;
+                          // Allow typing commas and convert to array on change
+                          const rows = inputValue.split(",").map(r => r.trim().toUpperCase()).filter(r => r);
                           field.onChange(rows);
+                        }}
+                        onKeyDown={(e) => {
+                          // Explicitly allow comma key
+                          if (e.key === ',') {
+                            e.stopPropagation();
+                          }
                         }}
                       />
                       <p className="text-sm text-muted-foreground">
