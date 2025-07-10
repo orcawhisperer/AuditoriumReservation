@@ -627,24 +627,10 @@ function ShowForm() {
                 <div className="space-y-2">
                   <Input
                     placeholder="Enter row identifiers (e.g., A,B or R1,R2)"
-                    value={Array.isArray(field.value) ? field.value.join(",") : ""}
+                    value={Array.isArray(field.value) ? field.value.join(",") : field.value || ""}
                     onChange={(e) => {
-                      const inputValue = e.target.value;
-                      // Process input but keep as raw string until blur to allow comma typing
-                      if (inputValue.endsWith(',') || inputValue.includes(',')) {
-                        // Only convert to array when user types comma or on complete input
-                        const rows = inputValue.split(",").map(r => r.trim().toUpperCase()).filter(r => r.length > 0);
-                        field.onChange(rows);
-                      } else {
-                        // For single values, keep as array but allow typing
-                        field.onChange(inputValue ? [inputValue.toUpperCase()] : []);
-                      }
-                    }}
-                    onBlur={(e) => {
-                      // Final processing on blur to ensure proper format
-                      const inputValue = e.target.value;
-                      const rows = inputValue.split(",").map(r => r.trim().toUpperCase()).filter(r => r.length > 0);
-                      field.onChange(rows);
+                      // Keep as string during typing, convert to uppercase
+                      field.onChange(e.target.value.toUpperCase());
                     }}
                   />
                   <p className="text-sm text-muted-foreground">
@@ -1058,24 +1044,10 @@ function EditShowDialog({
                     <div className="space-y-2">
                       <Input
                         placeholder="Enter row identifiers (e.g., A,B or R1,R2)"
-                        value={Array.isArray(field.value) ? field.value.join(",") : ""}
+                        value={Array.isArray(field.value) ? field.value.join(",") : field.value || ""}
                         onChange={(e) => {
-                          const inputValue = e.target.value;
-                          // Process input but keep as raw string until blur to allow comma typing
-                          if (inputValue.endsWith(',') || inputValue.includes(',')) {
-                            // Only convert to array when user types comma or on complete input
-                            const rows = inputValue.split(",").map(r => r.trim().toUpperCase()).filter(r => r.length > 0);
-                            field.onChange(rows);
-                          } else {
-                            // For single values, keep as array but allow typing
-                            field.onChange(inputValue ? [inputValue.toUpperCase()] : []);
-                          }
-                        }}
-                        onBlur={(e) => {
-                          // Final processing on blur to ensure proper format
-                          const inputValue = e.target.value;
-                          const rows = inputValue.split(",").map(r => r.trim().toUpperCase()).filter(r => r.length > 0);
-                          field.onChange(rows);
+                          // Keep as string during typing, convert to uppercase
+                          field.onChange(e.target.value.toUpperCase());
                         }}
                       />
                       <p className="text-sm text-muted-foreground">
