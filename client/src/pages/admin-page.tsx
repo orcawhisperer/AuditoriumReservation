@@ -52,6 +52,10 @@ import {
   UserPlus,
   Palette,
   Ticket,
+  Eye,
+  Share2,
+  Copy,
+  Edit,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo, useEffect } from "react";
@@ -1090,9 +1094,260 @@ function EditShowDialog({
   );
 }
 
+// Show Details Dialog Component
+function ShowDetailsDialog({
+  show,
+  onClose,
+}: {
+  show: Show;
+  onClose: () => void;
+}) {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(true);
+  const { data: reservations = [] } = useQuery<any[]>({
+    queryKey: ["/api/reservations"],
+    staleTime: 0,
+  });
+  const { data: users = [] } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+    staleTime: 0,
+  });
+
+  const handleClose = () => {
+    setOpen(false);
+    onClose();
+  };
+
+  const showReservations = reservations.filter((r) => r.showId === show.id);
+  const bookedSeats = showReservations.flatMap((r) => {
+    try {
+      return typeof r.seatNumbers === 'string' ? JSON.parse(r.seatNumbers) : r.seatNumbers;
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const blockedSeats = Array.isArray(show.blockedSeats) 
+    ? show.blockedSeats 
+    : (typeof show.blockedSeats === 'string' 
+      ? (show.blockedSeats.includes(",") 
+        ? show.blockedSeats.split(",").map(s => s.trim()) 
+        : (show.blockedSeats ? [show.blockedSeats] : []))
+      : []);
+
+  const allowedCategories = Array.isArray(show.allowedCategories) 
+    ? show.allowedCategories 
+    : (typeof show.allowedCategories === 'string' 
+      ? (show.allowedCategories.includes("[") 
+        ? JSON.parse(show.allowedCategories) 
+        : show.allowedCategories.split(",").map(s => s.trim()))
+      : []);
+
+  const fafaExclusiveRows = Array.isArray(show.fafaExclusiveRows) 
+    ? show.fafaExclusiveRows 
+    : (typeof show.fafaExclusiveRows === 'string' 
+      ? (show.fafaExclusiveRows.includes("[") 
+        ? JSON.parse(show.fafaExclusiveRows) 
+        : show.fafaExclusiveRows.split(",").map(s => s.trim()))
+      : []);
+
+  const layout = typeof show.seatLayout === 'string' ? JSON.parse(show.seatLayout) : show.seatLayout;
+  const totalSeats = layout.reduce((total: number, section: any) => {
+    return total + section.rows.reduce((sectionTotal: number, row: any) => {
+      return sectionTotal + row.seats.length;
+    }, 0);
+  }, 0);
+
+  const availableSeats = totalSeats - bookedSeats.length - blockedSeats.length;
+
+  const handleShare = () => {
+    const showUrl = `${window.location.origin}/?show=${show.id}`;
+    navigator.clipboard.writeText(showUrl).then(() => {
+      toast({
+        title: "Link Copied",
+        description: "Show booking link copied to clipboard",
+      });
+    }).catch(() => {
+      toast({
+        title: "Error",
+        description: "Failed to copy link",
+        variant: "destructive",
+      });
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <span>{show.emoji}</span>
+            {show.title}
+          </DialogTitle>
+          <DialogDescription>
+            Complete show details and booking information
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-6">
+          {/* Basic Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-medium text-sm text-muted-foreground mb-2">Show Information</h3>
+                <div className="space-y-2">
+                  <p><span className="font-medium">Date & Time:</span> {format(new Date(show.date), "PPP p")}</p>
+                  <p><span className="font-medium">Price:</span> ₹{show.price || 0}</p>
+                  {show.description && (
+                    <p><span className="font-medium">Description:</span> {show.description}</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-medium text-sm text-muted-foreground mb-2">Seat Statistics</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-green-50 p-3 rounded-lg">
+                    <p className="text-lg font-bold text-green-600">{availableSeats}</p>
+                    <p className="text-sm text-green-600">Available</p>
+                  </div>
+                  <div className="bg-red-50 p-3 rounded-lg">
+                    <p className="text-lg font-bold text-red-600">{bookedSeats.length}</p>
+                    <p className="text-sm text-red-600">Booked</p>
+                  </div>
+                  <div className="bg-yellow-50 p-3 rounded-lg">
+                    <p className="text-lg font-bold text-yellow-600">{blockedSeats.length}</p>
+                    <p className="text-sm text-yellow-600">Blocked</p>
+                  </div>
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <p className="text-lg font-bold text-blue-600">{totalSeats}</p>
+                    <p className="text-sm text-blue-600">Total</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {show.poster && (
+                <div>
+                  <h3 className="font-medium text-sm text-muted-foreground mb-2">Poster</h3>
+                  <div className="relative w-full h-48 overflow-hidden rounded-lg border">
+                    <img
+                      src={show.poster}
+                      alt={`Poster for ${show.title}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {show.foodMenu && (
+                <div>
+                  <h3 className="font-medium text-sm text-muted-foreground mb-2">Food Menu</h3>
+                  <div className="relative w-full h-32 overflow-hidden rounded-lg border">
+                    <img
+                      src={show.foodMenu}
+                      alt="Food menu"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Category & FAFA Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="font-medium text-sm text-muted-foreground mb-2">Allowed User Categories</h3>
+              <div className="flex flex-wrap gap-2">
+                {allowedCategories.length > 0 ? (
+                  allowedCategories.map((category: string) => (
+                    <Badge key={category} variant="secondary" className="capitalize">
+                      {category}
+                    </Badge>
+                  ))
+                ) : (
+                  <span className="text-sm text-muted-foreground">All categories allowed</span>
+                )}
+              </div>
+            </div>
+
+            {fafaExclusiveRows.length > 0 && (
+              <div>
+                <h3 className="font-medium text-sm text-muted-foreground mb-2">FAFA-Exclusive Rows</h3>
+                <div className="flex flex-wrap gap-2">
+                  {fafaExclusiveRows.map((row: string) => (
+                    <Badge key={row} variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                      Row {row}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Seat Layout */}
+          <div>
+            <h3 className="font-medium text-sm text-muted-foreground mb-2">Current Seat Layout</h3>
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <SeatGrid 
+                showId={show.id.toString()} 
+                hideActionButtons={true}
+                isAdminMode={true}
+                className="scale-75 transform-origin-top-left"
+              />
+            </div>
+          </div>
+
+          {/* Reservations */}
+          {showReservations.length > 0 && (
+            <div>
+              <h3 className="font-medium text-sm text-muted-foreground mb-2">Recent Reservations</h3>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {showReservations.slice(0, 5).map((reservation: any) => {
+                  const user = users.find((u) => u.id === reservation.userId);
+                  const seats = typeof reservation.seatNumbers === 'string' 
+                    ? JSON.parse(reservation.seatNumbers) 
+                    : reservation.seatNumbers;
+                  
+                  return (
+                    <div key={reservation.id} className="flex justify-between items-center p-2 bg-white rounded border">
+                      <span className="font-medium">{user?.username || "Unknown"}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {Array.isArray(seats) ? seats.join(", ") : seats}
+                      </span>
+                    </div>
+                  );
+                })}
+                {showReservations.length > 5 && (
+                  <p className="text-sm text-muted-foreground text-center">
+                    +{showReservations.length - 5} more reservations
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-between pt-4">
+          <Button onClick={handleShare} variant="outline" className="flex items-center gap-2">
+            <Share2 className="h-4 w-4" />
+            Share Booking Link
+          </Button>
+          <Button onClick={handleClose}>
+            Close
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function ShowList() {
   const { toast } = useToast();
   const [editingShow, setEditingShow] = useState<Show | null>(null);
+  const [viewingShow, setViewingShow] = useState<Show | null>(null);
   const { data: showsData = [], isLoading } = useQuery<Show[]>({
     queryKey: ["/api/shows"],
     staleTime: 0,
@@ -1261,10 +1516,43 @@ function ShowList() {
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={() => setViewingShow(show)}
+                  className="w-full sm:w-auto flex items-center gap-2"
+                >
+                  <Eye className="h-4 w-4" />
+                  View Details
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const showUrl = `${window.location.origin}/?show=${show.id}`;
+                    navigator.clipboard.writeText(showUrl).then(() => {
+                      toast({
+                        title: "Link Copied",
+                        description: "Show booking link copied to clipboard",
+                      });
+                    }).catch(() => {
+                      toast({
+                        title: "Error",
+                        description: "Failed to copy link",
+                        variant: "destructive",
+                      });
+                    });
+                  }}
+                  className="w-full sm:w-auto flex items-center gap-2"
+                >
+                  <Share2 className="h-4 w-4" />
+                  Share
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setEditingShow(show)}
                   disabled={isPastShow}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto flex items-center gap-2"
                 >
+                  <Edit className="h-4 w-4" />
                   Edit
                 </Button>
                 <AlertDialog>
@@ -1353,6 +1641,12 @@ function ShowList() {
         <EditShowDialog
           show={editingShow}
           onClose={() => setEditingShow(null)}
+        />
+      )}
+      {viewingShow && (
+        <ShowDetailsDialog
+          show={viewingShow}
+          onClose={() => setViewingShow(null)}
         />
       )}
     </div>
