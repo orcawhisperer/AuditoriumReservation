@@ -149,95 +149,55 @@ export const insertShowSchema = createInsertSchema(shows).extend({
   allowedCategories: z.array(z.enum(["single", "family", "fafa"])).default(["single", "family", "fafa"]),
   fafaExclusiveRows: z.array(z.string()).default([]), // Array of row identifiers like ["A", "B"] or ["R1", "R2"]
   foodMenu: z.string().optional(), // Base64 encoded food menu image
-  blockedSeats: z.union([z.string(), z.array(z.string())]).transform((val) => {
-    // Common validation function for seat format
-    const validateSeat = (seat: string): boolean => {
-      // Check for plastic seats format (R1, R2, R3 followed by seat number)
-      if (/^R[123][0-9]{1,2}$/.test(seat)) {
-        const row = seat.substring(0, 2); // R1, R2, or R3
-        const number = parseInt(seat.slice(2));
-        
-        // Plastic seats have 18 seats per row (1-18)
-        if ((row === "R1" || row === "R2" || row === "R3") && number >= 1 && number <= 18) {
-          return true;
+  blockedSeats: z.array(z.string()).default([]).refine(
+    (seats) => {
+      // Validate each seat format
+      return seats.every((seat) => {
+        // Check for plastic seats format (R1, R2, R3 followed by seat number)
+        if (/^R[123][0-9]{1,2}$/.test(seat)) {
+          const row = seat.substring(0, 2); // R1, R2, or R3
+          const number = parseInt(seat.slice(2));
+          
+          // Plastic seats have 18 seats per row (1-18)
+          return (row === "R1" || row === "R2" || row === "R3") && number >= 1 && number <= 18;
         }
         
-        throw new Error(
-          `Invalid seat number: ${seat}. This seat does not exist in the layout.`,
-        );
-      }
-      
-      // Check for regular seats format (A-P followed by seat number)
-      if (!/^[A-P][0-9]{1,2}$/.test(seat)) {
-        throw new Error(
-          `Invalid seat format: ${seat}. Format should be like A1, B2, N3, R11, etc.`,
-        );
-      }
+        // Check for regular seats format (A-P followed by seat number)
+        if (!/^[A-P][0-9]{1,2}$/.test(seat)) {
+          return false;
+        }
 
-      const row = seat[0];
-      const number = parseInt(seat.slice(1));
+        const row = seat[0];
+        const number = parseInt(seat.slice(1));
 
-      // Balcony (rows O-P)
-      if ((row === "O" || row === "P") && number >= 1 && number <= 9) {
-        return true;
-      }
+        // Balcony (rows O-P)
+        if ((row === "O" || row === "P") && number >= 1 && number <= 9) {
+          return true;
+        }
 
-      // Row N with server room (missing 5-8)
-      if (
-        row === "N" &&
-        [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)
-      ) {
-        return true;
-      }
+        // Row N with server room (missing 5-8)
+        if (
+          row === "N" &&
+          [1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16].includes(number)
+        ) {
+          return true;
+        }
 
-      // Back section (rows G-M)
-      if (row >= "G" && row <= "M" && number >= 1 && number <= 16) {
-        return true;
-      }
+        // Back section (rows G-M)
+        if (row >= "G" && row <= "M" && number >= 1 && number <= 16) {
+          return true;
+        }
 
-      // Front section (rows A-F)
-      if (row >= "A" && row <= "F" && number >= 1 && number <= 18) {
-        return true;
-      }
+        // Front section (rows A-F)
+        if (row >= "A" && row <= "F" && number >= 1 && number <= 18) {
+          return true;
+        }
 
-      throw new Error(
-        `Invalid seat number: ${seat}. This seat does not exist in the layout.`,
-      );
-    };
-
-    // If it's already an array, validate each seat
-    if (Array.isArray(val)) {
-      val.forEach(validateSeat);
-      return val;
-    }
-
-    // Otherwise treat as string
-    const str = val as string;
-
-    // If the string is empty or undefined, return empty array
-    if (!str || str.trim() === "") {
-      return [];
-    }
-
-    try {
-      // Try parsing as JSON first (in case it's already JSON)
-      const parsed = JSON.parse(str);
-      if (Array.isArray(parsed)) {
-        parsed.forEach(validateSeat);
-        return parsed;
-      }
-    } catch (e) {
-      // If not valid JSON, treat as comma-separated string
-    }
-
-    // Split by comma and clean up each seat
-    const seats = str
-      .split(",")
-      .map((s) => s.trim().toUpperCase())
-      .filter(Boolean);
-    seats.forEach(validateSeat);
-    return seats;
-  }),
+        return false;
+      });
+    },
+    { message: "Invalid seat selection" }
+  ),
 });
 
 export const insertReservationSchema = createInsertSchema(reservations)

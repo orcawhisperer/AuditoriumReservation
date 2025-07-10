@@ -101,15 +101,21 @@ export class SQLiteStorage implements IStorage {
   }
 
   async createShow(insertShow: InsertShow): Promise<Show> {
-    // For SQLite, store blockedSeats and seatLayout as JSON strings
+    // For SQLite, store blockedSeats, allowedCategories, and fafaExclusiveRows as JSON strings
     const showData = {
       ...insertShow,
       // Store as ISO string in SQLite
       date: typeof insertShow.date === 'string' ? insertShow.date : new Date(insertShow.date).toISOString(),
-      // Convert array to JSON string if needed
+      // Convert arrays to JSON strings if needed
       blockedSeats: Array.isArray(insertShow.blockedSeats) 
         ? JSON.stringify(insertShow.blockedSeats) 
         : insertShow.blockedSeats,
+      allowedCategories: Array.isArray(insertShow.allowedCategories) 
+        ? JSON.stringify(insertShow.allowedCategories) 
+        : insertShow.allowedCategories,
+      fafaExclusiveRows: Array.isArray(insertShow.fafaExclusiveRows) 
+        ? JSON.stringify(insertShow.fafaExclusiveRows) 
+        : insertShow.fafaExclusiveRows,
       // Ensure seatLayout is a string in SQLite
       seatLayout: typeof insertShow.seatLayout === 'string'
         ? insertShow.seatLayout
@@ -131,6 +137,12 @@ export class SQLiteStorage implements IStorage {
       if (typeof show.blockedSeats === 'string') {
         show.blockedSeats = JSON.parse(show.blockedSeats);
       }
+      if (typeof show.allowedCategories === 'string') {
+        show.allowedCategories = JSON.parse(show.allowedCategories);
+      }
+      if (typeof show.fafaExclusiveRows === 'string') {
+        show.fafaExclusiveRows = JSON.parse(show.fafaExclusiveRows);
+      }
       if (typeof show.seatLayout === 'string') {
         show.seatLayout = JSON.parse(show.seatLayout);
       }
@@ -150,6 +162,12 @@ export class SQLiteStorage implements IStorage {
         if (typeof show.blockedSeats === 'string') {
           show.blockedSeats = JSON.parse(show.blockedSeats);
         }
+        if (typeof show.allowedCategories === 'string') {
+          show.allowedCategories = JSON.parse(show.allowedCategories);
+        }
+        if (typeof show.fafaExclusiveRows === 'string') {
+          show.fafaExclusiveRows = JSON.parse(show.fafaExclusiveRows);
+        }
         if (typeof show.seatLayout === 'string') {
           show.seatLayout = JSON.parse(show.seatLayout);
         }
@@ -166,15 +184,21 @@ export class SQLiteStorage implements IStorage {
   }
 
   async updateShow(id: number, show: InsertShow): Promise<Show> {
-    // For SQLite, store blockedSeats and seatLayout as JSON strings
+    // For SQLite, store blockedSeats, allowedCategories, and fafaExclusiveRows as JSON strings
     const showData = {
       ...show,
       // Store as ISO string in SQLite
       date: typeof show.date === 'string' ? show.date : new Date(show.date).toISOString(),
-      // Convert array to JSON string if needed
+      // Convert arrays to JSON strings if needed
       blockedSeats: Array.isArray(show.blockedSeats) 
         ? JSON.stringify(show.blockedSeats) 
         : show.blockedSeats,
+      allowedCategories: Array.isArray(show.allowedCategories) 
+        ? JSON.stringify(show.allowedCategories) 
+        : show.allowedCategories,
+      fafaExclusiveRows: Array.isArray(show.fafaExclusiveRows) 
+        ? JSON.stringify(show.fafaExclusiveRows) 
+        : show.fafaExclusiveRows,
       // Ensure seatLayout is a string in SQLite
       seatLayout: typeof show.seatLayout === 'string'
         ? show.seatLayout
