@@ -22,6 +22,7 @@ type SeatProps = {
   onSelect: (seatId: string) => void;
   isAdminMode?: boolean; // Add this to allow seat unselection in admin mode
   seatType?: "plastic" | "regular"; // Add this to distinguish plastic seats
+  isFafaExclusive?: boolean; // Add this to indicate FAFA exclusive seats
 };
 
 export function Seat({
@@ -32,7 +33,8 @@ export function Seat({
   isUserReservation,
   onSelect,
   isAdminMode = false,
-  seatType = "regular"
+  seatType = "regular",
+  isFafaExclusive = false
 }: SeatProps) {
   // Extract seat number - handle special case for plastic seats with R1, R2, R3 rows
   const getSeatNumber = (id: string) => {
@@ -55,6 +57,9 @@ export function Seat({
   const getBaseStyles = () => {
     if (seatType === "plastic") {
       return "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300 text-purple-800";
+    }
+    if (isFafaExclusive) {
+      return "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm bg-gradient-to-br from-orange-50 to-orange-100 border-orange-300 text-orange-800";
     }
     return "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm";
   };
@@ -86,7 +91,9 @@ export function Seat({
       onClick={() => onSelect(seatId)}
       title={seatType === "plastic" ? 
         `Plastic Seat ${seatNumber}${isUserReservation ? " (Your reservation)" : ""}` : 
-        isUserReservation ? "User reservation" : ""
+        isFafaExclusive ? 
+          `FAFA-Exclusive Seat ${seatNumber}${isUserReservation ? " (Your reservation)" : ""}` :
+          isUserReservation ? "User reservation" : ""
       }
     >
       {seatNumber}
@@ -300,6 +307,32 @@ export function SeatGrid({
         : [],
   );
 
+  // Parse FAFA exclusive rows
+  const fafaExclusiveRows = Array.isArray(show.fafaExclusiveRows)
+    ? show.fafaExclusiveRows
+    : typeof show.fafaExclusiveRows === "string"
+      ? show.fafaExclusiveRows.startsWith("[")
+        ? JSON.parse(show.fafaExclusiveRows)
+        : show.fafaExclusiveRows.split(",").map((s) => s.trim()).filter(s => s)
+      : [];
+
+  // Helper function to check if a seat is in a FAFA exclusive row
+  const isFafaExclusiveSeat = (seatId: string) => {
+    if (fafaExclusiveRows.length === 0) return false;
+    
+    // Extract row from seat ID (e.g., "A1" -> "A", "R11" -> "R1")
+    let row = "";
+    if (seatId.match(/^R[123]\d+$/)) {
+      // Plastic seats: R11, R21, R31 -> R1, R2, R3
+      row = seatId.substring(0, 2);
+    } else {
+      // Regular seats: A1, B2, etc. -> A, B, etc.
+      row = seatId.charAt(0);
+    }
+    
+    return fafaExclusiveRows.includes(row);
+  };
+
   const handleSeatSelect = (seatId: string) => {
     // If we have an external seat selection handler, use it
     if (propOnSeatSelect) {
@@ -315,6 +348,16 @@ export function SeatGrid({
     }
 
     // Trying to add a new seat
+
+    // Check FAFA exclusive row restrictions
+    if (!user?.isAdmin && isFafaExclusiveSeat(seatId) && user?.category !== "fafa") {
+      toast({
+        title: "FAFA-Exclusive Seat",
+        description: "This seat is only available to FAFA category users",
+        variant: "destructive",
+      });
+      return;
+    }
 
     // Admins have no seat limit
     if (!user?.isAdmin) {
@@ -341,7 +384,6 @@ export function SeatGrid({
   
   // Helper function to render a seat consistently throughout the component
   const renderSeat = (seatId: string, isUserRes: boolean, seatType: "plastic" | "regular" = "regular") => {
-    console.log("Rendering seat:", seatId, isUserRes, seatType)
     return (
       <Seat
         key={seatId}
@@ -353,6 +395,7 @@ export function SeatGrid({
         onSelect={handleSeatSelect}
         isAdminMode={isAdminMode}
         seatType={seatType}
+        isFafaExclusive={isFafaExclusiveSeat(seatId)}
       />
     );
   };
