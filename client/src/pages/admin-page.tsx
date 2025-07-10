@@ -205,7 +205,7 @@ function ShowForm() {
       emoji: "🎭",
       blockedSeats: "",
       allowedCategories: ["single", "family", "fafa"],
-      fafaExclusiveRows: [],
+      fafaExclusiveRows: "",
       foodMenu: "",
     },
   });
@@ -242,7 +242,16 @@ function ShowForm() {
     form.setValue("description", templateShow.description || "");
     form.setValue("themeColor", templateShow.themeColor || "#4B5320");
     form.setValue("emoji", templateShow.emoji || "🎭");
-    form.setValue("blockedSeats", templateShow.blockedSeats || "");
+    form.setValue("blockedSeats", Array.isArray(templateShow.blockedSeats) 
+      ? templateShow.blockedSeats.join(",") 
+      : (typeof templateShow.blockedSeats === 'string' 
+          ? (templateShow.blockedSeats.includes('[') ? JSON.parse(templateShow.blockedSeats).join(",") : templateShow.blockedSeats) 
+          : ""));
+    form.setValue("fafaExclusiveRows", Array.isArray(templateShow.fafaExclusiveRows) 
+      ? templateShow.fafaExclusiveRows.join(",") 
+      : (typeof templateShow.fafaExclusiveRows === 'string' 
+          ? (templateShow.fafaExclusiveRows.includes('[') ? JSON.parse(templateShow.fafaExclusiveRows).join(",") : templateShow.fafaExclusiveRows) 
+          : ""));
     
     // Always set a new date as default
     form.setValue("date", new Date().toISOString().slice(0, 16));
@@ -368,9 +377,12 @@ function ShowForm() {
       
       <form
         onSubmit={form.handleSubmit((data) => {
-          // Transform fafaExclusiveRows from string to array
+          // Transform string fields to arrays for backend
           const transformedData = {
             ...data,
+            blockedSeats: typeof data.blockedSeats === 'string' 
+              ? data.blockedSeats.split(',').map(s => s.trim()).filter(s => s)
+              : data.blockedSeats,
             fafaExclusiveRows: typeof data.fafaExclusiveRows === 'string' 
               ? data.fafaExclusiveRows.split(',').map(r => r.trim()).filter(r => r)
               : data.fafaExclusiveRows
@@ -712,10 +724,10 @@ function EditShowDialog({
             ? (show.allowedCategories.startsWith('[') ? JSON.parse(show.allowedCategories) : ["single", "family", "fafa"])
             : ["single", "family", "fafa"]),
       fafaExclusiveRows: Array.isArray(show.fafaExclusiveRows) 
-        ? show.fafaExclusiveRows 
+        ? show.fafaExclusiveRows.join(',')
         : (typeof show.fafaExclusiveRows === 'string' && show.fafaExclusiveRows.length > 0 
-            ? (show.fafaExclusiveRows.startsWith('[') ? JSON.parse(show.fafaExclusiveRows) : [])
-            : []),
+            ? (show.fafaExclusiveRows.startsWith('[') ? JSON.parse(show.fafaExclusiveRows).join(',') : show.fafaExclusiveRows)
+            : ""),
       foodMenu: show.foodMenu || "",
     },
   });
@@ -791,9 +803,12 @@ function EditShowDialog({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {
-              // Transform fafaExclusiveRows from string to array
+              // Transform string fields to arrays for backend
               const transformedData = {
                 ...data,
+                blockedSeats: typeof data.blockedSeats === 'string' 
+                  ? data.blockedSeats.split(',').map(s => s.trim()).filter(s => s)
+                  : data.blockedSeats,
                 fafaExclusiveRows: typeof data.fafaExclusiveRows === 'string' 
                   ? data.fafaExclusiveRows.split(',').map(r => r.trim()).filter(r => r)
                   : data.fafaExclusiveRows
