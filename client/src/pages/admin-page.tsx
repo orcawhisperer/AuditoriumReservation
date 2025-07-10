@@ -625,7 +625,7 @@ function ShowForm() {
                     placeholder="Enter row identifiers (e.g., A,B or R1,R2)"
                     value={field.value.join(",")}
                     onChange={(e) => {
-                      const rows = e.target.value.split(",").map(r => r.trim()).filter(r => r);
+                      const rows = e.target.value.split(",").map(r => r.trim().toUpperCase()).filter(r => r);
                       field.onChange(rows);
                     }}
                   />
@@ -693,8 +693,16 @@ function EditShowDialog({
         : (typeof show.blockedSeats === 'string' 
             ? (show.blockedSeats.includes('[') ? JSON.parse(show.blockedSeats).join(",") : show.blockedSeats) 
             : ""),
-      allowedCategories: show.allowedCategories ? JSON.parse(show.allowedCategories) : ["single", "family", "fafa"],
-      fafaExclusiveRows: show.fafaExclusiveRows ? JSON.parse(show.fafaExclusiveRows) : [],
+      allowedCategories: Array.isArray(show.allowedCategories) 
+        ? show.allowedCategories 
+        : (typeof show.allowedCategories === 'string' && show.allowedCategories.length > 0 
+            ? (show.allowedCategories.startsWith('[') ? JSON.parse(show.allowedCategories) : ["single", "family", "fafa"])
+            : ["single", "family", "fafa"]),
+      fafaExclusiveRows: Array.isArray(show.fafaExclusiveRows) 
+        ? show.fafaExclusiveRows 
+        : (typeof show.fafaExclusiveRows === 'string' && show.fafaExclusiveRows.length > 0 
+            ? (show.fafaExclusiveRows.startsWith('[') ? JSON.parse(show.fafaExclusiveRows) : [])
+            : []),
       foodMenu: show.foodMenu || "",
     },
   });
@@ -902,6 +910,27 @@ function EditShowDialog({
             
             <FormField
               control={form.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ticket Price (₹)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="0"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="poster"
               render={({ field }) => (
                 <FormItem>
@@ -925,6 +954,101 @@ function EditShowDialog({
                           </div>
                         </div>
                       )}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="foodMenu"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Food Menu Image</FormLabel>
+                  <FormControl>
+                    <div className="space-y-4">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFoodMenuChangeEdit}
+                        className="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium"
+                      />
+                      {foodMenuPreview && (
+                        <div className="relative w-full max-w-lg overflow-hidden rounded-lg border">
+                          <div className="relative aspect-video">
+                            <img
+                              src={foodMenuPreview}
+                              alt="Food menu preview"
+                              className="absolute inset-0 w-full h-full object-cover"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="allowedCategories"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Allowed User Categories</FormLabel>
+                  <FormControl>
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-2">
+                        {["single", "family", "fafa"].map((category) => (
+                          <div key={category} className="flex items-center space-x-2">
+                            <Switch
+                              checked={field.value.includes(category)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  field.onChange([...field.value, category]);
+                                } else {
+                                  field.onChange(field.value.filter((c: string) => c !== category));
+                                }
+                              }}
+                            />
+                            <label className="text-sm font-medium capitalize">
+                              {category}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Select which user categories can book tickets for this show
+                      </p>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="fafaExclusiveRows"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>FAFA-Exclusive Rows (Optional)</FormLabel>
+                  <FormControl>
+                    <div className="space-y-2">
+                      <Input
+                        placeholder="Enter row identifiers (e.g., A,B or R1,R2)"
+                        value={field.value.join(",")}
+                        onChange={(e) => {
+                          const rows = e.target.value.split(",").map(r => r.trim().toUpperCase()).filter(r => r);
+                          field.onChange(rows);
+                        }}
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Mark specific rows as FAFA-only. Only users with FAFA category can book these seats.
+                      </p>
                     </div>
                   </FormControl>
                   <FormMessage />
