@@ -142,9 +142,25 @@ export const insertShowSchema = createInsertSchema(shows).extend({
   blockedSeats: z.union([z.string(), z.array(z.string())]).transform((val) => {
     // Common validation function for seat format
     const validateSeat = (seat: string): boolean => {
+      // Check for plastic seats format (R1, R2, R3 followed by seat number)
+      if (/^R[123][0-9]{1,2}$/.test(seat)) {
+        const row = seat.substring(0, 2); // R1, R2, or R3
+        const number = parseInt(seat.slice(2));
+        
+        // Plastic seats have 18 seats per row (1-18)
+        if ((row === "R1" || row === "R2" || row === "R3") && number >= 1 && number <= 18) {
+          return true;
+        }
+        
+        throw new Error(
+          `Invalid seat number: ${seat}. This seat does not exist in the layout.`,
+        );
+      }
+      
+      // Check for regular seats format (A-P followed by seat number)
       if (!/^[A-P][0-9]{1,2}$/.test(seat)) {
         throw new Error(
-          `Invalid seat format: ${seat}. Format should be like A1, B2, N3, etc.`,
+          `Invalid seat format: ${seat}. Format should be like A1, B2, N3, R11, etc.`,
         );
       }
 
@@ -221,10 +237,20 @@ export const insertReservationSchema = createInsertSchema(reservations)
   })
   .extend({
     seatNumbers: z
-      .array(z.string().regex(/^[A-P][0-9]{1,2}$/, "Invalid seat format"))
+      .array(z.string().regex(/^([A-P][0-9]{1,2}|R[123][0-9]{1,2})$/, "Invalid seat format"))
       .refine(
         (seats) =>
           seats.every((seat) => {
+            // Check for plastic seats format (R1, R2, R3 followed by seat number)
+            if (/^R[123][0-9]{1,2}$/.test(seat)) {
+              const row = seat.substring(0, 2); // R1, R2, or R3
+              const number = parseInt(seat.slice(2));
+              
+              // Plastic seats have 18 seats per row (1-18)
+              return (row === "R1" || row === "R2" || row === "R3") && number >= 1 && number <= 18;
+            }
+            
+            // Check for regular seats
             const row = seat[0];
             const number = parseInt(seat.slice(1));
 

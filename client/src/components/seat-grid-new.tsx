@@ -64,7 +64,7 @@ export function Seat({
       className={cn(
         getBaseStyles(),
         // Apply selected style first (overrides base styles)
-        isSelected && "bg-primary border-primary text-primary-foreground",
+        isSelected && "bg-primary border-primary text-primary-foreground font-bold",
         
         // In admin mode, only show user reservation style if the seat is not currently selected
         isUserReservation && !isSelected && (isAdminMode ? false : true) &&
