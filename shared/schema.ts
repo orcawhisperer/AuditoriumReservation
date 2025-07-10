@@ -19,6 +19,7 @@ export const users = sqliteTable("users", {
   name: text("name"),
   gender: text("gender"),
   dateOfBirth: text("date_of_birth"),
+  category: text("category", { enum: ["single", "family", "fafa"] }).notNull().default("single"),
   createdAt: text("created_at")
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),
@@ -34,6 +35,8 @@ export const shows = sqliteTable("shows", {
   emoji: text("emoji"),
   blockedSeats: text("blocked_seats").notNull().default("[]"),
   price: integer("price").default(0),
+  allowedCategories: text("allowed_categories").notNull().default('["single","family","fafa"]'), // JSON array of allowed categories
+  fafaExclusiveRows: text("fafa_exclusive_rows").notNull().default("[]"), // JSON array of rows exclusive to FAFA users
   seatLayout: text("seat_layout")
     .notNull()
     .default(
@@ -115,6 +118,9 @@ export const insertUserSchema = createInsertSchema(users, {
     },
     { message: "Must be at least 13 years old" },
   ),
+  category: z.enum(["single", "family", "fafa"], {
+    required_error: "Please select a category",
+  }).default("single"),
   seatLimit: z
     .number()
     .int()
@@ -139,6 +145,8 @@ export const insertShowSchema = createInsertSchema(shows).extend({
     .optional(),
   emoji: z.string().optional(),
   price: z.number().int().min(0, "Price cannot be negative").default(0),
+  allowedCategories: z.array(z.enum(["single", "family", "fafa"])).default(["single", "family", "fafa"]),
+  fafaExclusiveRows: z.array(z.string()).default([]), // Array of row identifiers like ["A", "B"] or ["R1", "R2"]
   blockedSeats: z.union([z.string(), z.array(z.string())]).transform((val) => {
     // Common validation function for seat format
     const validateSeat = (seat: string): boolean => {

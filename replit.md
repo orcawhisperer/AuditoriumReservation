@@ -4,6 +4,17 @@
 A military-themed cinema reservation system providing a comprehensive, user-friendly platform for movie screenings and precise seat allocation. Previously known as "Shahbaaz Auditorium", the system has been rebranded to "BaazCine" to better reflect its cinema focus.
 
 ## Recent Changes
+- **2025-01-10**: User Category System Implementation
+  - Added user categories: single, family, FAFA
+  - Added show-level category restrictions (allowedCategories)
+  - Added FAFA-exclusive row functionality (fafaExclusiveRows)
+  - Updated database schema with new fields
+  - Fixed plastic seat number visibility when selected
+- **2025-01-10**: Plastic Seats Enhancements
+  - Fixed seat numbering display to show 1-18 correctly
+  - Updated seat validation to support plastic seat format (R11, R21, etc.)
+  - Enhanced selected seat visibility with better styling
+  - Successfully implemented plastic seat reservations
 - **2025-01-02**: Complete rebranding from "Shahbaaz Auditorium" to "BaazCine"
   - Updated all UI text, translations, and documentation
   - Changed terminology from auditorium/events to cinema/movies
@@ -19,7 +30,7 @@ A military-themed cinema reservation system providing a comprehensive, user-frie
 - **2025-01-02**: Added plastic seats section
   - Updated schema with new "Plastic" section containing 3 rows (R1, R2, R3)
   - Added 54 plastic seats with same layout as Front section (18 seats per row)
-  - Implemented distinctive orange styling for plastic seats
+  - Implemented distinctive purple styling for plastic seats
   - Added "PLASTIC SEATS SECTION" header and visual indicators
 
 ## Project Architecture
