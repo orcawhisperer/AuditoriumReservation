@@ -4,12 +4,15 @@
 A military-themed cinema reservation system providing a comprehensive, user-friendly platform for movie screenings and precise seat allocation. Previously known as "Shahbaaz Auditorium", the system has been rebranded to "BaazCine" to better reflect its cinema focus.
 
 ## Recent Changes
-- **2025-01-10**: Admin Interface Fixes
+- **2025-01-10**: Admin Interface Enhancements
   - Fixed database parameter mismatch error preventing app startup
   - Fixed JSON parsing error for allowedCategories field in edit dialog
-  - Fixed FAFA exclusive rows input to allow commas and auto-convert to uppercase
+  - Fixed FAFA exclusive rows input to allow natural comma typing and auto-convert to uppercase
   - Added missing form fields to EditShowDialog (price, food menu, categories, FAFA rows)
   - Made edit dialog scrollable to prevent content clipping
+  - Added comprehensive show details view with statistics and reservation overview
+  - Implemented share functionality for booking links with one-click copying
+  - Enhanced admin interface with View Details, Share, Edit, and Delete actions
 - **2025-01-10**: User Category System Implementation
   - Added user categories: single, family, FAFA
   - Added show-level category restrictions (allowedCategories)

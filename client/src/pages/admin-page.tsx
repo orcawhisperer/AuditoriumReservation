@@ -630,15 +630,21 @@ function ShowForm() {
                     value={Array.isArray(field.value) ? field.value.join(",") : ""}
                     onChange={(e) => {
                       const inputValue = e.target.value;
-                      // Allow typing commas and convert to array on change
-                      const rows = inputValue.split(",").map(r => r.trim().toUpperCase()).filter(r => r);
-                      field.onChange(rows);
-                    }}
-                    onKeyDown={(e) => {
-                      // Explicitly allow comma key
-                      if (e.key === ',') {
-                        e.stopPropagation();
+                      // Process input but keep as raw string until blur to allow comma typing
+                      if (inputValue.endsWith(',') || inputValue.includes(',')) {
+                        // Only convert to array when user types comma or on complete input
+                        const rows = inputValue.split(",").map(r => r.trim().toUpperCase()).filter(r => r.length > 0);
+                        field.onChange(rows);
+                      } else {
+                        // For single values, keep as array but allow typing
+                        field.onChange(inputValue ? [inputValue.toUpperCase()] : []);
                       }
+                    }}
+                    onBlur={(e) => {
+                      // Final processing on blur to ensure proper format
+                      const inputValue = e.target.value;
+                      const rows = inputValue.split(",").map(r => r.trim().toUpperCase()).filter(r => r.length > 0);
+                      field.onChange(rows);
                     }}
                   />
                   <p className="text-sm text-muted-foreground">
@@ -1055,15 +1061,21 @@ function EditShowDialog({
                         value={Array.isArray(field.value) ? field.value.join(",") : ""}
                         onChange={(e) => {
                           const inputValue = e.target.value;
-                          // Allow typing commas and convert to array on change
-                          const rows = inputValue.split(",").map(r => r.trim().toUpperCase()).filter(r => r);
-                          field.onChange(rows);
-                        }}
-                        onKeyDown={(e) => {
-                          // Explicitly allow comma key
-                          if (e.key === ',') {
-                            e.stopPropagation();
+                          // Process input but keep as raw string until blur to allow comma typing
+                          if (inputValue.endsWith(',') || inputValue.includes(',')) {
+                            // Only convert to array when user types comma or on complete input
+                            const rows = inputValue.split(",").map(r => r.trim().toUpperCase()).filter(r => r.length > 0);
+                            field.onChange(rows);
+                          } else {
+                            // For single values, keep as array but allow typing
+                            field.onChange(inputValue ? [inputValue.toUpperCase()] : []);
                           }
+                        }}
+                        onBlur={(e) => {
+                          // Final processing on blur to ensure proper format
+                          const inputValue = e.target.value;
+                          const rows = inputValue.split(",").map(r => r.trim().toUpperCase()).filter(r => r.length > 0);
+                          field.onChange(rows);
                         }}
                       />
                       <p className="text-sm text-muted-foreground">
@@ -1287,18 +1299,7 @@ function ShowDetailsDialog({
             )}
           </div>
 
-          {/* Seat Layout */}
-          <div>
-            <h3 className="font-medium text-sm text-muted-foreground mb-2">Current Seat Layout</h3>
-            <div className="border rounded-lg p-4 bg-gray-50">
-              <SeatGrid 
-                showId={show.id.toString()} 
-                hideActionButtons={true}
-                isAdminMode={true}
-                className="scale-75 transform-origin-top-left"
-              />
-            </div>
-          </div>
+
 
           {/* Reservations */}
           {showReservations.length > 0 && (
