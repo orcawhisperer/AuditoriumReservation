@@ -61,7 +61,7 @@ export function Seat({
       return `${baseSize} bg-gradient-to-br from-violet-50 to-violet-100 border-violet-300 text-violet-700`;
     }
     if (isFafaExclusive) {
-      return `${baseSize} bg-gradient-to-br from-amber-50 to-amber-100 border-amber-400 text-amber-800`;
+      return `${baseSize} bg-gradient-to-br from-orange-50 to-orange-100 border-[#ea8357] text-orange-800`;
     }
     return `${baseSize} bg-gradient-to-br from-slate-50 to-slate-100 border-slate-300 text-slate-700`;
   };
@@ -90,7 +90,11 @@ export function Seat({
         // Hover state - subtle lift effect
         !isDisabled &&
           !isSelected &&
-          "hover:shadow-md hover:scale-105 hover:-translate-y-0.5 hover:!from-slate-100 hover:!to-slate-200 hover:!border-slate-400 hover:!text-slate-800 active:scale-100 active:translate-y-0",
+          (isFafaExclusive 
+            ? "hover:shadow-md hover:scale-105 hover:-translate-y-0.5 hover:!from-orange-100 hover:!to-orange-200 hover:!border-[#ea8357] hover:!text-orange-900 active:scale-100 active:translate-y-0"
+            : seatType === "plastic"
+            ? "hover:shadow-md hover:scale-105 hover:-translate-y-0.5 hover:!from-violet-100 hover:!to-violet-200 hover:!border-violet-400 hover:!text-violet-800 active:scale-100 active:translate-y-0"
+            : "hover:shadow-md hover:scale-105 hover:-translate-y-0.5 hover:!from-slate-100 hover:!to-slate-200 hover:!border-slate-400 hover:!text-slate-800 active:scale-100 active:translate-y-0"),
       )}
       disabled={isDisabled}
       onClick={() => onSelect(seatId)}
