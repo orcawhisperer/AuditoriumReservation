@@ -55,13 +55,15 @@ export function Seat({
     : (isReserved || isBlocked); // In normal mode, both reserved and blocked are disabled
     
   const getBaseStyles = () => {
+    const baseSize = "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm";
+    
     if (seatType === "plastic") {
-      return "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300 text-purple-800";
+      return `${baseSize} bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300 text-purple-800`;
     }
     if (isFafaExclusive) {
-      return "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm bg-gradient-to-br from-orange-50 to-orange-100 border-orange-300 text-orange-800";
+      return `${baseSize} bg-gradient-to-br from-orange-50 to-orange-100 border-orange-300 text-orange-800`;
     }
-    return "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm";
+    return `${baseSize} bg-white border-gray-300 text-gray-700`;
   };
 
   return (
@@ -82,12 +84,13 @@ export function Seat({
         isBlocked &&
           "bg-yellow-100 border-yellow-200 text-yellow-500 cursor-not-allowed",
         
-        // Apply selected style last (so it overrides everything)
-        isSelected && "!bg-primary !border-primary !text-primary-foreground font-bold shadow-lg",
+        // Apply selected style last (so it overrides everything) - ensure white text on primary background
+        isSelected && "!bg-primary !border-primary !text-white font-bold shadow-lg",
         
+        // Hover state - ensure good contrast
         !isDisabled &&
           !isSelected &&
-          "hover:bg-accent hover:border-accent hover:text-accent-foreground active:scale-95",
+          "hover:bg-gray-200 hover:border-gray-400 hover:text-gray-800 active:scale-95",
       )}
       disabled={isDisabled}
       onClick={() => onSelect(seatId)}
