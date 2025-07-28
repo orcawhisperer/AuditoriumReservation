@@ -556,11 +556,11 @@ export function SeatGrid({
               {section.section}
               <span className="text-sm text-muted-foreground font-normal">
                 {section.section === "Balcony"
-                  ? "(Prefix: B)"
+                  ? "(Rows: P,O)"
                   : section.section === "Back"
-                    ? "(Prefix: R)"
+                    ? "(Rows: N,M,L,K,J,I,H,G)"
                     : section.section === "Front"
-                      ? "(Prefix: F)"
+                      ? "(Rows: F,E,D,C,B,A)"
                       : section.section === "Plastic"
                         ? "(Prefix: P) - Plastic Seats"
                         : ""}
@@ -591,6 +591,13 @@ export function SeatGrid({
                 {/* Render each row */}
                 {section.rows.map((rowData: any, rowIndex: number) => {
                   console.log(`Rendering ${section.section} section, row: ${rowData.row}`);
+                  
+                  // Log sample seat ID generation for Back section
+                  if (section.section === "Back" && (rowData.row === "M" || rowData.row === "N")) {
+                    const sampleSeatId = `${rowData.row}1`;
+                    console.log(`🎯 SAMPLE BACK SEAT ID: ${sampleSeatId}, is FAFA exclusive: ${isFafaExclusiveSeat(sampleSeatId)}`);
+                  }
+                  
                   return (
                   <div
                     key={rowData.row}
