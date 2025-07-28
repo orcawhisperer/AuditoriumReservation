@@ -376,19 +376,7 @@ function ShowForm() {
       </div>
       
       <form
-        onSubmit={form.handleSubmit((data) => {
-          // Transform string fields to arrays for backend
-          const transformedData = {
-            ...data,
-            blockedSeats: typeof data.blockedSeats === 'string' 
-              ? data.blockedSeats.split(',').map(s => s.trim()).filter(s => s)
-              : data.blockedSeats,
-            fafaExclusiveRows: typeof data.fafaExclusiveRows === 'string' 
-              ? data.fafaExclusiveRows.split(',').map(r => r.trim()).filter(r => r)
-              : data.fafaExclusiveRows
-          };
-          createShowMutation.mutate(transformedData);
-        })}
+        onSubmit={form.handleSubmit((data) => createShowMutation.mutate(data))}
         className="space-y-4"
       >
         <FormField
@@ -802,19 +790,7 @@ function EditShowDialog({
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((data) => {
-              // Transform string fields to arrays for backend
-              const transformedData = {
-                ...data,
-                blockedSeats: typeof data.blockedSeats === 'string' 
-                  ? data.blockedSeats.split(',').map(s => s.trim()).filter(s => s)
-                  : data.blockedSeats,
-                fafaExclusiveRows: typeof data.fafaExclusiveRows === 'string' 
-                  ? data.fafaExclusiveRows.split(',').map(r => r.trim()).filter(r => r)
-                  : data.fafaExclusiveRows
-              };
-              editShowMutation.mutate(transformedData);
-            })}
+            onSubmit={form.handleSubmit((data) => editShowMutation.mutate(data))}
             className="space-y-4"
           >
             <FormField

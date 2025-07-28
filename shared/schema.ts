@@ -147,9 +147,25 @@ export const insertShowSchema = createInsertSchema(shows).extend({
   emoji: z.string().optional(),
   price: z.number().int().min(0, "Price cannot be negative").default(0),
   allowedCategories: z.array(z.enum(["single", "family", "fafa"])).default(["single", "family", "fafa"]),
-  fafaExclusiveRows: z.array(z.string()).default([]), // Array of row identifiers like ["A", "B"] or ["R1", "R2"]
+  fafaExclusiveRows: z
+    .union([z.string(), z.array(z.string())])
+    .transform((val) => {
+      if (typeof val === 'string') {
+        return val.split(',').map(s => s.trim()).filter(s => s);
+      }
+      return val;
+    })
+    .default([]), // Array of row identifiers like ["A", "B"] or ["R1", "R2"]
   foodMenu: z.string().optional(), // Base64 encoded food menu image
-  blockedSeats: z.array(z.string()).default([]).refine(
+  blockedSeats: z
+    .union([z.string(), z.array(z.string())])
+    .transform((val) => {
+      if (typeof val === 'string') {
+        return val.split(',').map(s => s.trim()).filter(s => s);
+      }
+      return val;
+    })
+    .default([]).refine(
     (seats) => {
       // Validate each seat format
       return seats.every((seat) => {
