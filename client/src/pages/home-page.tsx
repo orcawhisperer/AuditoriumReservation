@@ -99,7 +99,7 @@ function ShowCard({
           : [userReservation.seatNumbers];
         return Array.isArray(parsed) ? parsed.length : 1;
       } else if (Array.isArray(userReservation.seatNumbers)) {
-        return userReservation.seatNumbers.length;
+        return (userReservation.seatNumbers as string[]).length;
       }
       return 0;
     } catch (e) {
@@ -192,7 +192,7 @@ function ShowCard({
                   ) : hasReservation ? (
                     <>
                       <Eye className="h-4 w-4 mr-2" />
-                      View Booking
+                      View Show
                     </>
                   ) : (
                     <>
@@ -637,15 +637,20 @@ function ReservationCard({
   const handleShare = async () => {
     if (!show) return;
     
-    const shareText = `${t("translation.home.shareText")} ${show.title} - ${format(new Date(show.date), "PPP")} ${t("translation.common.seats")}: ${seatNumbers.join(", ")}`;
-    const shareUrl = `${window.location.origin}/show/${show.id}`;
+    const bookingDetails = `🎬 ${show.title}
+📅 ${format(new Date(show.date), "EEEE, MMMM dd, yyyy")}
+⏰ ${format(new Date(show.date), "h:mm a")}
+🎫 Seats: ${seatNumbers.join(", ")}
+🆔 Booking ID: #${reservation.id}
+📍 BaazCine
+
+Your cinema reservation is confirmed!`;
     
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${t("translation.common.appName")} - ${show.title}`,
-          text: shareText,
-          url: shareUrl,
+          title: `Cinema Booking - ${show.title}`,
+          text: bookingDetails,
         });
       } catch (err) {
         // User cancelled share
@@ -653,16 +658,16 @@ function ReservationCard({
     } else {
       // Fallback: copy to clipboard
       try {
-        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        await navigator.clipboard.writeText(bookingDetails);
         toast({
-          title: t("translation.common.success"),
-          description: "Reservation details copied to clipboard",
+          title: "Copied to clipboard",
+          description: "Booking details copied successfully",
         });
       } catch (err) {
         console.error("Failed to copy:", err);
         toast({
-          title: t("translation.common.error"),
-          description: "Failed to copy reservation details",
+          title: "Copy failed",
+          description: "Unable to copy booking details",
           variant: "destructive",
         });
       }
@@ -724,204 +729,218 @@ function ReservationCard({
               </div>
 
               {/* Actions */}
-              <div className="flex-shrink-0 ml-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <MoreHorizontal className="h-4 w-4" />
+              <div className="flex-shrink-0 ml-2 flex gap-1">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-8 w-8 p-0" 
+                  onClick={handleViewDetails}
+                  title="View Details"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-8 w-8 p-0" 
+                  onClick={handleShare}
+                  title="Share Booking"
+                >
+                  <Share2 className="h-4 w-4" />
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10" 
+                      disabled={isPastShow}
+                      title="Cancel Booking"
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={handleViewDetails}>
-                      <Eye className="h-4 w-4 mr-2" />
-                      View Details
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleShare}>
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Share Reservation
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <DropdownMenuItem 
-                          disabled={isPastShow}
-                          onSelect={(e) => e.preventDefault()}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Cancel Booking
-                        </DropdownMenuItem>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            {t("translation.home.cancelReservationTitle")}
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            {t("translation.home.cancelReservationConfirmation", {
-                              showTitle: show.title,
-                            })}
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>
-                            {t("translation.common.back")}
-                          </AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => cancelMutation.mutate()}
-                            disabled={cancelMutation.isPending}
-                          >
-                            {cancelMutation.isPending && (
-                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            )}
-                            {t("translation.common.confirm")}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        {t("translation.home.cancelReservationTitle")}
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {t("translation.home.cancelReservationConfirmation", {
+                          showTitle: show.title,
+                        })}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>
+                        {t("translation.common.back")}
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => cancelMutation.mutate()}
+                        disabled={cancelMutation.isPending}
+                      >
+                        {cancelMutation.isPending && (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        )}
+                        {t("translation.common.confirm")}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           </div>
         </div>
         
-        {/* Ticket Dialog */}
+        {/* Redesigned Ticket Dialog */}
         <Dialog open={ticketDialogOpen} onOpenChange={setTicketDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                Your Cinema Ticket
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-background to-background/95">
+            <DialogHeader className="text-center pb-2">
+              <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mb-4">
+                <Ticket className="h-8 w-8 text-primary" />
+              </div>
+              <DialogTitle className="text-2xl font-bold">
+                Digital Cinema Ticket
               </DialogTitle>
-              <DialogDescription>
-                Complete booking details for {show?.title}
+              <DialogDescription className="text-base">
+                Your confirmed booking for {show?.title}
               </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-6">
-              {/* Show Details */}
-              <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-6 rounded-lg border">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  {show?.poster && (
-                    <div className="w-full sm:w-32 h-48 sm:h-32 rounded-lg overflow-hidden border">
-                      <img
-                        src={show.poster}
-                        alt={show.title}
-                        className="w-full h-full object-cover"
-                      />
+              {/* Ticket-Style Header */}
+              <div className="relative bg-gradient-to-r from-primary via-primary/90 to-primary text-primary-foreground p-6 rounded-xl border-2 border-dashed border-primary/30 overflow-hidden">
+                <div className="absolute top-0 right-0 w-20 h-20 bg-primary-foreground/10 rounded-full -translate-y-10 translate-x-10"></div>
+                <div className="absolute top-6 left-6 w-12 h-12 bg-primary-foreground/10 rounded-full"></div>
+                
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 bg-primary-foreground rounded-full"></div>
+                      <span className="text-sm font-medium uppercase tracking-wider">BaazCine</span>
                     </div>
-                  )}
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold mb-2">{show?.title}</h3>
-                    <div className="space-y-1 text-sm">
-                      <p><strong>Date & Time:</strong> {show && format(new Date(show.date), "PPP 'at' p")}</p>
-                      <p><strong>Seats:</strong> {seatNumbers.join(", ")}</p>
-                      <p><strong>Quantity:</strong> {seatNumbers.length} {seatNumbers.length === 1 ? 'ticket' : 'tickets'}</p>
-
-                      <p><strong>Booking ID:</strong> #{reservation.id}</p>
-                      <p><strong>Booked On:</strong> {format(new Date(reservation.createdAt), "PPP 'at' p")}</p>
+                    <div className="text-right">
+                      <div className="text-xs opacity-80">Booking ID</div>
+                      <div className="font-mono font-bold">#{reservation.id}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-bold">{show?.title}</h3>
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        <span>{show && format(new Date(show.date), "EEEE, MMM dd, yyyy")}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        <span>{show && format(new Date(show.date), "h:mm a")}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-                
-                {show?.description && (
-                  <div className="mt-4 pt-4 border-t">
-                    <p className="text-sm text-muted-foreground">{show.description}</p>
-                  </div>
-                )}
               </div>
-              
+
+              {/* Booking Details Grid */}
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Seat Information */}
+                <div className="bg-card border rounded-xl p-6">
+                  <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    Seat Details
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Seats:</span>
+                      <span className="font-medium">{seatNumbers.join(", ")}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Quantity:</span>
+                      <span className="font-medium">{seatNumbers.length} {seatNumbers.length === 1 ? 'ticket' : 'tickets'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Booked On:</span>
+                      <span className="font-medium">{format(new Date(reservation.createdAt), "MMM dd, yyyy")}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Show Poster & Info */}
+                <div className="bg-card border rounded-xl p-6">
+                  <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                    <Film className="h-5 w-5 text-primary" />
+                    Show Information
+                  </h4>
+                  <div className="flex gap-4">
+                    {show?.poster && (
+                      <div className="w-20 h-28 rounded-lg overflow-hidden border flex-shrink-0">
+                        <img
+                          src={show.poster}
+                          alt={show.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h5 className="font-medium mb-2">{show?.title}</h5>
+                      {show?.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-3">
+                          {show.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Food Menu */}
               {show?.foodMenu && (
-                <div>
-                  <h4 className="text-lg font-semibold mb-3">Food Menu Available</h4>
+                <div className="bg-card border rounded-xl p-6">
+                  <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
+                    Available Food Menu
+                  </h4>
                   <div className="border rounded-lg overflow-hidden">
                     <img
                       src={show.foodMenu}
                       alt="Food Menu"
-                      className="w-full h-auto max-h-96 object-contain bg-gray-50"
+                      className="w-full h-auto max-h-80 object-contain bg-muted/20"
                     />
                   </div>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Food and beverages are available at the cinema. Please visit the concession stand.
+                  <p className="text-sm text-muted-foreground mt-3 text-center">
+                    Visit our concession stand for fresh snacks and beverages
                   </p>
                 </div>
               )}
-              
-              {/* Seat Map Visual */}
-              <div>
-                <h4 className="text-lg font-semibold mb-3">Your Seat Location</h4>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="text-center mb-4">
-                    <div className="inline-block bg-gray-300 px-6 py-2 rounded-t-lg text-sm font-medium">
-                      SCREEN
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-8 gap-1 max-w-md mx-auto">
-                    {seatNumbers.map((seat: string, index: number) => (
-                      <div key={index} className="bg-primary text-primary-foreground text-xs p-2 rounded text-center font-medium">
-                        {seat}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-center text-sm text-muted-foreground mt-3">
-                    Your reserved seats are highlighted above
-                  </p>
+
+              {/* QR Code Placeholder & Instructions */}
+              <div className="bg-gradient-to-r from-muted/50 to-muted/30 border-2 border-dashed rounded-xl p-6 text-center">
+                <div className="w-16 h-16 bg-foreground/10 rounded-lg mx-auto mb-4 flex items-center justify-center">
+                  <div className="w-8 h-8 bg-foreground/20 rounded"></div>
                 </div>
+                <h4 className="font-semibold mb-2">Ready for Your Show</h4>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  Present this digital ticket at the cinema entrance. Arrive 15 minutes early for the best experience.
+                </p>
               </div>
-              
-              {/* Important Notes */}
-              <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                <h4 className="font-semibold text-blue-800 mb-2">Important Information</h4>
-                <ul className="text-sm text-blue-700 space-y-1">
-                  <li>• Please arrive 15 minutes before the show time</li>
-                  <li>• Present this booking confirmation at the entrance</li>
-                  <li>• This is an internal cinema system - no payment required</li>
-                  <li>• Mobile phones should be silenced during the show</li>
-                  {show?.foodMenu && (
-                    <li>• Food and beverages are available at the concession stand</li>
-                  )}
-                </ul>
-              </div>
-              
+
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4 border-t">
-                <Button onClick={handleShare} variant="outline" className="flex-1">
+                <Button 
+                  onClick={handleShare} 
+                  variant="outline" 
+                  className="flex-1"
+                >
                   <Share2 className="h-4 w-4 mr-2" />
                   Share Booking
                 </Button>
-                {!isPastShow && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" className="flex-1">
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Cancel Booking
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Cancel Reservation</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to cancel your booking for {show?.title}? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Keep Booking</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => {
-                            cancelMutation.mutate();
-                            setTicketDialogOpen(false);
-                          }}
-                          disabled={cancelMutation.isPending}
-                        >
-                          {cancelMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                          Cancel Booking
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
+                <Button 
+                  onClick={() => setLocation(`/show/${show?.id}`)}
+                  className="flex-1"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  View Show Page
+                </Button>
               </div>
             </div>
           </DialogContent>
