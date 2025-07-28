@@ -45,10 +45,10 @@ export function DataPagination<T>({
   
   // Separate effect to handle onPageChange callback to avoid infinite loops
   useEffect(() => {
-    if (onPageChange && currentItems.length > 0) {
+    if (onPageChange && currentItems.length >= 0) {
       onPageChange(currentItems);
     }
-  }, [currentItems, onPageChange]);
+  }, [currentItems]);
 
   // Sync with external current page if provided
   useEffect(() => {
