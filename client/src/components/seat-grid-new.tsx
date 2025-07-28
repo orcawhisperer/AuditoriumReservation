@@ -68,8 +68,6 @@ export function Seat({
     <button
       className={cn(
         getBaseStyles(),
-        // Apply selected style first (overrides base styles)
-        isSelected && "bg-primary border-primary text-primary-foreground font-bold shadow-lg",
         
         // In admin mode, only show user reservation style if the seat is not currently selected
         isUserReservation && !isSelected && (isAdminMode ? false : true) &&
@@ -83,6 +81,10 @@ export function Seat({
         // Blocked seats
         isBlocked &&
           "bg-yellow-100 border-yellow-200 text-yellow-500 cursor-not-allowed",
+        
+        // Apply selected style last (so it overrides everything)
+        isSelected && "!bg-primary !border-primary !text-primary-foreground font-bold shadow-lg",
+        
         !isDisabled &&
           !isSelected &&
           "hover:bg-accent hover:border-accent hover:text-accent-foreground active:scale-95",
@@ -334,7 +336,7 @@ export function SeatGrid({
     
     const isExclusive = fafaExclusiveRows.includes(row);
     if (isExclusive) {
-      console.log(`Seat ${seatId} is FAFA exclusive (row: ${row})`);
+      console.log(`Seat ${seatId} is FAFA exclusive (row: ${row}), user category: ${user?.category}`);
     }
     return isExclusive;
   };
@@ -356,10 +358,13 @@ export function SeatGrid({
     // Trying to add a new seat
 
     // Check FAFA exclusive row restrictions - non-FAFA users cannot select FAFA exclusive seats
-    if (!user?.isAdmin && isFafaExclusiveSeat(seatId) && user?.category !== "fafa") {
+    const userCategory = user?.category || "single";
+    console.log(`Attempting to select seat ${seatId}, user category: ${userCategory}, is FAFA exclusive: ${isFafaExclusiveSeat(seatId)}`);
+    
+    if (!user?.isAdmin && isFafaExclusiveSeat(seatId) && userCategory !== "fafa") {
       toast({
         title: "FAFA-Exclusive Seat",
-        description: "This seat is only available to FAFA category users",
+        description: `This seat is only available to FAFA category users. Your category: ${userCategory}`,
         variant: "destructive",
       });
       return;
