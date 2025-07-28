@@ -61,12 +61,27 @@ import {
   UserIcon,
   Calendar,
   MapPin,
+  Check,
+  ChevronDown,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo, useEffect } from "react";
 import { DataPagination } from "@/components/data-pagination";
 import { useTranslation } from "react-i18next";
 import { Footer } from "@/components/footer";
+import { 
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 import {
   AlertDialog,
@@ -2631,46 +2646,19 @@ function ReservationManagement() {
               />
             </div>
 
-            {/* Show Filter */}
-            <Select value={selectedShowId} onValueChange={setSelectedShowId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by show" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Shows</SelectItem>
-                {shows
-                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                  .map((show) => (
-                    <SelectItem key={show.id} value={show.id.toString()}>
-                      <div className="flex items-center gap-2">
-                        <span>{show.emoji}</span>
-                        {show.title}
-                        <span className="text-xs text-muted-foreground">
-                          ({format(new Date(show.date), "MMM dd")})
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+            {/* Show Filter - Autocomplete */}
+            <ShowFilterSelect 
+              selectedShowId={selectedShowId} 
+              onSelectShow={setSelectedShowId}
+              shows={shows}
+            />
 
-            {/* User Filter */}
-            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by user" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Users</SelectItem>
-                {users
-                  .sort((a, b) => (a.name || a.username).localeCompare(b.name || b.username))
-                  .map((user) => (
-                    <SelectItem key={user.id} value={user.id.toString()}>
-                      {user.name || user.username}
-                      {user.isAdmin && <span className="text-xs text-blue-600 ml-1">(Admin)</span>}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+            {/* User Filter - Autocomplete */}
+            <UserFilterSelect 
+              selectedUserId={selectedUserId} 
+              onSelectUser={setSelectedUserId}
+              users={users}
+            />
 
             {/* Sort Options */}
             <div className="flex gap-2">
@@ -2935,6 +2923,224 @@ function ReservationManagement() {
         />
       )}
     </Card>
+  );
+}
+
+// Show Filter Component with Search
+function ShowFilterSelect({ selectedShowId, onSelectShow, shows }: {
+  selectedShowId: string;
+  onSelectShow: (showId: string) => void;
+  shows: Show[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredShows = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return shows
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 50); // Limit to first 50 recent shows
+    }
+    
+    return shows
+      .filter(show => 
+        show.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        show.emoji?.includes(searchQuery) ||
+        format(new Date(show.date), "MMM dd, yyyy").toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 20); // Limit search results to 20
+  }, [shows, searchQuery]);
+
+  const selectedShow = shows.find(show => show.id.toString() === selectedShowId);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between"
+        >
+          {selectedShowId === "all" ? (
+            "All Shows"
+          ) : selectedShow ? (
+            <div className="flex items-center gap-2 truncate">
+              <span>{selectedShow.emoji}</span>
+              <span className="truncate">{selectedShow.title}</span>
+            </div>
+          ) : (
+            "Filter by show"
+          )}
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[300px] p-0" align="start">
+        <Command>
+          <CommandInput
+            placeholder="Search shows..."
+            value={searchQuery}
+            onValueChange={setSearchQuery}
+          />
+          <CommandList>
+            <CommandEmpty>
+              {searchQuery ? "No shows found matching your search" : "No shows available"}
+            </CommandEmpty>
+            <CommandGroup>
+              <CommandItem
+                key="all"
+                value="all"
+                onSelect={() => {
+                  onSelectShow("all");
+                  setOpen(false);
+                  setSearchQuery("");
+                }}
+              >
+                <Check
+                  className={`mr-2 h-4 w-4 ${selectedShowId === "all" ? "opacity-100" : "opacity-0"}`}
+                />
+                All Shows
+              </CommandItem>
+              {filteredShows.map((show) => (
+                <CommandItem
+                  key={show.id}
+                  value={`${show.title} ${show.emoji} ${format(new Date(show.date), "MMM dd, yyyy")}`}
+                  onSelect={() => {
+                    onSelectShow(show.id.toString());
+                    setOpen(false);
+                    setSearchQuery("");
+                  }}
+                >
+                  <Check
+                    className={`mr-2 h-4 w-4 ${selectedShowId === show.id.toString() ? "opacity-100" : "opacity-0"}`}
+                  />
+                  <div className="flex items-center gap-2 w-full">
+                    <span>{show.emoji}</span>
+                    <span className="truncate">{show.title}</span>
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      {format(new Date(show.date), "MMM dd")}
+                    </span>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            {!searchQuery && shows.length > 50 && (
+              <div className="p-2 text-xs text-muted-foreground text-center border-t">
+                Showing recent 50 shows. Use search to find older shows.
+              </div>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// User Filter Component with Search
+function UserFilterSelect({ selectedUserId, onSelectUser, users }: {
+  selectedUserId: string;
+  onSelectUser: (userId: string) => void;
+  users: User[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return users
+        .sort((a, b) => (a.name || a.username).localeCompare(b.name || b.username))
+        .slice(0, 50); // Limit to first 50 users
+    }
+    
+    return users
+      .filter(user => 
+        (user.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.username.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      .sort((a, b) => (a.name || a.username).localeCompare(b.name || b.username))
+      .slice(0, 20); // Limit search results to 20
+  }, [users, searchQuery]);
+
+  const selectedUser = users.find(user => user.id.toString() === selectedUserId);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between"
+        >
+          {selectedUserId === "all" ? (
+            "All Users"
+          ) : selectedUser ? (
+            <div className="flex items-center gap-2 truncate">
+              <span className="truncate">{selectedUser.name || selectedUser.username}</span>
+              {selectedUser.isAdmin && <span className="text-xs text-blue-600">(Admin)</span>}
+            </div>
+          ) : (
+            "Filter by user"
+          )}
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[300px] p-0" align="start">
+        <Command>
+          <CommandInput
+            placeholder="Search users..."
+            value={searchQuery}
+            onValueChange={setSearchQuery}
+          />
+          <CommandList>
+            <CommandEmpty>
+              {searchQuery ? "No users found matching your search" : "No users available"}
+            </CommandEmpty>
+            <CommandGroup>
+              <CommandItem
+                key="all"
+                value="all"
+                onSelect={() => {
+                  onSelectUser("all");
+                  setOpen(false);
+                  setSearchQuery("");
+                }}
+              >
+                <Check
+                  className={`mr-2 h-4 w-4 ${selectedUserId === "all" ? "opacity-100" : "opacity-0"}`}
+                />
+                All Users
+              </CommandItem>
+              {filteredUsers.map((user) => (
+                <CommandItem
+                  key={user.id}
+                  value={`${user.name || user.username} ${user.username}`}
+                  onSelect={() => {
+                    onSelectUser(user.id.toString());
+                    setOpen(false);
+                    setSearchQuery("");
+                  }}
+                >
+                  <Check
+                    className={`mr-2 h-4 w-4 ${selectedUserId === user.id.toString() ? "opacity-100" : "opacity-0"}`}
+                  />
+                  <div className="flex items-center gap-2 w-full">
+                    <span className="truncate">{user.name || user.username}</span>
+                    {user.isAdmin && <span className="text-xs text-blue-600 ml-auto">(Admin)</span>}
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            {!searchQuery && users.length > 50 && (
+              <div className="p-2 text-xs text-muted-foreground text-center border-t">
+                Showing first 50 users. Use search to find specific users.
+              </div>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
 

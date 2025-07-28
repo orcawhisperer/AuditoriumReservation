@@ -4,6 +4,17 @@
 A military-themed cinema reservation system providing a comprehensive, user-friendly platform for movie screenings and precise seat allocation. Previously known as "Shahbaaz Auditorium", the system has been rebranded to "BaazCine" to better reflect its cinema focus.
 
 ## Recent Changes
+- **2025-01-28**: Scalable Filter System Implementation
+  - Replaced dropdown filters with searchable command palettes for shows and users
+  - Implemented lazy loading: shows limited to 50 recent items, users to 50 alphabetical
+  - Added real-time search functionality within filters to find specific items
+  - Enhanced performance for large datasets with pagination and search limits
+  - Maintained "All Shows" and "All Users" options while preventing performance issues
+- **2025-01-28**: Comprehensive Admin Dashboard Redesign
+  - Complete reservation management overhaul with advanced filtering and search
+  - Enhanced user management with proper pagination and dark mode support
+  - Improved show management with list-based layout and comprehensive details dialog
+  - Professional styling with consistent hover effects and responsive design
 - **2025-01-10**: Admin Interface Enhancements
   - Fixed database parameter mismatch error preventing app startup
   - Fixed JSON parsing error for allowedCategories field in edit dialog
