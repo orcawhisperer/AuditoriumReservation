@@ -582,6 +582,7 @@ function ReservationCard({
   reservation,
   show,
 }: ReservationCardProps) {
+  const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
@@ -792,85 +793,29 @@ Your cinema reservation is confirmed!`;
           </div>
         </div>
         
-        {/* Redesigned Ticket Dialog */}
+        {/* Ticket Details Dialog */}
         <Dialog open={ticketDialogOpen} onOpenChange={setTicketDialogOpen}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-background to-background/95">
-            <DialogHeader className="text-center pb-2">
-              <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mb-4">
-                <Ticket className="h-8 w-8 text-primary" />
-              </div>
-              <DialogTitle className="text-2xl font-bold">
-                Digital Cinema Ticket
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Ticket className="h-5 w-5" />
+                Booking Details
               </DialogTitle>
-              <DialogDescription className="text-base">
-                Your confirmed booking for {show?.title}
+              <DialogDescription>
+                Complete information for your cinema reservation
               </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-6">
-              {/* Ticket-Style Header */}
-              <div className="relative bg-gradient-to-r from-primary via-primary/90 to-primary text-primary-foreground p-6 rounded-xl border-2 border-dashed border-primary/30 overflow-hidden">
-                <div className="absolute top-0 right-0 w-20 h-20 bg-primary-foreground/10 rounded-full -translate-y-10 translate-x-10"></div>
-                <div className="absolute top-6 left-6 w-12 h-12 bg-primary-foreground/10 rounded-full"></div>
-                
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-primary-foreground rounded-full"></div>
-                      <span className="text-sm font-medium uppercase tracking-wider">BaazCine</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs opacity-80">Booking ID</div>
-                      <div className="font-mono font-bold">#{reservation.id}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h3 className="text-2xl font-bold">{show?.title}</h3>
-                    <div className="flex items-center gap-4 text-sm">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>{show && format(new Date(show.date), "EEEE, MMM dd, yyyy")}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        <span>{show && format(new Date(show.date), "h:mm a")}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Booking Details Grid */}
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Seat Information */}
-                <div className="bg-card border rounded-xl p-6">
-                  <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-primary" />
-                    Seat Details
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Seats:</span>
-                      <span className="font-medium">{seatNumbers.join(", ")}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Quantity:</span>
-                      <span className="font-medium">{seatNumbers.length} {seatNumbers.length === 1 ? 'ticket' : 'tickets'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Booked On:</span>
-                      <span className="font-medium">{format(new Date(reservation.createdAt), "MMM dd, yyyy")}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Show Poster & Info */}
-                <div className="bg-card border rounded-xl p-6">
-                  <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                    <Film className="h-5 w-5 text-primary" />
-                    Show Information
-                  </h4>
+              {/* Show Information Card */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Film className="h-5 w-5" />
+                    {show?.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
                   <div className="flex gap-4">
                     {show?.poster && (
                       <div className="w-20 h-28 rounded-lg overflow-hidden border flex-shrink-0">
@@ -881,65 +826,139 @@ Your cinema reservation is confirmed!`;
                         />
                       </div>
                     )}
-                    <div className="flex-1 min-w-0">
-                      <h5 className="font-medium mb-2">{show?.title}</h5>
+                    <div className="flex-1 space-y-2">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Date:</span>
+                          <p className="font-medium">{show && format(new Date(show.date), "EEEE, MMM dd, yyyy")}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Time:</span>
+                          <p className="font-medium">{show && format(new Date(show.date), "h:mm a")}</p>
+                        </div>
+                      </div>
+                      
                       {show?.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-3">
-                          {show.description}
-                        </p>
+                        <div>
+                          <span className="text-muted-foreground text-sm">Description:</span>
+                          <p className="text-sm mt-1">{show.description}</p>
+                        </div>
                       )}
                     </div>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
+
+              {/* Booking Information */}
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Seat Details */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      Seat Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div>
+                        <span className="text-muted-foreground text-sm">Seats:</span>
+                        <p className="font-medium">{seatNumbers.join(", ")}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-sm">Total Tickets:</span>
+                        <p className="font-medium">{seatNumbers.length} {seatNumbers.length === 1 ? 'ticket' : 'tickets'}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* User & Booking Details */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Booking Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div>
+                        <span className="text-muted-foreground text-sm">Booked by:</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <UserAvatar user={user} className="h-6 w-6" />
+                          <span className="font-medium">{user?.username}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-sm">Booking ID:</span>
+                        <p className="font-mono font-medium">#{reservation.id}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-sm">Booked on:</span>
+                        <p className="font-medium">{format(new Date(reservation.createdAt), "MMM dd, yyyy 'at' h:mm a")}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Food Menu */}
               {show?.foodMenu && (
-                <div className="bg-card border rounded-xl p-6">
-                  <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                    <Users className="h-5 w-5 text-primary" />
-                    Available Food Menu
-                  </h4>
-                  <div className="border rounded-lg overflow-hidden">
-                    <img
-                      src={show.foodMenu}
-                      alt="Food Menu"
-                      className="w-full h-auto max-h-80 object-contain bg-muted/20"
-                    />
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-3 text-center">
-                    Visit our concession stand for fresh snacks and beverages
-                  </p>
-                </div>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Food Menu Available
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="border rounded-lg overflow-hidden mb-3">
+                      <img
+                        src={show.foodMenu}
+                        alt="Food Menu"
+                        className="w-full h-auto max-h-64 object-contain bg-muted/10"
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground text-center">
+                      Food and beverages available at the concession stand
+                    </p>
+                  </CardContent>
+                </Card>
               )}
 
-              {/* QR Code Placeholder & Instructions */}
-              <div className="bg-gradient-to-r from-muted/50 to-muted/30 border-2 border-dashed rounded-xl p-6 text-center">
-                <div className="w-16 h-16 bg-foreground/10 rounded-lg mx-auto mb-4 flex items-center justify-center">
-                  <div className="w-8 h-8 bg-foreground/20 rounded"></div>
-                </div>
-                <h4 className="font-semibold mb-2">Ready for Your Show</h4>
-                <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  Present this digital ticket at the cinema entrance. Arrive 15 minutes early for the best experience.
-                </p>
-              </div>
+              {/* Instructions */}
+              <Card className="border-dashed border-2">
+                <CardContent className="pt-6 text-center">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full mx-auto mb-3 flex items-center justify-center">
+                    <Ticket className="h-6 w-6 text-primary" />
+                  </div>
+                  <h4 className="font-semibold mb-2">Important Information</h4>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p>• Present this booking confirmation at the cinema entrance</p>
+                    <p>• Please arrive 15 minutes before the show time</p>
+                    <p>• This is an internal cinema system</p>
+                    <p>• Mobile phones should be silenced during the show</p>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 pt-4 border-t">
+              <div className="flex gap-3 pt-2">
                 <Button 
                   onClick={handleShare} 
                   variant="outline" 
                   className="flex-1"
                 >
                   <Share2 className="h-4 w-4 mr-2" />
-                  Share Booking
+                  Share Details
                 </Button>
                 <Button 
                   onClick={() => setLocation(`/show/${show?.id}`)}
                   className="flex-1"
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  View Show Page
+                  View Show
                 </Button>
               </div>
             </div>
