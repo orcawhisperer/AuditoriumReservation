@@ -56,6 +56,11 @@ import {
   Share2,
   Copy,
   Edit,
+  ArrowUp,
+  ArrowDown,
+  UserIcon,
+  Calendar,
+  MapPin,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo, useEffect } from "react";
@@ -2442,8 +2447,11 @@ function ReservationManagement() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [selectedShowId, setSelectedShowId] = useState<string>("all");
-  const [editingReservation, setEditingReservation] =
-    useState<Reservation | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"date" | "user" | "show">("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
 
   const { data: shows = [], isLoading: showsLoading } = useQuery<Show[]>({
     queryKey: ["/api/shows"],
@@ -2490,6 +2498,11 @@ function ReservationManagement() {
     return show ? show.title : "Unknown Show";
   };
 
+  const getShowDate = (showId: number) => {
+    const show = shows.find((s) => s.id === showId);
+    return show ? new Date(show.date) : new Date();
+  };
+
   const getUserName = (userId: number) => {
     const user = users.find((u) => u.id === userId);
     return user ? user.name || user.username : "Unknown User";
@@ -2501,20 +2514,82 @@ function ReservationManagement() {
     return new Date(show.date) < new Date();
   };
 
-  const filteredReservations = useMemo(() => {
-    if (selectedShowId === "all") return reservations;
-    const showId = parseInt(selectedShowId, 10);
-    return reservations.filter((r) => r.showId === showId);
-  }, [selectedShowId, reservations]);
+  const filteredAndSortedReservations = useMemo(() => {
+    let filtered = reservations;
 
-  const itemsPerPage = 5;
+    // Filter by show
+    if (selectedShowId !== "all") {
+      const showId = parseInt(selectedShowId, 10);
+      filtered = filtered.filter((r) => r.showId === showId);
+    }
+
+    // Filter by user
+    if (selectedUserId !== "all") {
+      const userId = parseInt(selectedUserId, 10);
+      filtered = filtered.filter((r) => r.userId === userId);
+    }
+
+    // Filter by search query (searches in show title, user name, and seat numbers)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((r) => {
+        const showTitle = getShowTitle(r.showId).toLowerCase();
+        const userName = getUserName(r.userId).toLowerCase();
+        const seatNumbers = (() => {
+          try {
+            if (typeof r.seatNumbers === 'string') {
+              return r.seatNumbers.startsWith('[')
+                ? JSON.parse(r.seatNumbers).join(" ").toLowerCase()
+                : r.seatNumbers.toLowerCase();
+            } else if (Array.isArray(r.seatNumbers)) {
+              return r.seatNumbers.join(" ").toLowerCase();
+            }
+            return "";
+          } catch (e) {
+            return "";
+          }
+        })();
+        
+        return showTitle.includes(query) || userName.includes(query) || seatNumbers.includes(query);
+      });
+    }
+
+    // Sort reservations
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case "date":
+          comparison = getShowDate(a.showId).getTime() - getShowDate(b.showId).getTime();
+          break;
+        case "user":
+          comparison = getUserName(a.userId).localeCompare(getUserName(b.userId));
+          break;
+        case "show":
+          comparison = getShowTitle(a.showId).localeCompare(getShowTitle(b.showId));
+          break;
+      }
+      
+      return sortOrder === "desc" ? -comparison : comparison;
+    });
+
+    return filtered;
+  }, [selectedShowId, selectedUserId, searchQuery, sortBy, sortOrder, reservations, shows, users]);
+
+  const itemsPerPage = 6;
   const [page, setPage] = useState(1);
-  const [currentItems, setCurrentItems] = useState<Reservation[]>([]);
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredAndSortedReservations.length / itemsPerPage);
+  const paginatedReservations = filteredAndSortedReservations.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage
+  );
 
-  // Reset page when filter changes
+  // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [selectedShowId]);
+  }, [selectedShowId, selectedUserId, searchQuery, sortBy, sortOrder]);
 
   if (showsLoading || reservationsLoading || usersLoading) {
     return (
@@ -2535,158 +2610,321 @@ function ReservationManagement() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('translation.admin.manageReservations')}</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Ticket className="h-5 w-5" />
+          {t('translation.admin.manageReservations')}
+        </CardTitle>
         <CardDescription>{t('translation.admin.viewAndManageReservations')}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <div className="flex gap-4">
+        <div className="space-y-6">
+          {/* Enhanced Filters Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search reservations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Show Filter */}
             <Select value={selectedShowId} onValueChange={setSelectedShowId}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger>
                 <SelectValue placeholder="Filter by show" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Shows</SelectItem>
-                {shows.map((show) => (
-                  <SelectItem key={show.id} value={show.id.toString()}>
-                    {show.title}
-                  </SelectItem>
-                ))}
+                {shows
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .map((show) => (
+                    <SelectItem key={show.id} value={show.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <span>{show.emoji}</span>
+                        {show.title}
+                        <span className="text-xs text-muted-foreground">
+                          ({format(new Date(show.date), "MMM dd")})
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
+
+            {/* User Filter */}
+            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by user" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Users</SelectItem>
+                {users
+                  .sort((a, b) => (a.name || a.username).localeCompare(b.name || b.username))
+                  .map((user) => (
+                    <SelectItem key={user.id} value={user.id.toString()}>
+                      {user.name || user.username}
+                      {user.isAdmin && <span className="text-xs text-blue-600 ml-1">(Admin)</span>}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+
+            {/* Sort Options */}
+            <div className="flex gap-2">
+              <Select value={sortBy} onValueChange={(value: "date" | "user" | "show") => setSortBy(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date">Sort by Date</SelectItem>
+                  <SelectItem value="show">Sort by Show</SelectItem>
+                  <SelectItem value="user">Sort by User</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                className="px-3"
+              >
+                {sortOrder === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
 
-          <div className="h-[400px] overflow-y-auto pr-2">
-            {currentItems.length > 0 ? (
-              <div className="space-y-4">
-                {currentItems.map((reservation: Reservation) => {
-                  const isPastShow = isShowInPast(reservation.showId);
-                  
-                  return (
-                    <div
-                      key={reservation.id}
-                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-4"
-                    >
-                      <div>
-                        <p className="font-medium">
+          {/* Results Summary */}
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <div>
+              Showing {paginatedReservations.length} of {filteredAndSortedReservations.length} reservations
+              {searchQuery && ` matching "${searchQuery}"`}
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span>Active</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                <span>Past Show</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Reservations List */}
+          <div className="space-y-3">
+            {paginatedReservations.length > 0 ? (
+              paginatedReservations.map((reservation: Reservation) => {
+                const isPastShow = isShowInPast(reservation.showId);
+                const show = shows.find(s => s.id === reservation.showId);
+                const user = users.find(u => u.id === reservation.userId);
+                
+                return (
+                  <div
+                    key={reservation.id}
+                    className={`flex items-center gap-4 p-4 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg hover:shadow-md transition-all duration-200 ${isPastShow ? "opacity-75" : ""}`}
+                  >
+                    {/* Status Indicator */}
+                    <div className={`w-3 h-3 rounded-full ${isPastShow ? "bg-gray-400" : "bg-green-500"}`}></div>
+                    
+                    {/* Show Emoji & Poster Thumbnail */}
+                    <div className="flex items-center gap-3">
+                      {show?.poster ? (
+                        <img
+                          src={show.poster}
+                          alt={show.title}
+                          className="w-12 h-16 object-cover rounded border"
+                        />
+                      ) : (
+                        <div className="w-12 h-16 bg-gray-100 dark:bg-gray-700 rounded border flex items-center justify-center text-2xl">
+                          {show?.emoji || "🎬"}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Reservation Details */}
+                    <div className="flex-grow min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
                           {getShowTitle(reservation.showId)}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Reserved by: {getUserName(reservation.userId)}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Seats: {(() => {
-                            try {
-                              if (typeof reservation.seatNumbers === 'string') {
-                                return reservation.seatNumbers.startsWith('[')
-                                  ? JSON.parse(reservation.seatNumbers).join(", ")
-                                  : reservation.seatNumbers;
-                              } else if (Array.isArray(reservation.seatNumbers)) {
-                                return (reservation.seatNumbers as string[]).join(", ");
-                              }
-                              return 'No seats';
-                            } catch (e) {
-                              console.error("Error parsing seat numbers:", e);
-                              return 'No seats';
-                            }
-                          })()}
-                        </p>
+                        </h3>
                         {isPastShow && (
-                          <p className="text-xs text-destructive mt-1">
-                            Past show - modifications disabled
-                          </p>
+                          <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                            Past Show
+                          </Badge>
                         )}
                       </div>
-                      <div className="flex gap-2 w-full sm:w-auto">
-                        {!isPastShow ? (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setEditingReservation(reservation)}
-                              className="flex-1 sm:flex-none"
-                            >
-                              Edit
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  disabled={deleteReservationMutation.isPending}
-                                  className="flex-1 sm:flex-none"
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Reservation</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete this reservation? This
-                                    action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => deleteReservationMutation.mutate(reservation.id)}
-                                  >
-                                    {deleteReservationMutation.isPending && (
-                                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                    )}
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </>
-                        ) : (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled
-                              className="flex-1 sm:flex-none"
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              disabled
-                              className="flex-1 sm:flex-none"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </Button>
-                          </>
-                        )}
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-300">
+                        <div className="flex items-center gap-1">
+                          <UserIcon className="h-3 w-3" />
+                          <span>{getUserName(reservation.userId)}</span>
+                          {user?.isAdmin && <span className="text-blue-600 dark:text-blue-400">(Admin)</span>}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>{format(getShowDate(reservation.showId), "MMM dd, yyyy 'at' h:mm a")}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          <span>
+                            {(() => {
+                              try {
+                                if (typeof reservation.seatNumbers === 'string') {
+                                  const seats = reservation.seatNumbers.startsWith('[')
+                                    ? JSON.parse(reservation.seatNumbers)
+                                    : reservation.seatNumbers.split(',').map(s => s.trim());
+                                  return seats.join(", ");
+                                } else if (Array.isArray(reservation.seatNumbers)) {
+                                  return reservation.seatNumbers.join(", ");
+                                }
+                                return 'No seats';
+                              } catch (e) {
+                                console.error("Error parsing seat numbers:", e);
+                                return 'Error parsing seats';
+                              }
+                            })()}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      {!isPastShow ? (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditingReservation(reservation)}
+                            className="flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                          >
+                            <Edit className="h-4 w-4" />
+                            <span className="hidden md:inline">Edit</span>
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={deleteReservationMutation.isPending}
+                                className="flex items-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400"
+                              >
+                                {deleteReservationMutation.isPending ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
+                                <span className="hidden md:inline">Delete</span>
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Reservation</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this reservation for "{getShowTitle(reservation.showId)}"? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => deleteReservationMutation.mutate(reservation.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Delete Reservation
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled
+                            className="flex items-center gap-2 opacity-50"
+                          >
+                            <Edit className="h-4 w-4" />
+                            <span className="hidden md:inline">Edit</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled
+                            className="flex items-center gap-2 opacity-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="hidden md:inline">Delete</span>
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
             ) : (
-              <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-                <Ticket className="h-8 w-8 mb-2" />
-                <p>
-                  {selectedShowId === "all"
-                    ? "No reservations found"
-                    : "No reservations found for this show"}
+              <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                <Ticket className="h-12 w-12 mb-4 text-gray-400 dark:text-gray-500" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No reservations found</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                  {searchQuery ? `No reservations match "${searchQuery}"` : "No reservations have been made yet"}
                 </p>
+                {(selectedShowId !== "all" || selectedUserId !== "all" || searchQuery) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedShowId("all");
+                      setSelectedUserId("all");
+                      setSearchQuery("");
+                    }}
+                    className="mt-3"
+                  >
+                    Clear Filters
+                  </Button>
+                )}
               </div>
             )}
           </div>
 
-          <DataPagination
-            data={filteredReservations}
-            itemsPerPage={itemsPerPage}
-            currentPage={page}
-            onCurrentPageChange={setPage}
-            onPageChange={setCurrentItems}
-          />
+          {/* Pagination */}
+          {filteredAndSortedReservations.length > itemsPerPage && (
+            <div className="flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className="cursor-pointer"
+                    />
+                  </PaginationItem>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (pageNum) => (
+                      <PaginationItem key={pageNum}>
+                        <PaginationLink
+                          onClick={() => setPage(pageNum)}
+                          isActive={page === pageNum}
+                          className="cursor-pointer"
+                        >
+                          {pageNum}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ),
+                  )}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                      className="cursor-pointer"
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
       </CardContent>
       {editingReservation && (
