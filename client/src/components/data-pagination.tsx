@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Pagination,
   PaginationContent,
@@ -27,28 +27,26 @@ export function DataPagination<T>({
 }: DataPaginationProps<T>) {
   const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(externalCurrentPage || 1);
-  const [currentItems, setCurrentItems] = useState<T[]>([]);
+  const onPageChangeRef = useRef(onPageChange);
+  
+  // Update ref when callback changes
+  useEffect(() => {
+    onPageChangeRef.current = onPageChange;
+  }, [onPageChange]);
   
   const totalPages = Math.ceil(data.length / itemsPerPage);
   
-  // Handle changes to the data or current page
+  // Calculate current items and call callback
   useEffect(() => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const slicedData = data.slice(indexOfFirstItem, indexOfLastItem);
     
-    setCurrentItems(slicedData);
-    
-    // Call the callback with the current page items, but only if the component has mounted
-    // This prevents triggering the callback on every render
-  }, [data, currentPage, itemsPerPage]);
-  
-  // Separate effect to handle onPageChange callback to avoid infinite loops
-  useEffect(() => {
-    if (onPageChange && currentItems.length >= 0) {
-      onPageChange(currentItems);
+    // Call callback directly without state update to avoid infinite loops
+    if (onPageChangeRef.current) {
+      onPageChangeRef.current(slicedData);
     }
-  }, [currentItems]);
+  }, [data, currentPage, itemsPerPage]);
 
   // Sync with external current page if provided
   useEffect(() => {
