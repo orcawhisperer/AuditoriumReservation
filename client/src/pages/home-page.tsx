@@ -16,7 +16,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { DataPagination } from "@/components/data-pagination";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +35,14 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,  
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ShowCardSkeleton,
@@ -130,6 +138,15 @@ export default function HomePage() {
   const [paginatedReservations, setPaginatedReservations] = useState<
     Reservation[]
   >([]);
+  
+  // Use useCallback to stabilize the pagination callback functions
+  const handleShowsPagination = useCallback((shows: Show[]) => {
+    setPaginatedShows(shows);
+  }, []);
+  
+  const handleReservationsPagination = useCallback((reservations: Reservation[]) => {
+    setPaginatedReservations(reservations);
+  }, []);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   
@@ -299,7 +316,7 @@ export default function HomePage() {
                         (show) => new Date(show.date) >= new Date(),
                       )}
                       itemsPerPage={4}
-                      onPageChange={setPaginatedShows}
+                      onPageChange={handleShowsPagination}
                     />
                   </>
                 )}
@@ -334,7 +351,7 @@ export default function HomePage() {
                     <DataPagination
                       data={reservations}
                       itemsPerPage={4}
-                      onPageChange={setPaginatedReservations}
+                      onPageChange={handleReservationsPagination}
                     />
                   </>
                 )}
@@ -362,6 +379,7 @@ function ReservationCard({
   const { toast } = useToast();
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
+  const [ticketDialogOpen, setTicketDialogOpen] = useState(false);
   const isPastShow = show && new Date(show.date) < new Date();
   
   const cancelMutation = useMutation({
@@ -407,8 +425,7 @@ function ReservationCard({
   })();
 
   const handleViewDetails = () => {
-    if (!show) return;
-    setLocation(`/show/${show.id}`);
+    setTicketDialogOpen(true);
   };
 
   const handleShare = async () => {
@@ -536,6 +553,146 @@ function ReservationCard({
             </DropdownMenu>
           </div>
         </div>
+        
+        {/* Ticket Dialog */}
+        <Dialog open={ticketDialogOpen} onOpenChange={setTicketDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                Your Cinema Ticket
+              </DialogTitle>
+              <DialogDescription>
+                Complete booking details for {show?.title}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              {/* Show Details */}
+              <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-6 rounded-lg border">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  {show?.poster && (
+                    <div className="w-full sm:w-32 h-48 sm:h-32 rounded-lg overflow-hidden border">
+                      <img
+                        src={show.poster}
+                        alt={show.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold mb-2">{show?.title}</h3>
+                    <div className="space-y-1 text-sm">
+                      <p><strong>Date & Time:</strong> {show && format(new Date(show.date), "PPP 'at' p")}</p>
+                      <p><strong>Seats:</strong> {seatNumbers.join(", ")}</p>
+                      <p><strong>Quantity:</strong> {seatNumbers.length} {seatNumbers.length === 1 ? 'ticket' : 'tickets'}</p>
+                      {show?.price && (
+                        <p><strong>Total Amount:</strong> ₹{show.price * seatNumbers.length}</p>
+                      )}
+                      <p><strong>Booking ID:</strong> #{reservation.id}</p>
+                      <p><strong>Booked On:</strong> {format(new Date(reservation.createdAt), "PPP 'at' p")}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {show?.description && (
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-sm text-muted-foreground">{show.description}</p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Food Menu */}
+              {show?.foodMenu && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-3">Food Menu Available</h4>
+                  <div className="border rounded-lg overflow-hidden">
+                    <img
+                      src={show.foodMenu}
+                      alt="Food Menu"
+                      className="w-full h-auto max-h-96 object-contain bg-gray-50"
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Food and beverages are available at the cinema. Please visit the concession stand.
+                  </p>
+                </div>
+              )}
+              
+              {/* Seat Map Visual */}
+              <div>
+                <h4 className="text-lg font-semibold mb-3">Your Seat Location</h4>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-center mb-4">
+                    <div className="inline-block bg-gray-300 px-6 py-2 rounded-t-lg text-sm font-medium">
+                      SCREEN
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-8 gap-1 max-w-md mx-auto">
+                    {seatNumbers.map((seat, index) => (
+                      <div key={index} className="bg-primary text-primary-foreground text-xs p-2 rounded text-center font-medium">
+                        {seat}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-center text-sm text-muted-foreground mt-3">
+                    Your reserved seats are highlighted above
+                  </p>
+                </div>
+              </div>
+              
+              {/* Important Notes */}
+              <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+                <h4 className="font-semibold text-yellow-800 mb-2">Important Information</h4>
+                <ul className="text-sm text-yellow-700 space-y-1">
+                  <li>• Please arrive 15 minutes before the show time</li>
+                  <li>• Present this booking confirmation at the entrance</li>
+                  <li>• Outside food and beverages are not allowed</li>
+                  <li>• Mobile phones should be silenced during the show</li>
+                </ul>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4 border-t">
+                <Button onClick={handleShare} variant="outline" className="flex-1">
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share Booking
+                </Button>
+                {!isPastShow && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" className="flex-1">
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Cancel Booking
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Cancel Reservation</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to cancel your booking for {show?.title}? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Keep Booking</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => {
+                            cancelMutation.mutate();
+                            setTicketDialogOpen(false);
+                          }}
+                          disabled={cancelMutation.isPending}
+                        >
+                          {cancelMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                          Cancel Booking
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
