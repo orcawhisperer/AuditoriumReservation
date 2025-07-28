@@ -57,11 +57,12 @@ export function Seat({
   const getBaseStyles = () => {
     const baseSize = "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-md border-2 text-xs font-medium transition-all duration-200 shadow-sm";
     
-    if (seatType === "plastic") {
-      return `${baseSize} bg-gradient-to-br from-violet-50 to-violet-100 border-violet-300 text-violet-700`;
-    }
+    // FAFA exclusive styling takes precedence over all other types
     if (isFafaExclusive) {
       return `${baseSize} bg-gradient-to-br from-orange-50 to-orange-100 border-[#ea8357] text-orange-800`;
+    }
+    if (seatType === "plastic") {
+      return `${baseSize} bg-gradient-to-br from-violet-50 to-violet-100 border-violet-300 text-violet-700`;
     }
     return `${baseSize} bg-gradient-to-br from-slate-50 to-slate-100 border-slate-300 text-slate-700`;
   };
@@ -98,10 +99,10 @@ export function Seat({
       )}
       disabled={isDisabled}
       onClick={() => onSelect(seatId)}
-      title={seatType === "plastic" ? 
-        `Plastic Seat ${seatNumber}${isUserReservation ? " (Your reservation)" : ""}` : 
-        isFafaExclusive ? 
+      title={isFafaExclusive ? 
           `FAFA-Exclusive Seat ${seatNumber}${isUserReservation ? " (Your reservation)" : ""}` :
+        seatType === "plastic" ? 
+          `Plastic Seat ${seatNumber}${isUserReservation ? " (Your reservation)" : ""}` : 
           isUserReservation ? "User reservation" : ""
       }
     >
@@ -445,9 +446,8 @@ export function SeatGrid({
         isUserReservation={isUserRes}
         onSelect={handleSeatSelect}
         isAdminMode={isAdminMode}
-                                      isFafaExclusive={isFafaExclusiveSeat(seatId)}
-        seatType={seatType}
         isFafaExclusive={isFafaExclusiveSeat(seatId)}
+        seatType={seatType}
       />
     );
   };

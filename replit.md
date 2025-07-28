@@ -4,6 +4,12 @@
 A military-themed cinema reservation system providing a comprehensive, user-friendly platform for movie screenings and precise seat allocation. Previously known as "Shahbaaz Auditorium", the system has been rebranded to "BaazCine" to better reflect its cinema focus.
 
 ## Recent Changes
+- **2025-01-28**: FAFA Styling Precedence Fix
+  - Fixed FAFA row highlighting issue in Back section by adding missing isFafaExclusive prop to all Seat components
+  - Implemented FAFA styling precedence over plastic section styling
+  - FAFA exclusive seats now correctly display orange highlighting (#ea8357) even when in plastic sections
+  - Removed row label text from section headers for cleaner UI
+  - Fixed duplicate isFafaExclusive prop issue
 - **2025-01-28**: Scalable Filter System Implementation
   - Replaced dropdown filters with searchable command palettes for shows and users
   - Implemented lazy loading: shows limited to 50 recent items, users to 50 alphabetical
