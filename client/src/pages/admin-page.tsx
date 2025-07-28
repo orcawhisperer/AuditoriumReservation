@@ -1499,83 +1499,88 @@ function ShowList() {
           return (
             <div 
               key={show.id}
-              className={`flex items-center gap-4 p-4 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg hover:shadow-md transition-all duration-200 ${isPastShow ? "opacity-75" : ""}`}
+              className={`flex flex-col sm:flex-row gap-4 p-4 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg hover:shadow-md transition-all duration-200 ${isPastShow ? "opacity-75" : ""}`}
               style={{
                 borderColor: show.themeColor || "#e5e7eb",
                 backgroundColor: `${show.themeColor}02` || "#ffffff",
               }}
             >
-              {/* Poster Thumbnail */}
-              <div className="flex-shrink-0">
-                {show.poster ? (
-                  <div className="relative w-16 h-16 overflow-hidden rounded-lg border">
-                    <img
-                      src={show.poster}
-                      alt={`Poster for ${show.title}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div 
-                    className="w-16 h-16 flex items-center justify-center rounded-lg border"
-                    style={{ backgroundColor: show.themeColor || "#f3f4f6" }}
-                  >
-                    <span className="text-2xl">{show.emoji || "🎬"}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Show Information */}
-              <div className="flex-grow min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100 truncate">
-                    {show.title}
-                  </h3>
-                  {isPastShow && (
-                    <Badge variant="secondary" className="text-xs bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200">
-                      Past Show
-                    </Badge>
+              <div className="flex gap-4 flex-1">
+                {/* Poster Thumbnail */}
+                <div className="flex-shrink-0">
+                  {show.poster ? (
+                    <div className="relative w-12 h-16 sm:w-16 sm:h-16 overflow-hidden rounded-lg border">
+                      <img
+                        src={show.poster}
+                        alt={`Poster for ${show.title}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div 
+                      className="w-12 h-16 sm:w-16 sm:h-16 flex items-center justify-center rounded-lg border"
+                      style={{ backgroundColor: show.themeColor || "#f3f4f6" }}
+                    >
+                      <span className="text-xl sm:text-2xl">{show.emoji || "🎬"}</span>
+                    </div>
                   )}
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                  {format(new Date(show.date), "MMM dd, yyyy 'at' h:mm a")}
-                </p>
-                {show.description && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 truncate mb-2" title={show.description}>
-                    {show.description}
+
+                {/* Show Information */}
+                <div className="flex-grow min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                    <h3 className="font-semibold text-base sm:text-lg text-gray-900 dark:text-gray-100 truncate">
+                      {show.title}
+                    </h3>
+                    {isPastShow && (
+                      <Badge variant="secondary" className="text-xs bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 w-fit">
+                        Past Show
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    {format(new Date(show.date), "MMM dd, yyyy 'at' h:mm a")}
                   </p>
-                )}
-                
-                {/* Compact Statistics */}
-                <div className="flex items-center gap-4 text-xs">
-                  <span className="flex items-center gap-1">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    {availableSeats} Available
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    {bookedSeats.length} Booked
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    {blockedSeats.length} Blocked
-                  </span>
-                  <span className="text-gray-500 dark:text-gray-400">
-                    {totalSeats > 0 ? Math.round((bookedSeats.length / totalSeats) * 100) : 0}% Full
-                  </span>
+                  {show.description && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate mb-2" title={show.description}>
+                      {show.description}
+                    </p>
+                  )}
+                  
+                  {/* Compact Statistics */}
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs">
+                    <span className="flex items-center gap-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="hidden sm:inline">{availableSeats} Available</span>
+                      <span className="sm:hidden">{availableSeats} Avail</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      <span className="hidden sm:inline">{bookedSeats.length} Booked</span>
+                      <span className="sm:hidden">{bookedSeats.length} Book</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                      <span className="hidden sm:inline">{blockedSeats.length} Blocked</span>
+                      <span className="sm:hidden">{blockedSeats.length} Block</span>
+                    </span>
+                    <span className="text-gray-500 dark:text-gray-400">
+                      {totalSeats > 0 ? Math.round((bookedSeats.length / totalSeats) * 100) : 0}% Full
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2 flex-shrink-0 flex-wrap sm:flex-nowrap">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setViewingShow(show)}
-                  className="flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                  className="flex items-center gap-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex-1 sm:flex-none"
                 >
                   <Eye className="h-4 w-4" />
-                  <span className="hidden md:inline">View</span>
+                  <span className="text-xs sm:text-sm">View</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -1595,20 +1600,20 @@ function ShowList() {
                       });
                     });
                   }}
-                  className="flex items-center gap-2 hover:bg-green-50 dark:hover:bg-green-900/20"
+                  className="flex items-center gap-1 hover:bg-green-50 dark:hover:bg-green-900/20 flex-1 sm:flex-none"
                 >
                   <Share2 className="h-4 w-4" />
-                  <span className="hidden md:inline">Share</span>
+                  <span className="text-xs sm:text-sm">Share</span>
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setEditingShow(show)}
                   disabled={isPastShow}
-                  className="flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20 disabled:opacity-50"
+                  className="flex items-center gap-1 hover:bg-orange-50 dark:hover:bg-orange-900/20 disabled:opacity-50 flex-1 sm:flex-none"
                 >
                   <Edit className="h-4 w-4" />
-                  <span className="hidden md:inline">Edit</span>
+                  <span className="text-xs sm:text-sm">Edit</span>
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -2634,7 +2639,7 @@ function ReservationManagement() {
       <CardContent>
         <div className="space-y-6">
           {/* Enhanced Filters Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -2684,19 +2689,21 @@ function ReservationManagement() {
           </div>
 
           {/* Results Summary */}
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 text-sm text-muted-foreground">
+            <div className="flex-1">
               Showing {paginatedReservations.length} of {filteredAndSortedReservations.length} reservations
               {searchQuery && ` matching "${searchQuery}"`}
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span>Active</span>
+                <span className="hidden sm:inline">Active</span>
+                <span className="sm:hidden">Active</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                <span>Past Show</span>
+                <span className="hidden sm:inline">Past Show</span>
+                <span className="sm:hidden">Past</span>
               </div>
             </div>
           </div>
@@ -2712,84 +2719,87 @@ function ReservationManagement() {
                 return (
                   <div
                     key={reservation.id}
-                    className={`flex items-center gap-4 p-4 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg hover:shadow-md transition-all duration-200 ${isPastShow ? "opacity-75" : ""}`}
+                    className={`flex flex-col sm:flex-row gap-4 p-4 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg hover:shadow-md transition-all duration-200 ${isPastShow ? "opacity-75" : ""}`}
                   >
-                    {/* Status Indicator */}
-                    <div className={`w-3 h-3 rounded-full ${isPastShow ? "bg-gray-400" : "bg-green-500"}`}></div>
-                    
-                    {/* Show Emoji & Poster Thumbnail */}
-                    <div className="flex items-center gap-3">
-                      {show?.poster ? (
-                        <img
-                          src={show.poster}
-                          alt={show.title}
-                          className="w-12 h-16 object-cover rounded border"
-                        />
-                      ) : (
-                        <div className="w-12 h-16 bg-gray-100 dark:bg-gray-700 rounded border flex items-center justify-center text-2xl">
-                          {show?.emoji || "🎬"}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Reservation Details */}
-                    <div className="flex-grow min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
-                          {getShowTitle(reservation.showId)}
-                        </h3>
-                        {isPastShow && (
-                          <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                            Past Show
-                          </Badge>
+                    <div className="flex gap-3 flex-1">
+                      {/* Status Indicator */}
+                      <div className={`w-3 h-3 mt-1 rounded-full flex-shrink-0 ${isPastShow ? "bg-gray-400" : "bg-green-500"}`}></div>
+                      
+                      {/* Show Emoji & Poster Thumbnail */}
+                      <div className="flex items-start gap-3 flex-shrink-0">
+                        {show?.poster ? (
+                          <img
+                            src={show.poster}
+                            alt={show.title}
+                            className="w-10 h-12 sm:w-12 sm:h-16 object-cover rounded border"
+                          />
+                        ) : (
+                          <div className="w-10 h-12 sm:w-12 sm:h-16 bg-gray-100 dark:bg-gray-700 rounded border flex items-center justify-center text-lg sm:text-2xl">
+                            {show?.emoji || "🎬"}
+                          </div>
                         )}
                       </div>
-                      <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-300">
-                        <div className="flex items-center gap-1">
-                          <UserIcon className="h-3 w-3" />
-                          <span>{getUserName(reservation.userId)}</span>
-                          {user?.isAdmin && <span className="text-blue-600 dark:text-blue-400">(Admin)</span>}
+
+                      {/* Reservation Details */}
+                      <div className="flex-grow min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                          <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-gray-100 truncate">
+                            {getShowTitle(reservation.showId)}
+                          </h3>
+                          {isPastShow && (
+                            <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 w-fit">
+                              Past Show
+                            </Badge>
+                          )}
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          <span>{format(getShowDate(reservation.showId), "MMM dd, yyyy 'at' h:mm a")}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          <span>
-                            {(() => {
-                              try {
-                                if (typeof reservation.seatNumbers === 'string') {
-                                  const seats = reservation.seatNumbers.startsWith('[')
-                                    ? JSON.parse(reservation.seatNumbers)
-                                    : reservation.seatNumbers.split(',').map(s => s.trim());
-                                  return seats.join(", ");
-                                } else if (Array.isArray(reservation.seatNumbers)) {
-                                  return reservation.seatNumbers.join(", ");
+                        <div className="space-y-1 sm:space-y-0 sm:flex sm:flex-wrap sm:gap-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+                          <div className="flex items-center gap-1">
+                            <UserIcon className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{getUserName(reservation.userId)}</span>
+                            {user?.isAdmin && <span className="text-blue-600 dark:text-blue-400">(Admin)</span>}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3 flex-shrink-0" />
+                            <span className="hidden sm:inline">{format(getShowDate(reservation.showId), "MMM dd, yyyy 'at' h:mm a")}</span>
+                            <span className="sm:hidden">{format(getShowDate(reservation.showId), "MMM dd, h:mm a")}</span>
+                          </div>
+                          <div className="flex items-start gap-1">
+                            <MapPin className="h-3 w-3 flex-shrink-0 mt-0.5" />
+                            <span className="text-xs break-all">
+                              {(() => {
+                                try {
+                                  if (typeof reservation.seatNumbers === 'string') {
+                                    const seats = reservation.seatNumbers.startsWith('[')
+                                      ? JSON.parse(reservation.seatNumbers)
+                                      : reservation.seatNumbers.split(',').map(s => s.trim());
+                                    return seats.join(", ");
+                                  } else if (Array.isArray(reservation.seatNumbers)) {
+                                    return reservation.seatNumbers.join(", ");
+                                  }
+                                  return 'No seats';
+                                } catch (e) {
+                                  console.error("Error parsing seat numbers:", e);
+                                  return 'Error parsing seats';
                                 }
-                                return 'No seats';
-                              } catch (e) {
-                                console.error("Error parsing seat numbers:", e);
-                                return 'Error parsing seats';
-                              }
-                            })()}
-                          </span>
+                              })()}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap sm:flex-nowrap">
                       {!isPastShow ? (
                         <>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => setEditingReservation(reservation)}
-                            className="flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                            className="flex items-center gap-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex-1 sm:flex-none"
                           >
                             <Edit className="h-4 w-4" />
-                            <span className="hidden md:inline">Edit</span>
+                            <span className="text-xs sm:text-sm">Edit</span>
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
@@ -2797,14 +2807,14 @@ function ReservationManagement() {
                                 variant="outline"
                                 size="sm"
                                 disabled={deleteReservationMutation.isPending}
-                                className="flex items-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400"
+                                className="flex items-center gap-1 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 flex-1 sm:flex-none"
                               >
                                 {deleteReservationMutation.isPending ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />
                                 ) : (
                                   <Trash2 className="h-4 w-4" />
                                 )}
-                                <span className="hidden md:inline">Delete</span>
+                                <span className="text-xs sm:text-sm">Delete</span>
                               </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
