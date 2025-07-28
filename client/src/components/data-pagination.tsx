@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import {
   Pagination,
   PaginationContent,
@@ -27,14 +27,11 @@ export function DataPagination<T>({
 }: DataPaginationProps<T>) {
   const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(externalCurrentPage || 1);
-  const onPageChangeRef = useRef(onPageChange);
-  
-  // Update ref when callback changes
-  useEffect(() => {
-    onPageChangeRef.current = onPageChange;
-  }, [onPageChange]);
   
   const totalPages = Math.ceil(data.length / itemsPerPage);
+  
+  // Memoize the callback to prevent infinite loops
+  const stableOnPageChange = useCallback(onPageChange || (() => {}), []);
   
   // Calculate current items and call callback
   useEffect(() => {
@@ -42,11 +39,11 @@ export function DataPagination<T>({
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const slicedData = data.slice(indexOfFirstItem, indexOfLastItem);
     
-    // Call callback directly without state update to avoid infinite loops
-    if (onPageChangeRef.current) {
-      onPageChangeRef.current(slicedData);
+    // Only call if callback exists
+    if (onPageChange) {
+      onPageChange(slicedData);
     }
-  }, [data, currentPage, itemsPerPage]);
+  }, [data, currentPage, itemsPerPage, onPageChange]);
 
   // Sync with external current page if provided
   useEffect(() => {

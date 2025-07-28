@@ -1,0 +1,38 @@
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+    at DataPagination (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/src/components/data-pagination.tsx:30:3)
+    at div
+    at div
+    at _c9 (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at main
+    at div
+    at HomePage (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/src/pages/home-page.tsx:175:36)
+    at Route (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=66a1e733:323:16)
+    at ProtectedRoute (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/src/lib/protected-route.tsx:22:3)
+    at Route (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=66a1e733:323:16)
+    at Switch (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=66a1e733:379:17)
+    at Router
+    at AuthProvider (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/src/hooks/use-auth.tsx:26:32)
+    at ThemeProvider (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/src/hooks/use-theme.tsx:25:3)
+    at QueryClientProvider (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=66a1e733:2805:3)
+    at I18nextProvider (https://392208a4-3347-4498-a57c-2910a05f2de5-00-1ncy5ugx1cgfi.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-i18next.js?v=66a1e733:781:3)
+    at App
+printWarning @ chunk-RPCDYKBN.js?v=66a1e733:521
+error @ chunk-RPCDYKBN.js?v=66a1e733:505
+checkForNestedUpdates @ chunk-RPCDYKBN.js?v=66a1e733:19665
+scheduleUpdateOnFiber @ chunk-RPCDYKBN.js?v=66a1e733:18533
+dispatchSetState @ chunk-RPCDYKBN.js?v=66a1e733:12403
+(anonymous) @ data-pagination.tsx:49
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=66a1e733:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=66a1e733:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=66a1e733:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=66a1e733:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=66a1e733:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=66a1e733:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=66a1e733:19447
+(anonymous) @ chunk-RPCDYKBN.js?v=66a1e733:19328
+workLoop @ chunk-RPCDYKBN.js?v=66a1e733:197
+flushWork @ chunk-RPCDYKBN.js?v=66a1e733:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=66a1e733:384

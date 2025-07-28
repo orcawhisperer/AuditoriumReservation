@@ -407,10 +407,13 @@ function ReservationCard({
   })();
 
   const handleViewDetails = () => {
+    if (!show) return;
     setLocation(`/show/${show.id}`);
   };
 
   const handleShare = async () => {
+    if (!show) return;
+    
     const shareText = `${t("translation.home.shareText")} ${show.title} - ${format(new Date(show.date), "PPP")} ${t("translation.common.seats")}: ${seatNumbers.join(", ")}`;
     const shareUrl = `${window.location.origin}/show/${show.id}`;
     
