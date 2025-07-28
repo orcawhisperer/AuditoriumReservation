@@ -48,7 +48,7 @@ export function DataPagination<T>({
     if (onPageChange && currentItems.length > 0) {
       onPageChange(currentItems);
     }
-  }, [currentItems]);
+  }, [currentItems, onPageChange]);
 
   // Sync with external current page if provided
   useEffect(() => {

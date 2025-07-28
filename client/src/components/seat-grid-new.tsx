@@ -359,9 +359,10 @@ export function SeatGrid({
 
     // Check FAFA exclusive row restrictions - non-FAFA users cannot select FAFA exclusive seats
     const userCategory = user?.category || "single";
-    console.log(`Attempting to select seat ${seatId}, user category: ${userCategory}, is FAFA exclusive: ${isFafaExclusiveSeat(seatId)}`);
+    console.log(`Attempting to select seat ${seatId}, user category: ${userCategory}, is FAFA exclusive: ${isFafaExclusiveSeat(seatId)}, is admin: ${user?.isAdmin}`);
     
-    if (!user?.isAdmin && isFafaExclusiveSeat(seatId) && userCategory !== "fafa") {
+    // For now, let's disable admin bypass to test the restriction properly
+    if (isFafaExclusiveSeat(seatId) && userCategory !== "fafa") {
       toast({
         title: "FAFA-Exclusive Seat",
         description: `This seat is only available to FAFA category users. Your category: ${userCategory}`,
