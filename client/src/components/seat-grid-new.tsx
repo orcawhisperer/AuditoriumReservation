@@ -327,6 +327,14 @@ export function SeatGrid({
 
   console.log("FAFA Exclusive Rows:", fafaExclusiveRows, "Show data:", show.fafaExclusiveRows);
   console.log("Seat Layout:", layout);
+  
+  // Log Back section specifically to check if M and N rows exist
+  const backSection = layout.find((s: any) => s.section === "Back");
+  if (backSection) {
+    console.log("Back section found with rows:", backSection.rows.map((r: any) => r.row));
+  } else {
+    console.log("Back section NOT found in layout!");
+  }
 
   // Helper function to check if a seat is in a FAFA exclusive row
   const isFafaExclusiveSeat = (seatId: string) => {
@@ -343,7 +351,10 @@ export function SeatGrid({
     }
     
     const isExclusive = fafaExclusiveRows.includes(row);
-    console.log(`Checking seat ${seatId} with row '${row}' against FAFA rows:`, fafaExclusiveRows, 'Result:', isExclusive);
+    // Only log for FAFA rows to reduce noise
+    if (row === 'M' || row === 'N' || isExclusive) {
+      console.log(`🔍 CHECKING FAFA SEAT: ${seatId} with row '${row}' against FAFA rows:`, fafaExclusiveRows, 'Result:', isExclusive);
+    }
     if (isExclusive) {
       console.log(`Seat ${seatId} is FAFA exclusive (row: ${row}), user category: ${user?.category}`);
     }
