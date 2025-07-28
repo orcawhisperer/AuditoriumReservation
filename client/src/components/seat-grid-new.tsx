@@ -360,48 +360,49 @@ export function SeatGrid({
 
     // Trying to add a new seat
 
-    // Check FAFA exclusive row restrictions - non-FAFA users cannot select FAFA exclusive seats
-    const userCategory = user?.category || "single";
-    console.log(`Attempting to select seat ${seatId}, user category: ${userCategory}, is FAFA exclusive: ${isFafaExclusiveSeat(seatId)}, is admin: ${user?.isAdmin}`);
-    
-    // For now, let's disable admin bypass to test the restriction properly
-    if (isFafaExclusiveSeat(seatId) && userCategory !== "fafa") {
-      toast({
-        title: "FAFA-Exclusive Seat",
-        description: `This seat is only available to FAFA category users. Your category: ${userCategory}`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Check if user category is allowed for this show
-    const allowedCategories = Array.isArray(show.allowedCategories)
-      ? show.allowedCategories
-      : typeof show.allowedCategories === "string"
-        ? show.allowedCategories.startsWith("[")
-          ? JSON.parse(show.allowedCategories)
-          : show.allowedCategories.split(",").map((s) => s.trim()).filter(s => s)
-        : ["single", "family", "fafa"];
-
-    if (!user?.isAdmin && !allowedCategories.includes(user?.category || "single")) {
-      toast({
-        title: "Category Not Allowed",
-        description: `This show is not available for ${user?.category || "single"} category users`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Admins have no seat limit
+    // Admin users bypass all category restrictions
     if (!user?.isAdmin) {
-      const seatLimit = user?.seatLimit || 4;
+      // Check FAFA exclusive row restrictions - non-FAFA users cannot select FAFA exclusive seats
+      const userCategory = user?.category || "single";
+      console.log(`Attempting to select seat ${seatId}, user category: ${userCategory}, is FAFA exclusive: ${isFafaExclusiveSeat(seatId)}`);
+      
+      if (isFafaExclusiveSeat(seatId) && userCategory !== "fafa") {
+        toast({
+          title: "FAFA-Exclusive Seat",
+          description: `This seat is only available to FAFA category users. Your category: ${userCategory}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if user category is allowed for this show
+      const allowedCategories = Array.isArray(show.allowedCategories)
+        ? show.allowedCategories
+        : typeof show.allowedCategories === "string"
+          ? show.allowedCategories.startsWith("[")
+            ? JSON.parse(show.allowedCategories)
+            : show.allowedCategories.split(",").map((s) => s.trim()).filter(s => s)
+          : ["single", "family", "fafa"];
+
+      if (!allowedCategories.includes(userCategory)) {
+        toast({
+          title: "Category Not Allowed",
+          description: `This show is not available for ${userCategory} category users`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Admins have no seat limit, but regular users are limited to 4 seats
+    if (!user?.isAdmin) {
+      const seatLimit = 4; // Fixed limit for non-admin users
       if (internalSelectedSeats.length >= seatLimit) {
         toast({
           title: "Maximum seats reached",
           description: `You can only reserve up to ${seatLimit} seats`,
           variant: "destructive",
         });
-        // Don't modify the selection
         return;
       }
     }

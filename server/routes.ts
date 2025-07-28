@@ -406,20 +406,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
               id: req.user!.id,
               username: req.user!.username,
               isAdmin: req.user!.isAdmin,
+              category: req.user!.category,
               seatCount: seatNumbers.length
             });
 
-            // Check if the number of seats exceeds the user's seat limit
-            // Handle the case where seatLimit column might not exist yet
-            // Skip seat limit check for admin users
+            // Admin users bypass all category restrictions
             if (!req.user!.isAdmin) {
-              let seatLimit = 4; // Default to 4
-              try {
-                // Try to use the user's seatLimit if it exists
-                seatLimit = req.user!.seatLimit ?? 4;
-              } catch (error) {
-                console.log(`[Transaction ${retryCount}] seatLimit not found, using default of 4`);
+              // Check user category is allowed for this show
+              const allowedCategories = (() => {
+                try {
+                  if (Array.isArray(show.allowedCategories)) {
+                    return show.allowedCategories;
+                  } else if (typeof show.allowedCategories === 'string') {
+                    return show.allowedCategories.startsWith('[') 
+                      ? JSON.parse(show.allowedCategories)
+                      : show.allowedCategories.split(',').map(s => s.trim()).filter(s => s);
+                  }
+                  return ['single', 'family', 'fafa']; // default
+                } catch (e) {
+                  console.error('Error parsing allowedCategories:', e);
+                  return ['single', 'family', 'fafa'];
+                }
+              })();
+
+              const userCategory = req.user!.category || 'single';
+              console.log(`[Transaction ${retryCount}] Category check: user=${userCategory}, allowed=${allowedCategories}`);
+              
+              if (!allowedCategories.includes(userCategory)) {
+                console.log(`[Transaction ${retryCount}] User category not allowed for this show`);
+                throw new Error(`This show is not available for ${userCategory} category users`);
               }
+
+              // Check FAFA exclusive row restrictions
+              const fafaExclusiveRows = (() => {
+                try {
+                  if (Array.isArray(show.fafaExclusiveRows)) {
+                    return show.fafaExclusiveRows;
+                  } else if (typeof show.fafaExclusiveRows === 'string') {
+                    return show.fafaExclusiveRows.startsWith('[') 
+                      ? JSON.parse(show.fafaExclusiveRows)
+                      : show.fafaExclusiveRows.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
+                  }
+                  return [];
+                } catch (e) {
+                  console.error('Error parsing fafaExclusiveRows:', e);
+                  return [];
+                }
+              })();
+
+              if (fafaExclusiveRows.length > 0 && userCategory !== 'fafa') {
+                // Check if any of the requested seats are in FAFA exclusive rows
+                const isTryingToBookFafaSeat = seatNumbers.some((seatId: string) => {
+                  let row = "";
+                  if (seatId.match(/^R[123]\d+$/)) {
+                    // Plastic seats: R11, R21, R31 -> R1, R2, R3
+                    row = seatId.substring(0, 2);
+                  } else {
+                    // Regular seats: A1, B2, etc. -> A, B, etc.
+                    row = seatId.charAt(0);
+                  }
+                  return fafaExclusiveRows.includes(row);
+                });
+
+                if (isTryingToBookFafaSeat) {
+                  console.log(`[Transaction ${retryCount}] User trying to book FAFA exclusive seats without proper category`);
+                  throw new Error(`Some selected seats are FAFA exclusive and only available to FAFA category users`);
+                }
+              }
+            } else {
+              console.log(`[Transaction ${retryCount}] Admin user bypassing category restrictions`);
+            }
+
+            // Check if the number of seats exceeds the user's seat limit
+            // Skip seat limit check for admin users - they can book unlimited seats
+            if (!req.user!.isAdmin) {
+              const seatLimit = 4; // Fixed limit for non-admin users
               
               console.log(`[Transaction ${retryCount}] Seat limit check: ${seatNumbers.length} seats requested, limit is ${seatLimit}`);
               
@@ -429,7 +490,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
               console.log(`[Transaction ${retryCount}] Seat limit check passed`);
             } else {
-              console.log(`[Transaction ${retryCount}] Skipping seat limit check for admin user`);
+              console.log(`[Transaction ${retryCount}] Skipping seat limit check for admin user - unlimited seats allowed`);
             }
 
             const hasConflict = seatNumbers.some((seat: string) =>
