@@ -1424,8 +1424,9 @@ function ShowList() {
     );
   }
   return (
-    <div className="space-y-4">
-      <div className="space-y-4 h-[400px] overflow-y-auto pr-2">
+    <div className="space-y-6">
+      {/* Modern Grid Layout */}
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {paginatedShows.map((show) => {
           const showReservations = getShowReservations(show.id);
           const bookedSeats = getBookedSeats(show.id);
@@ -1437,185 +1438,235 @@ function ShowList() {
                 : (show.blockedSeats ? [show.blockedSeats] : []))
               : []);
           const totalSeats = calculateTotalSeats(show);
-          const availableSeats =
-            totalSeats - bookedSeats.length - blockedSeats.length;
+          const availableSeats = totalSeats - bookedSeats.length - blockedSeats.length;
           const isPastShow = new Date(show.date) < new Date();
+          
           return (
-            <div
+            <Card 
               key={show.id}
-              className={`flex flex-col sm:flex-row justify-between gap-4 p-4 border-2 rounded-lg hover:bg-accent/50 transition-colors ${isPastShow ? "opacity-75" : ""}`}
+              className={`group hover:shadow-lg transition-all duration-200 border-2 ${isPastShow ? "opacity-75" : ""}`}
               style={{
-                borderColor: show.themeColor || "#4B5320",
-                backgroundColor: `${show.themeColor}10` || "#4B532010",
+                borderColor: show.themeColor || "#e5e7eb",
+                backgroundColor: `${show.themeColor}05` || "#f9fafb",
               }}
             >
-              <div className="flex flex-col sm:flex-row gap-4">
-                {show.poster && (
-                  <div className="relative w-full sm:w-24 h-24 overflow-hidden rounded-lg border">
+              {/* Card Header with Poster */}
+              <div className="relative">
+                {show.poster ? (
+                  <div className="relative w-full h-48 overflow-hidden rounded-t-lg">
                     <img
                       src={show.poster}
                       alt={`Poster for ${show.title}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                     />
+                    <div className="absolute top-2 right-2">
+                      {isPastShow && (
+                        <Badge className="bg-orange-500 text-white shadow-md">
+                          Past Show
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div 
+                    className="w-full h-48 flex items-center justify-center rounded-t-lg"
+                    style={{ backgroundColor: show.themeColor || "#f3f4f6" }}
+                  >
+                    <div className="text-center">
+                      <span className="text-4xl">{show.emoji || "🎬"}</span>
+                      {isPastShow && (
+                        <Badge className="absolute top-2 right-2 bg-orange-500 text-white shadow-md">
+                          Past Show
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 )}
+              </div>
+
+              {/* Card Content */}
+              <CardContent className="p-4 space-y-4">
+                {/* Title and Date */}
                 <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium">
-                      {show.emoji} {show.title}
-                    </p>
-                    {isPastShow && (
-                      <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-800 border-orange-300">
-                        Past Show
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {format(new Date(show.date), "PPP p")}
+                  <h3 className="font-semibold text-lg text-gray-900 truncate" title={show.title}>
+                    <span className="mr-2">{show.emoji}</span>
+                    {show.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {format(new Date(show.date), "MMM dd, yyyy 'at' h:mm a")}
                   </p>
-                  {show.description && (
-                    <p className="text-sm text-muted-foreground">
-                      {show.description}
-                    </p>
-                  )}
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-500/10 text-green-500">
-                      {availableSeats} Available
-                    </span>
-                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-500/10 text-red-500">
-                      {bookedSeats.length} Booked
-                    </span>
-                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-500/10 text-yellow-500">
-                      {blockedSeats.length} Blocked
-                    </span>
+                </div>
+
+                {/* Description */}
+                {show.description && (
+                  <p className="text-sm text-gray-600 line-clamp-2" title={show.description}>
+                    {show.description}
+                  </p>
+                )}
+
+                {/* Seat Statistics */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="text-center p-2 bg-green-50 rounded-lg border border-green-200">
+                    <div className="text-lg font-bold text-green-600">{availableSeats}</div>
+                    <div className="text-xs text-green-600">Available</div>
+                  </div>
+                  <div className="text-center p-2 bg-red-50 rounded-lg border border-red-200">
+                    <div className="text-lg font-bold text-red-600">{bookedSeats.length}</div>
+                    <div className="text-xs text-red-600">Booked</div>
+                  </div>
+                  <div className="text-center p-2 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div className="text-lg font-bold text-yellow-600">{blockedSeats.length}</div>
+                    <div className="text-xs text-yellow-600">Blocked</div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col sm:flex-row gap-2 sm:items-start">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setViewingShow(show)}
-                  className="w-full sm:w-auto flex items-center gap-2"
-                >
-                  <Eye className="h-4 w-4" />
-                  View Details
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const showUrl = `${window.location.origin}/?show=${show.id}`;
-                    navigator.clipboard.writeText(showUrl).then(() => {
-                      toast({
-                        title: "Link Copied",
-                        description: "Show booking link copied to clipboard",
-                      });
-                    }).catch(() => {
-                      toast({
-                        title: "Error",
-                        description: "Failed to copy link",
-                        variant: "destructive",
-                      });
-                    });
-                  }}
-                  className="w-full sm:w-auto flex items-center gap-2"
-                >
-                  <Share2 className="h-4 w-4" />
-                  Share
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditingShow(show)}
-                  disabled={isPastShow}
-                  className="w-full sm:w-auto flex items-center gap-2"
-                >
-                  <Edit className="h-4 w-4" />
-                  Edit
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-2 pt-2">
+                  {/* Primary Actions Row */}
+                  <div className="grid grid-cols-2 gap-2">
                     <Button
-                      variant="destructive"
+                      variant="outline"
                       size="sm"
-                      disabled={deleteShowMutation.isPending || isPastShow}
-                      className="w-full sm:w-auto"
+                      onClick={() => setViewingShow(show)}
+                      className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-300"
                     >
-                      {deleteShowMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : (
-                        <Trash2 className="h-4 w-4 mr-2" />
-                      )}
-                      Delete
+                      <Eye className="h-4 w-4" />
+                      <span className="hidden sm:inline">View Details</span>
+                      <span className="sm:hidden">Details</span>
                     </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Show</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete this show? This action
-                        cannot be undone.
-                        {showReservations.length > 0 && (
-                          <p className="mt-2 text-red-500">
-                            Warning: This show has {showReservations.length}{" "}
-                            active reservations.
-                          </p>
-                        )}
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => deleteShowMutation.mutate(show.id)}
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const showUrl = `${window.location.origin}/?show=${show.id}`;
+                        navigator.clipboard.writeText(showUrl).then(() => {
+                          toast({
+                            title: "Link Copied",
+                            description: "Show booking link copied to clipboard",
+                          });
+                        }).catch(() => {
+                          toast({
+                            title: "Error",
+                            description: "Failed to copy link",
+                            variant: "destructive",
+                          });
+                        });
+                      }}
+                      className="flex items-center gap-2 hover:bg-green-50 hover:border-green-300"
+                    >
+                      <Share2 className="h-4 w-4" />
+                      <span className="hidden sm:inline">Share</span>
+                      <span className="sm:hidden">Share</span>
+                    </Button>
+                  </div>
+                  
+                  {/* Secondary Actions Row */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditingShow(show)}
+                      disabled={isPastShow}
+                      className="flex items-center gap-2 hover:bg-orange-50 hover:border-orange-300 disabled:opacity-50"
+                    >
+                      <Edit className="h-4 w-4" />
+                      <span className="hidden sm:inline">Edit</span>
+                      <span className="sm:hidden">Edit</span>
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={deleteShowMutation.isPending || isPastShow}
+                          className="flex items-center gap-2 hover:bg-red-50 hover:border-red-300 hover:text-red-600 disabled:opacity-50"
+                        >
+                          {deleteShowMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                          <span className="hidden sm:inline">Delete</span>
+                          <span className="sm:hidden">Delete</span>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Show</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{show.title}"? This action cannot be undone.
+                            {showReservations.length > 0 && (
+                              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <p className="text-red-800 font-medium">
+                                  ⚠️ Warning: This show has {showReservations.length} active reservation{showReservations.length !== 1 ? 's' : ''}.
+                                </p>
+                              </div>
+                            )}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deleteShowMutation.mutate(show.id)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Delete Show
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           );
         })}
-        {shows.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-            <CalendarPlus className="h-8 w-8 mb-2" />
-            <p>No shows scheduled</p>
-          </div>
-        )}
       </div>
+      
+      {/* Empty State */}
+      {shows.length === 0 && (
+        <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+          <CalendarPlus className="h-12 w-12 mb-4 text-gray-400" />
+          <h3 className="text-lg font-medium text-gray-900">No shows scheduled</h3>
+          <p className="text-sm text-gray-500">Create your first show to get started</p>
+        </div>
+      )}
 
+      {/* Pagination */}
       {shows.length > itemsPerPage && (
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-              />
-            </PaginationItem>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-              (pageNum) => (
-                <PaginationItem key={pageNum}>
-                  <PaginationLink
-                    onClick={() => setPage(pageNum)}
-                    isActive={page === pageNum}
-                  >
-                    {pageNum}
-                  </PaginationLink>
-                </PaginationItem>
-              ),
-            )}
-            <PaginationItem>
-              <PaginationNext
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+        <div className="flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="cursor-pointer"
+                />
+              </PaginationItem>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (pageNum) => (
+                  <PaginationItem key={pageNum}>
+                    <PaginationLink
+                      onClick={() => setPage(pageNum)}
+                      isActive={page === pageNum}
+                      className="cursor-pointer"
+                    >
+                      {pageNum}
+                    </PaginationLink>
+                  </PaginationItem>
+                ),
+              )}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="cursor-pointer"
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
       )}
       {editingShow && (
         <EditShowDialog
@@ -2953,32 +3004,38 @@ export default function AdminPage() {
             </TabsList>
           </div>
 
-          <TabsContent value="shows" className="space-y-4">
-            <div className="grid gap-4 lg:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('translation.admin.addShow')}</CardTitle>
-                  <CardDescription>
-                    {t('translation.admin.addShow')} {t('translation.common.toThe')} {t('translation.common.system')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ShowForm />
-                </CardContent>
-              </Card>
+          <TabsContent value="shows" className="space-y-6">
+            {/* Add Show Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarPlus className="h-5 w-5" />
+                  {t('translation.admin.addShow')}
+                </CardTitle>
+                <CardDescription>
+                  Create a new movie show with custom settings and seat configuration
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ShowForm />
+              </CardContent>
+            </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('translation.admin.manageShows')}</CardTitle>
-                  <CardDescription>
-                    {t('translation.admin.manageShows')} {t('translation.common.andTheir')} {t('translation.common.configurations')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="max-h-[600px] overflow-y-auto pr-4">
-                  <ShowList />
-                </CardContent>
-              </Card>
-            </div>
+            {/* Manage Shows Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Eye className="h-5 w-5" />
+                  {t('translation.admin.manageShows')}
+                </CardTitle>
+                <CardDescription>
+                  View, edit, and manage all your movie shows and bookings
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ShowList />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="users">
