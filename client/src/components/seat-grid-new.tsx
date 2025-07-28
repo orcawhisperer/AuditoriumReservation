@@ -445,6 +445,7 @@ export function SeatGrid({
         isUserReservation={isUserRes}
         onSelect={handleSeatSelect}
         isAdminMode={isAdminMode}
+                                      isFafaExclusive={isFafaExclusiveSeat(seatId)}
         seatType={seatType}
         isFafaExclusive={isFafaExclusiveSeat(seatId)}
       />
@@ -556,11 +557,11 @@ export function SeatGrid({
               {section.section}
               <span className="text-sm text-muted-foreground font-normal">
                 {section.section === "Balcony"
-                  ? "(Rows: P,O)"
+                  ? ""
                   : section.section === "Back"
-                    ? "(Rows: N,M,L,K,J,I,H,G)"
+                    ? ""
                     : section.section === "Front"
-                      ? "(Rows: F,E,D,C,B,A)"
+                      ? ""
                       : section.section === "Plastic"
                         ? "(Prefix: P) - Plastic Seats"
                         : ""}
@@ -705,55 +706,9 @@ export function SeatGrid({
                                   const seatNumber = idx + 1;
                                   const seatId = `${rowData.row}${seatNumber}`;
 
-                                  const isUserReservation =
-                                    userReservations.some((reservation) => {
-                                      if (
-                                        reservation.showId !== parseInt(showId)
-                                      )
-                                        return false;
+                                  const isUserReservation = checkIfUserReservation(seatId);
 
-                                      try {
-                                        const seats =
-                                          typeof reservation.seatNumbers ===
-                                          "string"
-                                            ? reservation.seatNumbers.startsWith(
-                                                "[",
-                                              )
-                                              ? JSON.parse(
-                                                  reservation.seatNumbers,
-                                                )
-                                              : reservation.seatNumbers
-                                                  .split(",")
-                                                  .map((s) => s.trim())
-                                            : reservation.seatNumbers || [];
-
-                                        return (
-                                          Array.isArray(seats) &&
-                                          seats.includes(seatId)
-                                        );
-                                      } catch (e) {
-                                        console.error(
-                                          "Error parsing user reservation seats:",
-                                          e,
-                                        );
-                                        return false;
-                                      }
-                                    });
-
-                                  return (
-                                    <Seat
-                                      key={seatId}
-                                      seatId={seatId}
-                                      isReserved={reservedSeats.has(seatId)}
-                                      isBlocked={blockedSeats.has(seatId)}
-                                      isSelected={selectedSeats.includes(
-                                        seatId,
-                                      )}
-                                      isUserReservation={isUserReservation}
-                                      onSelect={handleSeatSelect}
-                                  isAdminMode={isAdminMode}
-                                    />
-                                  );
+                                  return renderSeat(seatId, isUserReservation, "regular");
                                 })}
                               </div>
 
@@ -768,55 +723,9 @@ export function SeatGrid({
                                   const seatNumber = idx + 9;
                                   const seatId = `${rowData.row}${seatNumber}`;
 
-                                  const isUserReservation =
-                                    userReservations.some((reservation) => {
-                                      if (
-                                        reservation.showId !== parseInt(showId)
-                                      )
-                                        return false;
+                                  const isUserReservation = checkIfUserReservation(seatId);
 
-                                      try {
-                                        const seats =
-                                          typeof reservation.seatNumbers ===
-                                          "string"
-                                            ? reservation.seatNumbers.startsWith(
-                                                "[",
-                                              )
-                                              ? JSON.parse(
-                                                  reservation.seatNumbers,
-                                                )
-                                              : reservation.seatNumbers
-                                                  .split(",")
-                                                  .map((s) => s.trim())
-                                            : reservation.seatNumbers || [];
-
-                                        return (
-                                          Array.isArray(seats) &&
-                                          seats.includes(seatId)
-                                        );
-                                      } catch (e) {
-                                        console.error(
-                                          "Error parsing user reservation seats:",
-                                          e,
-                                        );
-                                        return false;
-                                      }
-                                    });
-
-                                  return (
-                                    <Seat
-                                      key={seatId}
-                                      seatId={seatId}
-                                      isReserved={reservedSeats.has(seatId)}
-                                      isBlocked={blockedSeats.has(seatId)}
-                                      isSelected={selectedSeats.includes(
-                                        seatId,
-                                      )}
-                                      isUserReservation={isUserReservation}
-                                      onSelect={handleSeatSelect}
-                                  isAdminMode={isAdminMode}
-                                    />
-                                  );
+                                  return renderSeat(seatId, isUserReservation, "regular");
                                 })}
                               </div>
 
@@ -876,6 +785,7 @@ export function SeatGrid({
                                       isUserReservation={isUserReservation}
                                       onSelect={handleSeatSelect}
                                   isAdminMode={isAdminMode}
+                                      isFafaExclusive={isFafaExclusiveSeat(seatId)}
                                     />
                                   );
                                 })}
@@ -936,6 +846,7 @@ export function SeatGrid({
                                       isUserReservation={isUserReservation}
                                       onSelect={handleSeatSelect}
                                   isAdminMode={isAdminMode}
+                                      isFafaExclusive={isFafaExclusiveSeat(seatId)}
                                     />
                                   );
                                 })}
@@ -997,6 +908,7 @@ export function SeatGrid({
                                       isUserReservation={isUserReservation}
                                       onSelect={handleSeatSelect}
                                   isAdminMode={isAdminMode}
+                                      isFafaExclusive={isFafaExclusiveSeat(seatId)}
                                     />
                                   );
                                 })}
@@ -1058,6 +970,7 @@ export function SeatGrid({
                                       isUserReservation={isUserReservation}
                                       onSelect={handleSeatSelect}
                                   isAdminMode={isAdminMode}
+                                      isFafaExclusive={isFafaExclusiveSeat(seatId)}
                                     />
                                   );
                                 })}
@@ -1119,6 +1032,7 @@ export function SeatGrid({
                                       isUserReservation={isUserReservation}
                                       onSelect={handleSeatSelect}
                                   isAdminMode={isAdminMode}
+                                      isFafaExclusive={isFafaExclusiveSeat(seatId)}
                                     />
                                   );
                                 })}
@@ -1179,6 +1093,7 @@ export function SeatGrid({
                                   isUserReservation={isUserReservation}
                                   onSelect={handleSeatSelect}
                                   isAdminMode={isAdminMode}
+                                      isFafaExclusive={isFafaExclusiveSeat(seatId)}
                                 />
                               );
                             })}
@@ -1242,6 +1157,7 @@ export function SeatGrid({
                                   isUserReservation={isUserReservation}
                                   onSelect={handleSeatSelect}
                                   isAdminMode={isAdminMode}
+                                      isFafaExclusive={isFafaExclusiveSeat(seatId)}
                                 />
                               );
                             })}
@@ -1305,6 +1221,7 @@ export function SeatGrid({
                                   isUserReservation={isUserReservation}
                                   onSelect={handleSeatSelect}
                                   isAdminMode={isAdminMode}
+                                      isFafaExclusive={isFafaExclusiveSeat(seatId)}
                                 />
                               );
                             })}
