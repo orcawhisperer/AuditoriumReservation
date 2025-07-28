@@ -316,6 +316,8 @@ export function SeatGrid({
         : show.fafaExclusiveRows.split(",").map((s) => s.trim()).filter(s => s)
       : [];
 
+  console.log("FAFA Exclusive Rows:", fafaExclusiveRows, "Show data:", show.fafaExclusiveRows);
+
   // Helper function to check if a seat is in a FAFA exclusive row
   const isFafaExclusiveSeat = (seatId: string) => {
     if (fafaExclusiveRows.length === 0) return false;
@@ -354,6 +356,24 @@ export function SeatGrid({
       toast({
         title: "FAFA-Exclusive Seat",
         description: "This seat is only available to FAFA category users",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if user category is allowed for this show
+    const allowedCategories = Array.isArray(show.allowedCategories)
+      ? show.allowedCategories
+      : typeof show.allowedCategories === "string"
+        ? show.allowedCategories.startsWith("[")
+          ? JSON.parse(show.allowedCategories)
+          : show.allowedCategories.split(",").map((s) => s.trim()).filter(s => s)
+        : ["single", "family", "fafa"];
+
+    if (!user?.isAdmin && !allowedCategories.includes(user?.category || "single")) {
+      toast({
+        title: "Category Not Allowed",
+        description: `This show is not available for ${user?.category || "single"} category users`,
         variant: "destructive",
       });
       return;
