@@ -326,7 +326,7 @@ export function SeatGrid({
       : [];
 
   console.log("FAFA Exclusive Rows:", fafaExclusiveRows, "Show data:", show.fafaExclusiveRows);
-  console.log("Show object:", show);
+  console.log("Seat Layout:", layout);
 
   // Helper function to check if a seat is in a FAFA exclusive row
   const isFafaExclusiveSeat = (seatId: string) => {
@@ -578,7 +578,9 @@ export function SeatGrid({
                 )}
 
                 {/* Render each row */}
-                {section.rows.map((rowData: any, rowIndex: number) => (
+                {section.rows.map((rowData: any, rowIndex: number) => {
+                  console.log(`Rendering ${section.section} section, row: ${rowData.row}`);
+                  return (
                   <div
                     key={rowData.row}
                     className="flex gap-1 sm:gap-2 md:gap-3 justify-center"
@@ -1304,7 +1306,8 @@ export function SeatGrid({
                       <div className="w-[62px]"></div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
 
                 {/* Exits between Front and Back sections */}
                 {section.section === "Front" && (
