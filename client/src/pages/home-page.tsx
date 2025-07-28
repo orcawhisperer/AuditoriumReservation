@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Show, Reservation } from "@shared/schema";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Loader2, ChevronDown } from "lucide-react";
+import { Loader2, ChevronDown, Share2, Eye, Trash2, Copy, ExternalLink } from "lucide-react";
 import { useLocation } from "wouter";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +28,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ShowCardSkeleton,
@@ -354,7 +361,9 @@ function ReservationCard({
 }: ReservationCardProps) {
   const { toast } = useToast();
   const { t } = useTranslation();
+  const [, setLocation] = useLocation();
   const isPastShow = show && new Date(show.date) < new Date();
+  
   const cancelMutation = useMutation({
     mutationFn: async () => {
       const res = await fetch(`/api/reservations/${reservation.id}`, {
@@ -381,83 +390,148 @@ function ReservationCard({
     },
   });
 
+  const seatNumbers = (() => {
+    try {
+      if (typeof reservation.seatNumbers === "string") {
+        return reservation.seatNumbers.startsWith("[")
+          ? JSON.parse(reservation.seatNumbers)
+          : [reservation.seatNumbers];
+      } else if (Array.isArray(reservation.seatNumbers)) {
+        return reservation.seatNumbers as string[];
+      }
+      return [];
+    } catch (e) {
+      console.error("Error parsing seat numbers:", e);
+      return [];
+    }
+  })();
+
+  const handleViewDetails = () => {
+    setLocation(`/show/${show.id}`);
+  };
+
+  const handleShare = async () => {
+    const shareText = `${t("translation.home.shareText")} ${show.title} - ${format(new Date(show.date), "PPP")} ${t("translation.common.seats")}: ${seatNumbers.join(", ")}`;
+    const shareUrl = `${window.location.origin}/show/${show.id}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${t("translation.common.appName")} - ${show.title}`,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (err) {
+        // User cancelled share
+      }
+    } else {
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        toast({
+          title: t("translation.common.success"),
+          description: "Reservation details copied to clipboard",
+        });
+      } catch (err) {
+        console.error("Failed to copy:", err);
+        toast({
+          title: t("translation.common.error"),
+          description: "Failed to copy reservation details",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   if (!show) return null;
 
   return (
     <Card>
       <CardContent className="pt-6">
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-          <div>
-            <h3 className="font-semibold">{show.title}</h3>
-            <p className="text-sm text-muted-foreground">
-              {format(new Date(show.date), "PPP")} at{" "}
-              {format(new Date(show.date), "p")}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {t("translation.common.seats")}:{" "}
-              {(() => {
-                try {
-                  if (typeof reservation.seatNumbers === "string") {
-                    return reservation.seatNumbers.startsWith("[")
-                      ? JSON.parse(reservation.seatNumbers).join(", ")
-                      : reservation.seatNumbers;
-                  } else if (Array.isArray(reservation.seatNumbers)) {
-                    // Use type assertion to handle the never type error
-                    return (reservation.seatNumbers as string[]).join(", ");
-                  }
-                  return "";
-                } catch (e) {
-                  console.error("Error parsing seat numbers:", e);
-                  return "";
-                }
-              })()}
-            </p>
-            {isPastShow && (
-              <p className="text-sm text-destructive mt-1">
-                {t("translation.admin.pastShowModificationsDisabled")}
-              </p>
-            )}
-          </div>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="destructive"
-                disabled={cancelMutation.isPending || isPastShow}
-                className="w-full sm:w-auto"
-              >
-                {cancelMutation.isPending && (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          <div className="flex-1">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="font-semibold">{show.title}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {format(new Date(show.date), "PPP")} at{" "}
+                  {format(new Date(show.date), "p")}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {t("translation.common.seats")}: {seatNumbers.join(", ")}
+                </p>
+                {show.price && (
+                  <p className="text-sm text-muted-foreground">
+                    {t("translation.show.price")}: ₹{show.price} × {seatNumbers.length} = ₹{show.price * seatNumbers.length}
+                  </p>
                 )}
-                {t("translation.common.cancel")}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {t("translation.home.cancelReservationTitle")}
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t("translation.home.cancelReservationConfirmation", {
-                    showTitle: show.title,
-                  })}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>
-                  {t("translation.common.back")}
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => cancelMutation.mutate()}
-                  disabled={cancelMutation.isPending}
-                >
-                  {cancelMutation.isPending && (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  )}
-                  {t("translation.common.confirm")}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                {isPastShow && (
+                  <p className="text-sm text-destructive mt-1">
+                    {t("translation.admin.pastShowModificationsDisabled")}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleViewDetails}>
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Details
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleShare}>
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share Reservation
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <DropdownMenuItem 
+                      disabled={isPastShow}
+                      onSelect={(e) => e.preventDefault()}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Cancel Booking
+                    </DropdownMenuItem>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        {t("translation.home.cancelReservationTitle")}
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {t("translation.home.cancelReservationConfirmation", {
+                          showTitle: show.title,
+                        })}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>
+                        {t("translation.common.back")}
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => cancelMutation.mutate()}
+                        disabled={cancelMutation.isPending}
+                      >
+                        {cancelMutation.isPending && (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        )}
+                        {t("translation.common.confirm")}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </CardContent>
     </Card>
