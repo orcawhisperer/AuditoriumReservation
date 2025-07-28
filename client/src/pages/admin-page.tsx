@@ -1185,41 +1185,41 @@ function ShowDetailsDialog({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Basic Info Column */}
             <div className="space-y-4">
-              <div className="bg-white border rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
                   <span className="text-lg">{show.emoji}</span>
                   Show Details
                 </h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Date & Time:</span>
-                    <span className="font-medium">{format(new Date(show.date), "MMM dd, yyyy")}</span>
+                    <span className="text-gray-600 dark:text-gray-300">Date & Time:</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{format(new Date(show.date), "MMM dd, yyyy")}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Time:</span>
-                    <span className="font-medium">{format(new Date(show.date), "h:mm a")}</span>
+                    <span className="text-gray-600 dark:text-gray-300">Time:</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{format(new Date(show.date), "h:mm a")}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Status:</span>
+                    <span className="text-gray-600 dark:text-gray-300">Status:</span>
                     <Badge variant={new Date(show.date) < new Date() ? "secondary" : "default"}>
                       {new Date(show.date) < new Date() ? "Past Show" : "Upcoming"}
                     </Badge>
                   </div>
                   {show.description && (
-                    <div className="pt-2 border-t">
-                      <span className="text-gray-600 block mb-1">Description:</span>
-                      <p className="text-gray-900">{show.description}</p>
+                    <div className="pt-2 border-t dark:border-gray-600">
+                      <span className="text-gray-600 dark:text-gray-300 block mb-1">Description:</span>
+                      <p className="text-gray-900 dark:text-gray-100">{show.description}</p>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Categories & FAFA */}
-              <div className="bg-white border rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-3">Access Settings</h3>
+              <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Access Settings</h3>
                 <div className="space-y-3">
                   <div>
-                    <span className="text-sm text-gray-600 block mb-2">Allowed Categories:</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300 block mb-2">Allowed Categories:</span>
                     <div className="flex flex-wrap gap-1">
                       {allowedCategories.length > 0 ? (
                         allowedCategories.map((category: string) => (
@@ -1228,16 +1228,16 @@ function ShowDetailsDialog({
                           </Badge>
                         ))
                       ) : (
-                        <span className="text-xs text-gray-500">All categories</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">All categories</span>
                       )}
                     </div>
                   </div>
                   {fafaExclusiveRows.length > 0 && (
                     <div>
-                      <span className="text-sm text-gray-600 block mb-2">FAFA-Exclusive Rows:</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-300 block mb-2">FAFA-Exclusive Rows:</span>
                       <div className="flex flex-wrap gap-1">
                         {fafaExclusiveRows.map((row: string) => (
-                          <Badge key={row} className="text-xs bg-amber-100 text-amber-800 border-amber-300">
+                          <Badge key={row} className="text-xs bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700">
                             Row {row}
                           </Badge>
                         ))}
@@ -1250,8 +1250,8 @@ function ShowDetailsDialog({
 
             {/* Statistics Column */}
             <div className="space-y-4">
-              <div className="bg-white border rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-3">Seat Statistics</h3>
+              <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Seat Statistics</h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
                     <div className="text-2xl font-bold text-green-600">{availableSeats}</div>
@@ -1272,30 +1272,30 @@ function ShowDetailsDialog({
                 </div>
               </div>
 
-              <div className="bg-white border rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-3">Performance Metrics</h3>
+              <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Performance Metrics</h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Occupancy Rate:</span>
-                    <span className="font-medium">{totalSeats > 0 ? Math.round((bookedSeats.length / totalSeats) * 100) : 0}%</span>
+                    <span className="text-gray-600 dark:text-gray-300">Occupancy Rate:</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{totalSeats > 0 ? Math.round((bookedSeats.length / totalSeats) * 100) : 0}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Total Reservations:</span>
-                    <span className="font-medium">{showReservations.length}</span>
+                    <span className="text-gray-600 dark:text-gray-300">Total Reservations:</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{showReservations.length}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Estimated Revenue:</span>
-                    <span className="font-medium">₹{(bookedSeats.length * (show.price || 0)).toLocaleString()}</span>
+                    <span className="text-gray-600 dark:text-gray-300">Estimated Revenue:</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">₹{(bookedSeats.length * (show.price || 0)).toLocaleString()}</span>
                   </div>
                   {totalSeats > 0 && (
-                    <div className="pt-2 border-t">
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="pt-2 border-t dark:border-gray-600">
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div 
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                          className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all duration-300" 
                           style={{ width: `${Math.round((bookedSeats.length / totalSeats) * 100)}%` }}
                         ></div>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1 text-center">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
                         {Math.round((bookedSeats.length / totalSeats) * 100)}% capacity filled
                       </p>
                     </div>
@@ -1307,9 +1307,9 @@ function ShowDetailsDialog({
             {/* Media Column */}
             <div className="space-y-4">
               {show.poster && (
-                <div className="bg-white border rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-3">Poster</h3>
-                  <div className="relative w-full aspect-[3/4] overflow-hidden rounded-lg border">
+                <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Poster</h3>
+                  <div className="relative w-full aspect-[3/4] overflow-hidden rounded-lg border dark:border-gray-600">
                     <img
                       src={show.poster}
                       alt={`Poster for ${show.title}`}
@@ -1320,9 +1320,9 @@ function ShowDetailsDialog({
               )}
 
               {show.foodMenu && (
-                <div className="bg-white border rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-3">Food Menu</h3>
-                  <div className="relative w-full aspect-[4/3] overflow-hidden rounded-lg border">
+                <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Food Menu</h3>
+                  <div className="relative w-full aspect-[4/3] overflow-hidden rounded-lg border dark:border-gray-600">
                     <img
                       src={show.foodMenu}
                       alt="Food menu"
@@ -1333,9 +1333,9 @@ function ShowDetailsDialog({
               )}
 
               {!show.poster && !show.foodMenu && (
-                <div className="bg-white border rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-3">Media</h3>
-                  <div className="text-center py-8 text-gray-500">
+                <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Media</h3>
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     <div className="text-4xl mb-2">{show.emoji || "🎬"}</div>
                     <p className="text-sm">No poster or menu uploaded</p>
                   </div>
@@ -1479,7 +1479,7 @@ function ShowList() {
           return (
             <div 
               key={show.id}
-              className={`flex items-center gap-4 p-4 bg-white border rounded-lg hover:shadow-md transition-all duration-200 ${isPastShow ? "opacity-75" : ""}`}
+              className={`flex items-center gap-4 p-4 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg hover:shadow-md transition-all duration-200 ${isPastShow ? "opacity-75" : ""}`}
               style={{
                 borderColor: show.themeColor || "#e5e7eb",
                 backgroundColor: `${show.themeColor}02` || "#ffffff",
@@ -1508,20 +1508,20 @@ function ShowList() {
               {/* Show Information */}
               <div className="flex-grow min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-lg text-gray-900 truncate">
+                  <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100 truncate">
                     {show.title}
                   </h3>
                   {isPastShow && (
-                    <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-800">
+                    <Badge variant="secondary" className="text-xs bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200">
                       Past Show
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                   {format(new Date(show.date), "MMM dd, yyyy 'at' h:mm a")}
                 </p>
                 {show.description && (
-                  <p className="text-sm text-gray-500 truncate mb-2" title={show.description}>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 truncate mb-2" title={show.description}>
                     {show.description}
                   </p>
                 )}
@@ -1540,7 +1540,7 @@ function ShowList() {
                     <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                     {blockedSeats.length} Blocked
                   </span>
-                  <span className="text-gray-500">
+                  <span className="text-gray-500 dark:text-gray-400">
                     {totalSeats > 0 ? Math.round((bookedSeats.length / totalSeats) * 100) : 0}% Full
                   </span>
                 </div>
@@ -1552,7 +1552,7 @@ function ShowList() {
                   variant="outline"
                   size="sm"
                   onClick={() => setViewingShow(show)}
-                  className="flex items-center gap-2 hover:bg-blue-50"
+                  className="flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                 >
                   <Eye className="h-4 w-4" />
                   <span className="hidden md:inline">View</span>
@@ -1575,7 +1575,7 @@ function ShowList() {
                       });
                     });
                   }}
-                  className="flex items-center gap-2 hover:bg-green-50"
+                  className="flex items-center gap-2 hover:bg-green-50 dark:hover:bg-green-900/20"
                 >
                   <Share2 className="h-4 w-4" />
                   <span className="hidden md:inline">Share</span>
@@ -1585,7 +1585,7 @@ function ShowList() {
                   size="sm"
                   onClick={() => setEditingShow(show)}
                   disabled={isPastShow}
-                  className="flex items-center gap-2 hover:bg-orange-50 disabled:opacity-50"
+                  className="flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20 disabled:opacity-50"
                 >
                   <Edit className="h-4 w-4" />
                   <span className="hidden md:inline">Edit</span>
@@ -1596,7 +1596,7 @@ function ShowList() {
                       variant="outline"
                       size="sm"
                       disabled={deleteShowMutation.isPending || isPastShow}
-                      className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                      className="flex items-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50"
                     >
                       {deleteShowMutation.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -1640,9 +1640,9 @@ function ShowList() {
       {/* Empty State */}
       {shows.length === 0 && (
         <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-          <CalendarPlus className="h-12 w-12 mb-4 text-gray-400" />
-          <h3 className="text-lg font-medium text-gray-900">No shows scheduled</h3>
-          <p className="text-sm text-gray-500">Create your first show to get started</p>
+          <CalendarPlus className="h-12 w-12 mb-4 text-gray-400 dark:text-gray-500" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">No shows scheduled</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Create your first show to get started</p>
         </div>
       )}
 
