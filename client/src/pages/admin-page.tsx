@@ -1181,48 +1181,135 @@ function ShowDetailsDialog({
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* Basic Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Show Information Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Basic Info Column */}
             <div className="space-y-4">
-              <div>
-                <h3 className="font-medium text-sm text-muted-foreground mb-2">Show Information</h3>
-                <div className="space-y-2">
-                  <p><span className="font-medium">Date & Time:</span> {format(new Date(show.date), "PPP p")}</p>
-                  <p><span className="font-medium">Price:</span> ₹{show.price || 0}</p>
+              <div className="bg-white border rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <span className="text-lg">{show.emoji}</span>
+                  Show Details
+                </h3>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Date & Time:</span>
+                    <span className="font-medium">{format(new Date(show.date), "MMM dd, yyyy")}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Time:</span>
+                    <span className="font-medium">{format(new Date(show.date), "h:mm a")}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Status:</span>
+                    <Badge variant={new Date(show.date) < new Date() ? "secondary" : "default"}>
+                      {new Date(show.date) < new Date() ? "Past Show" : "Upcoming"}
+                    </Badge>
+                  </div>
                   {show.description && (
-                    <p><span className="font-medium">Description:</span> {show.description}</p>
+                    <div className="pt-2 border-t">
+                      <span className="text-gray-600 block mb-1">Description:</span>
+                      <p className="text-gray-900">{show.description}</p>
+                    </div>
                   )}
                 </div>
               </div>
 
-              <div>
-                <h3 className="font-medium text-sm text-muted-foreground mb-2">Seat Statistics</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-green-50 p-3 rounded-lg">
-                    <p className="text-lg font-bold text-green-600">{availableSeats}</p>
-                    <p className="text-sm text-green-600">Available</p>
+              {/* Categories & FAFA */}
+              <div className="bg-white border rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 mb-3">Access Settings</h3>
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-sm text-gray-600 block mb-2">Allowed Categories:</span>
+                    <div className="flex flex-wrap gap-1">
+                      {allowedCategories.length > 0 ? (
+                        allowedCategories.map((category: string) => (
+                          <Badge key={category} variant="outline" className="text-xs capitalize">
+                            {category}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-xs text-gray-500">All categories</span>
+                      )}
+                    </div>
                   </div>
-                  <div className="bg-red-50 p-3 rounded-lg">
-                    <p className="text-lg font-bold text-red-600">{bookedSeats.length}</p>
-                    <p className="text-sm text-red-600">Booked</p>
-                  </div>
-                  <div className="bg-yellow-50 p-3 rounded-lg">
-                    <p className="text-lg font-bold text-yellow-600">{blockedSeats.length}</p>
-                    <p className="text-sm text-yellow-600">Blocked</p>
-                  </div>
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-lg font-bold text-blue-600">{totalSeats}</p>
-                    <p className="text-sm text-blue-600">Total</p>
-                  </div>
+                  {fafaExclusiveRows.length > 0 && (
+                    <div>
+                      <span className="text-sm text-gray-600 block mb-2">FAFA-Exclusive Rows:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {fafaExclusiveRows.map((row: string) => (
+                          <Badge key={row} className="text-xs bg-amber-100 text-amber-800 border-amber-300">
+                            Row {row}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
+            {/* Statistics Column */}
+            <div className="space-y-4">
+              <div className="bg-white border rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 mb-3">Seat Statistics</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-green-600">{availableSeats}</div>
+                    <div className="text-xs text-green-600 uppercase tracking-wide">Available</div>
+                  </div>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-red-600">{bookedSeats.length}</div>
+                    <div className="text-xs text-red-600 uppercase tracking-wide">Booked</div>
+                  </div>
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-yellow-600">{blockedSeats.length}</div>
+                    <div className="text-xs text-yellow-600 uppercase tracking-wide">Blocked</div>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-blue-600">{totalSeats}</div>
+                    <div className="text-xs text-blue-600 uppercase tracking-wide">Total</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white border rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 mb-3">Performance Metrics</h3>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Occupancy Rate:</span>
+                    <span className="font-medium">{totalSeats > 0 ? Math.round((bookedSeats.length / totalSeats) * 100) : 0}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Total Reservations:</span>
+                    <span className="font-medium">{showReservations.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Estimated Revenue:</span>
+                    <span className="font-medium">₹{(bookedSeats.length * (show.price || 0)).toLocaleString()}</span>
+                  </div>
+                  {totalSeats > 0 && (
+                    <div className="pt-2 border-t">
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                          style={{ width: `${Math.round((bookedSeats.length / totalSeats) * 100)}%` }}
+                        ></div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1 text-center">
+                        {Math.round((bookedSeats.length / totalSeats) * 100)}% capacity filled
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Media Column */}
             <div className="space-y-4">
               {show.poster && (
-                <div>
-                  <h3 className="font-medium text-sm text-muted-foreground mb-2">Poster</h3>
-                  <div className="relative w-full h-48 overflow-hidden rounded-lg border">
+                <div className="bg-white border rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-900 mb-3">Poster</h3>
+                  <div className="relative w-full aspect-[3/4] overflow-hidden rounded-lg border">
                     <img
                       src={show.poster}
                       alt={`Poster for ${show.title}`}
@@ -1233,9 +1320,9 @@ function ShowDetailsDialog({
               )}
 
               {show.foodMenu && (
-                <div>
-                  <h3 className="font-medium text-sm text-muted-foreground mb-2">Food Menu</h3>
-                  <div className="relative w-full h-32 overflow-hidden rounded-lg border">
+                <div className="bg-white border rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-900 mb-3">Food Menu</h3>
+                  <div className="relative w-full aspect-[4/3] overflow-hidden rounded-lg border">
                     <img
                       src={show.foodMenu}
                       alt="Food menu"
@@ -1244,70 +1331,18 @@ function ShowDetailsDialog({
                   </div>
                 </div>
               )}
-            </div>
-          </div>
 
-          {/* Category & FAFA Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-medium text-sm text-muted-foreground mb-2">Allowed User Categories</h3>
-              <div className="flex flex-wrap gap-2">
-                {allowedCategories.length > 0 ? (
-                  allowedCategories.map((category: string) => (
-                    <Badge key={category} variant="secondary" className="capitalize">
-                      {category}
-                    </Badge>
-                  ))
-                ) : (
-                  <span className="text-sm text-muted-foreground">All categories allowed</span>
-                )}
-              </div>
-            </div>
-
-            {fafaExclusiveRows.length > 0 && (
-              <div>
-                <h3 className="font-medium text-sm text-muted-foreground mb-2">FAFA-Exclusive Rows</h3>
-                <div className="flex flex-wrap gap-2">
-                  {fafaExclusiveRows.map((row: string) => (
-                    <Badge key={row} variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                      Row {row}
-                    </Badge>
-                  ))}
+              {!show.poster && !show.foodMenu && (
+                <div className="bg-white border rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-900 mb-3">Media</h3>
+                  <div className="text-center py-8 text-gray-500">
+                    <div className="text-4xl mb-2">{show.emoji || "🎬"}</div>
+                    <p className="text-sm">No poster or menu uploaded</p>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-
-
-
-          {/* Reservations */}
-          {showReservations.length > 0 && (
-            <div>
-              <h3 className="font-medium text-sm text-muted-foreground mb-2">Recent Reservations</h3>
-              <div className="space-y-2 max-h-32 overflow-y-auto">
-                {showReservations.slice(0, 5).map((reservation: any) => {
-                  const user = users.find((u) => u.id === reservation.userId);
-                  const seats = typeof reservation.seatNumbers === 'string' 
-                    ? JSON.parse(reservation.seatNumbers) 
-                    : reservation.seatNumbers;
-                  
-                  return (
-                    <div key={reservation.id} className="flex justify-between items-center p-2 bg-white rounded border">
-                      <span className="font-medium">{user?.username || "Unknown"}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {Array.isArray(seats) ? seats.join(", ") : seats}
-                      </span>
-                    </div>
-                  );
-                })}
-                {showReservations.length > 5 && (
-                  <p className="text-sm text-muted-foreground text-center">
-                    +{showReservations.length - 5} more reservations
-                  </p>
-                )}
-              </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         <div className="flex justify-between pt-4">
@@ -1424,9 +1459,9 @@ function ShowList() {
     );
   }
   return (
-    <div className="space-y-6">
-      {/* Modern Grid Layout */}
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+    <div className="space-y-4">
+      {/* List Layout */}
+      <div className="space-y-3">
         {paginatedShows.map((show) => {
           const showReservations = getShowReservations(show.id);
           const bookedSeats = getBookedSeats(show.id);
@@ -1442,183 +1477,162 @@ function ShowList() {
           const isPastShow = new Date(show.date) < new Date();
           
           return (
-            <Card 
+            <div 
               key={show.id}
-              className={`group hover:shadow-lg transition-all duration-200 border-2 ${isPastShow ? "opacity-75" : ""}`}
+              className={`flex items-center gap-4 p-4 bg-white border rounded-lg hover:shadow-md transition-all duration-200 ${isPastShow ? "opacity-75" : ""}`}
               style={{
                 borderColor: show.themeColor || "#e5e7eb",
-                backgroundColor: `${show.themeColor}05` || "#f9fafb",
+                backgroundColor: `${show.themeColor}02` || "#ffffff",
               }}
             >
-              {/* Card Header with Poster */}
-              <div className="relative">
+              {/* Poster Thumbnail */}
+              <div className="flex-shrink-0">
                 {show.poster ? (
-                  <div className="relative w-full h-48 overflow-hidden rounded-t-lg">
+                  <div className="relative w-16 h-16 overflow-hidden rounded-lg border">
                     <img
                       src={show.poster}
                       alt={`Poster for ${show.title}`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                      className="w-full h-full object-cover"
                     />
-                    <div className="absolute top-2 right-2">
-                      {isPastShow && (
-                        <Badge className="bg-orange-500 text-white shadow-md">
-                          Past Show
-                        </Badge>
-                      )}
-                    </div>
                   </div>
                 ) : (
                   <div 
-                    className="w-full h-48 flex items-center justify-center rounded-t-lg"
+                    className="w-16 h-16 flex items-center justify-center rounded-lg border"
                     style={{ backgroundColor: show.themeColor || "#f3f4f6" }}
                   >
-                    <div className="text-center">
-                      <span className="text-4xl">{show.emoji || "🎬"}</span>
-                      {isPastShow && (
-                        <Badge className="absolute top-2 right-2 bg-orange-500 text-white shadow-md">
-                          Past Show
-                        </Badge>
-                      )}
-                    </div>
+                    <span className="text-2xl">{show.emoji || "🎬"}</span>
                   </div>
                 )}
               </div>
 
-              {/* Card Content */}
-              <CardContent className="p-4 space-y-4">
-                {/* Title and Date */}
-                <div>
-                  <h3 className="font-semibold text-lg text-gray-900 truncate" title={show.title}>
-                    <span className="mr-2">{show.emoji}</span>
+              {/* Show Information */}
+              <div className="flex-grow min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-semibold text-lg text-gray-900 truncate">
                     {show.title}
                   </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {format(new Date(show.date), "MMM dd, yyyy 'at' h:mm a")}
-                  </p>
+                  {isPastShow && (
+                    <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-800">
+                      Past Show
+                    </Badge>
+                  )}
                 </div>
-
-                {/* Description */}
+                <p className="text-sm text-gray-600 mb-2">
+                  {format(new Date(show.date), "MMM dd, yyyy 'at' h:mm a")}
+                </p>
                 {show.description && (
-                  <p className="text-sm text-gray-600 line-clamp-2" title={show.description}>
+                  <p className="text-sm text-gray-500 truncate mb-2" title={show.description}>
                     {show.description}
                   </p>
                 )}
-
-                {/* Seat Statistics */}
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="text-center p-2 bg-green-50 rounded-lg border border-green-200">
-                    <div className="text-lg font-bold text-green-600">{availableSeats}</div>
-                    <div className="text-xs text-green-600">Available</div>
-                  </div>
-                  <div className="text-center p-2 bg-red-50 rounded-lg border border-red-200">
-                    <div className="text-lg font-bold text-red-600">{bookedSeats.length}</div>
-                    <div className="text-xs text-red-600">Booked</div>
-                  </div>
-                  <div className="text-center p-2 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <div className="text-lg font-bold text-yellow-600">{blockedSeats.length}</div>
-                    <div className="text-xs text-yellow-600">Blocked</div>
-                  </div>
+                
+                {/* Compact Statistics */}
+                <div className="flex items-center gap-4 text-xs">
+                  <span className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    {availableSeats} Available
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    {bookedSeats.length} Booked
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                    {blockedSeats.length} Blocked
+                  </span>
+                  <span className="text-gray-500">
+                    {totalSeats > 0 ? Math.round((bookedSeats.length / totalSeats) * 100) : 0}% Full
+                  </span>
                 </div>
+              </div>
 
-                {/* Action Buttons */}
-                <div className="flex flex-col gap-2 pt-2">
-                  {/* Primary Actions Row */}
-                  <div className="grid grid-cols-2 gap-2">
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setViewingShow(show)}
+                  className="flex items-center gap-2 hover:bg-blue-50"
+                >
+                  <Eye className="h-4 w-4" />
+                  <span className="hidden md:inline">View</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const showUrl = `${window.location.origin}/?show=${show.id}`;
+                    navigator.clipboard.writeText(showUrl).then(() => {
+                      toast({
+                        title: "Link Copied",
+                        description: "Show booking link copied to clipboard",
+                      });
+                    }).catch(() => {
+                      toast({
+                        title: "Error",
+                        description: "Failed to copy link",
+                        variant: "destructive",
+                      });
+                    });
+                  }}
+                  className="flex items-center gap-2 hover:bg-green-50"
+                >
+                  <Share2 className="h-4 w-4" />
+                  <span className="hidden md:inline">Share</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingShow(show)}
+                  disabled={isPastShow}
+                  className="flex items-center gap-2 hover:bg-orange-50 disabled:opacity-50"
+                >
+                  <Edit className="h-4 w-4" />
+                  <span className="hidden md:inline">Edit</span>
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setViewingShow(show)}
-                      className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-300"
+                      disabled={deleteShowMutation.isPending || isPastShow}
+                      className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                     >
-                      <Eye className="h-4 w-4" />
-                      <span className="hidden sm:inline">View Details</span>
-                      <span className="sm:hidden">Details</span>
+                      {deleteShowMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                      <span className="hidden md:inline">Delete</span>
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const showUrl = `${window.location.origin}/?show=${show.id}`;
-                        navigator.clipboard.writeText(showUrl).then(() => {
-                          toast({
-                            title: "Link Copied",
-                            description: "Show booking link copied to clipboard",
-                          });
-                        }).catch(() => {
-                          toast({
-                            title: "Error",
-                            description: "Failed to copy link",
-                            variant: "destructive",
-                          });
-                        });
-                      }}
-                      className="flex items-center gap-2 hover:bg-green-50 hover:border-green-300"
-                    >
-                      <Share2 className="h-4 w-4" />
-                      <span className="hidden sm:inline">Share</span>
-                      <span className="sm:hidden">Share</span>
-                    </Button>
-                  </div>
-                  
-                  {/* Secondary Actions Row */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setEditingShow(show)}
-                      disabled={isPastShow}
-                      className="flex items-center gap-2 hover:bg-orange-50 hover:border-orange-300 disabled:opacity-50"
-                    >
-                      <Edit className="h-4 w-4" />
-                      <span className="hidden sm:inline">Edit</span>
-                      <span className="sm:hidden">Edit</span>
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={deleteShowMutation.isPending || isPastShow}
-                          className="flex items-center gap-2 hover:bg-red-50 hover:border-red-300 hover:text-red-600 disabled:opacity-50"
-                        >
-                          {deleteShowMutation.isPending ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                          <span className="hidden sm:inline">Delete</span>
-                          <span className="sm:hidden">Delete</span>
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Show</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete "{show.title}"? This action cannot be undone.
-                            {showReservations.length > 0 && (
-                              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                                <p className="text-red-800 font-medium">
-                                  ⚠️ Warning: This show has {showReservations.length} active reservation{showReservations.length !== 1 ? 's' : ''}.
-                                </p>
-                              </div>
-                            )}
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => deleteShowMutation.mutate(show.id)}
-                            className="bg-red-600 hover:bg-red-700"
-                          >
-                            Delete Show
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Show</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete "{show.title}"? This action cannot be undone.
+                        {showReservations.length > 0 && (
+                          <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-red-800 font-medium">
+                              ⚠️ Warning: This show has {showReservations.length} active reservation{showReservations.length !== 1 ? 's' : ''}.
+                            </p>
+                          </div>
+                        )}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteShowMutation.mutate(show.id)}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Delete Show
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
           );
         })}
       </div>
