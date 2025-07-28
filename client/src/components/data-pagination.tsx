@@ -30,9 +30,6 @@ export function DataPagination<T>({
   
   const totalPages = Math.ceil(data.length / itemsPerPage);
   
-  // Memoize the callback to prevent infinite loops
-  const stableOnPageChange = useCallback(onPageChange || (() => {}), []);
-  
   // Calculate current items and call callback
   useEffect(() => {
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -43,7 +40,7 @@ export function DataPagination<T>({
     if (onPageChange) {
       onPageChange(slicedData);
     }
-  }, [data, currentPage, itemsPerPage, onPageChange]);
+  }, [data, currentPage, itemsPerPage]); // Removed onPageChange from dependencies
 
   // Sync with external current page if provided
   useEffect(() => {

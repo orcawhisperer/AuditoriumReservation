@@ -480,7 +480,7 @@ function ReservationCard({
                 <p className="text-sm text-muted-foreground">
                   {t("translation.common.seats")}: {seatNumbers.join(", ")}
                 </p>
-                {show.price && (
+                {show.price && show.price > 0 && (
                   <p className="text-sm text-muted-foreground">
                     {t("translation.show.price")}: ₹{show.price} × {seatNumbers.length} = ₹{show.price * seatNumbers.length}
                   </p>
@@ -586,7 +586,7 @@ function ReservationCard({
                       <p><strong>Date & Time:</strong> {show && format(new Date(show.date), "PPP 'at' p")}</p>
                       <p><strong>Seats:</strong> {seatNumbers.join(", ")}</p>
                       <p><strong>Quantity:</strong> {seatNumbers.length} {seatNumbers.length === 1 ? 'ticket' : 'tickets'}</p>
-                      {show?.price && (
+                      {show?.price && show.price > 0 && (
                         <p><strong>Total Amount:</strong> ₹{show.price * seatNumbers.length}</p>
                       )}
                       <p><strong>Booking ID:</strong> #{reservation.id}</p>
@@ -629,7 +629,7 @@ function ReservationCard({
                     </div>
                   </div>
                   <div className="grid grid-cols-8 gap-1 max-w-md mx-auto">
-                    {seatNumbers.map((seat, index) => (
+                    {seatNumbers.map((seat: string, index: number) => (
                       <div key={index} className="bg-primary text-primary-foreground text-xs p-2 rounded text-center font-medium">
                         {seat}
                       </div>
@@ -642,13 +642,16 @@ function ReservationCard({
               </div>
               
               {/* Important Notes */}
-              <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
-                <h4 className="font-semibold text-yellow-800 mb-2">Important Information</h4>
-                <ul className="text-sm text-yellow-700 space-y-1">
+              <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                <h4 className="font-semibold text-blue-800 mb-2">Important Information</h4>
+                <ul className="text-sm text-blue-700 space-y-1">
                   <li>• Please arrive 15 minutes before the show time</li>
                   <li>• Present this booking confirmation at the entrance</li>
-                  <li>• Outside food and beverages are not allowed</li>
+                  <li>• This is an internal cinema system - no payment required</li>
                   <li>• Mobile phones should be silenced during the show</li>
+                  {show?.foodMenu && (
+                    <li>• Food and beverages are available at the concession stand</li>
+                  )}
                 </ul>
               </div>
               
