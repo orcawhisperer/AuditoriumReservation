@@ -55,15 +55,15 @@ export function Seat({
     : (isReserved || isBlocked); // In normal mode, both reserved and blocked are disabled
     
   const getBaseStyles = () => {
-    const baseSize = "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded border-2 text-xs font-medium transition-colors shadow-sm";
+    const baseSize = "w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-md border-2 text-xs font-medium transition-all duration-200 shadow-sm";
     
     if (seatType === "plastic") {
-      return `${baseSize} bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300 text-purple-800`;
+      return `${baseSize} bg-gradient-to-br from-violet-50 to-violet-100 border-violet-300 text-violet-700`;
     }
     if (isFafaExclusive) {
-      return `${baseSize} bg-gradient-to-br from-orange-50 to-orange-100 border-orange-300 text-orange-800`;
+      return `${baseSize} bg-gradient-to-br from-amber-50 to-amber-100 border-amber-400 text-amber-800`;
     }
-    return `${baseSize} bg-white border-gray-300 text-gray-700`;
+    return `${baseSize} bg-gradient-to-br from-slate-50 to-slate-100 border-slate-300 text-slate-700`;
   };
 
   return (
@@ -71,26 +71,26 @@ export function Seat({
       className={cn(
         getBaseStyles(),
         
-        // In admin mode, only show user reservation style if the seat is not currently selected
+        // Your reservation - green theme
         isUserReservation && !isSelected && (isAdminMode ? false : true) &&
-          "bg-blue-100 border-blue-300 text-blue-700",
+          "!bg-gradient-to-br !from-emerald-100 !to-emerald-200 !border-emerald-400 !text-emerald-800 !shadow-md",
         
-        // Other reservations (not user's)
+        // Other users' reservations - red theme  
         isReserved &&
           !isUserReservation && !isSelected &&
-          "bg-red-100 border-red-200 text-red-500 cursor-not-allowed",
+          "!bg-gradient-to-br !from-red-100 !to-red-200 !border-red-400 !text-red-700 cursor-not-allowed !shadow-sm",
           
-        // Blocked seats
+        // Blocked seats - gray theme
         isBlocked &&
-          "bg-yellow-100 border-yellow-200 text-yellow-500 cursor-not-allowed",
+          "!bg-gradient-to-br !from-gray-200 !to-gray-300 !border-gray-400 !text-gray-600 cursor-not-allowed opacity-75",
         
-        // Apply selected style last (so it overrides everything) - ensure white text on primary background
-        isSelected && "!bg-primary !border-primary !text-white font-bold shadow-lg",
+        // Selected seats - blue theme (overrides everything)
+        isSelected && "!bg-gradient-to-br !from-blue-500 !to-blue-600 !border-blue-700 !text-white !font-bold !shadow-lg !ring-2 !ring-blue-300 !ring-offset-1",
         
-        // Hover state - ensure good contrast
+        // Hover state - subtle lift effect
         !isDisabled &&
           !isSelected &&
-          "hover:bg-gray-200 hover:border-gray-400 hover:text-gray-800 active:scale-95",
+          "hover:shadow-md hover:scale-105 hover:-translate-y-0.5 hover:!from-slate-100 hover:!to-slate-200 hover:!border-slate-400 hover:!text-slate-800 active:scale-100 active:translate-y-0",
       )}
       disabled={isDisabled}
       onClick={() => onSelect(seatId)}
@@ -1325,39 +1325,66 @@ export function SeatGrid({
         ))}
 
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex gap-6 items-center text-sm flex-wrap">
+          <div className="flex gap-4 items-center text-sm flex-wrap">
+            {/* Available Seats */}
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded border-2" />
-              <span>Available</span>
+              <div className="w-5 h-5 rounded-md bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-slate-300 shadow-sm" />
+              <span className="font-medium text-slate-700">Available</span>
             </div>
+            
+            {/* Selected Seats */}
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-primary border-2 border-primary" />
-              <span>Selected</span>
+              <div className="w-5 h-5 rounded-md bg-gradient-to-br from-blue-500 to-blue-600 border-2 border-blue-700 shadow-lg ring-1 ring-blue-300" />
+              <span className="font-medium text-blue-700">Selected</span>
             </div>
+            
+            {/* Your Reservations */}
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-blue-100 border-2 border-blue-300" />
-              <span>Your Reservation</span>
+              <div className="w-5 h-5 rounded-md bg-gradient-to-br from-emerald-100 to-emerald-200 border-2 border-emerald-400 shadow-md" />
+              <span className="font-medium text-emerald-700">Your Reservation</span>
             </div>
+            
+            {/* Others' Reservations */}
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-red-100 border-2 border-red-200" />
-              <span>Others' Reservation</span>
+              <div className="w-5 h-5 rounded-md bg-gradient-to-br from-red-100 to-red-200 border-2 border-red-400 shadow-sm" />
+              <span className="font-medium text-red-700">Others' Reservation</span>
             </div>
+            
+            {/* Blocked Seats */}
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-yellow-100 border-2 border-yellow-200" />
-              <span>Blocked</span>
+              <div className="w-5 h-5 rounded-md bg-gradient-to-br from-gray-200 to-gray-300 border-2 border-gray-400 opacity-75" />
+              <span className="font-medium text-gray-600">Blocked</span>
             </div>
+            
+            {/* FAFA Exclusive */}
             <div className="flex items-center gap-2">
-              <div className="bg-red-500 text-white px-1 py-0.5 rounded text-xs">
+              <div className="w-5 h-5 rounded-md bg-gradient-to-br from-amber-50 to-amber-100 border-2 border-amber-400 shadow-sm" />
+              <span className="font-medium text-amber-700">FAFA Exclusive</span>
+            </div>
+            
+            {/* Plastic Seats */}
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-md bg-gradient-to-br from-violet-50 to-violet-100 border-2 border-violet-300 shadow-sm" />  
+              <span className="font-medium text-violet-700">Plastic Seats</span>
+            </div>
+            
+            {/* Exit */}
+            <div className="flex items-center gap-2">
+              <div className="bg-red-500 text-white px-2 py-1 rounded-md text-xs font-bold shadow-sm">
                 EXIT
               </div>
-              <span>Exit</span>
+              <span className="font-medium text-red-600">Exit</span>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <p className="text-sm text-muted-foreground">
-              Selected: {selectedSeats.join(", ")}
-            </p>
+            {selectedSeats.length > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                <p className="text-sm font-medium text-blue-800">
+                  Selected ({selectedSeats.length}): {selectedSeats.join(", ")}
+                </p>
+              </div>
+            )}
             <Button
               onClick={() => reserveMutation.mutate()}
               disabled={
@@ -1366,7 +1393,7 @@ export function SeatGrid({
                 hasExistingReservation ||
                 isPastCutoffTime
               }
-              className="min-w-[120px]"
+              className="min-w-[140px] bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-md"
             >
               {reserveMutation.isPending && (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -1375,7 +1402,7 @@ export function SeatGrid({
                 ? "Already Reserved"
                 : isPastCutoffTime
                   ? "Booking Closed"
-                  : `Reserve (${selectedSeats.length})`}
+                  : `Reserve ${selectedSeats.length} Seat${selectedSeats.length !== 1 ? 's' : ''}`}
             </Button>
           </div>
         </div>
