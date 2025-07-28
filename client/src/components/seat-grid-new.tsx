@@ -69,7 +69,7 @@ export function Seat({
       className={cn(
         getBaseStyles(),
         // Apply selected style first (overrides base styles)
-        isSelected && "bg-primary border-primary text-white font-bold shadow-lg",
+        isSelected && "bg-primary border-primary text-primary-foreground font-bold shadow-lg",
         
         // In admin mode, only show user reservation style if the seat is not currently selected
         isUserReservation && !isSelected && (isAdminMode ? false : true) &&
@@ -355,7 +355,7 @@ export function SeatGrid({
 
     // Trying to add a new seat
 
-    // Check FAFA exclusive row restrictions
+    // Check FAFA exclusive row restrictions - non-FAFA users cannot select FAFA exclusive seats
     if (!user?.isAdmin && isFafaExclusiveSeat(seatId) && user?.category !== "fafa") {
       toast({
         title: "FAFA-Exclusive Seat",

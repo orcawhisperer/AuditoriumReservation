@@ -58,6 +58,7 @@ const profileUpdateSchema = z.object({
   name: z.string().optional(),
   gender: z.string().optional(),
   dateOfBirth: z.string().optional(),
+  category: z.enum(["single", "family", "fafa"]).optional(),
 });
 
 type ProfileUpdateFormValues = z.infer<typeof profileUpdateSchema>;
@@ -257,6 +258,7 @@ function ProfileUpdateCard() {
       name: user?.name || "",
       gender: user?.gender || "male",
       dateOfBirth: user?.dateOfBirth || "",
+      category: user?.category || "single",
     },
   });
 
@@ -361,6 +363,32 @@ function ProfileUpdateCard() {
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>User Category</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="single">Single</SelectItem>
+                      <SelectItem value="family">Family</SelectItem>
+                      <SelectItem value="fafa">FAFA</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <Button
               type="submit"
               className="w-full"
@@ -408,6 +436,33 @@ export default function ProfilePage() {
 
       <main className="container mx-auto py-8 px-4 sm:px-8">
         <h1 className="text-2xl font-bold mb-8">{t("translation.common.userProfile")}</h1>
+
+        {/* User Info Summary */}
+        <div className="max-w-md mx-auto mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Profile Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex justify-between">
+                <span className="font-medium">Username:</span>
+                <span>{user.username}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Category:</span>
+                <span className="capitalize">{user.category || "Single"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Name:</span>
+                <span>{user.name || "Not set"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Admin Status:</span>
+                <span>{user.isAdmin ? "Yes" : "No"}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="max-w-md mx-auto space-y-8">
           <ProfileUpdateCard />
