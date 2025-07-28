@@ -332,7 +332,11 @@ export function SeatGrid({
       row = seatId.charAt(0);
     }
     
-    return fafaExclusiveRows.includes(row);
+    const isExclusive = fafaExclusiveRows.includes(row);
+    if (isExclusive) {
+      console.log(`Seat ${seatId} is FAFA exclusive (row: ${row})`);
+    }
+    return isExclusive;
   };
 
   const handleSeatSelect = (seatId: string) => {
@@ -598,18 +602,7 @@ export function SeatGrid({
                               // Check if this seat is reserved by the user
                               const isUserReservation = checkIfUserReservation(seatId);
 
-                              return (
-                                <Seat
-                                  key={seatId}
-                                  seatId={seatId}
-                                  isReserved={reservedSeats.has(seatId)}
-                                  isBlocked={blockedSeats.has(seatId)}
-                                  isSelected={selectedSeats.includes(seatId)}
-                                  isUserReservation={isUserReservation}
-                                  onSelect={handleSeatSelect}
-                                  isAdminMode={isAdminMode}
-                                />
-                              );
+                              return renderSeat(seatId, isUserReservation, "regular");
                             })}
                           </div>
 
@@ -622,50 +615,9 @@ export function SeatGrid({
                               const seatNumber = idx + 10;
                               const seatId = `${rowData.row}${seatNumber}`;
 
-                              const isUserReservation = userReservations.some(
-                                (reservation) => {
-                                  if (reservation.showId !== parseInt(showId))
-                                    return false;
+                              const isUserReservation = checkIfUserReservation(seatId);
 
-                                  try {
-                                    const seats =
-                                      typeof reservation.seatNumbers ===
-                                      "string"
-                                        ? reservation.seatNumbers.startsWith(
-                                            "[",
-                                          )
-                                          ? JSON.parse(reservation.seatNumbers)
-                                          : reservation.seatNumbers
-                                              .split(",")
-                                              .map((s) => s.trim())
-                                        : reservation.seatNumbers || [];
-
-                                    return (
-                                      Array.isArray(seats) &&
-                                      seats.includes(seatId)
-                                    );
-                                  } catch (e) {
-                                    console.error(
-                                      "Error parsing user reservation seats:",
-                                      e,
-                                    );
-                                    return false;
-                                  }
-                                },
-                              );
-
-                              return (
-                                <Seat
-                                  key={seatId}
-                                  seatId={seatId}
-                                  isReserved={reservedSeats.has(seatId)}
-                                  isBlocked={blockedSeats.has(seatId)}
-                                  isSelected={selectedSeats.includes(seatId)}
-                                  isUserReservation={isUserReservation}
-                                  onSelect={handleSeatSelect}
-                                  isAdminMode={isAdminMode}
-                                />
-                              );
+                              return renderSeat(seatId, isUserReservation, "regular");
                             })}
                           </div>
                         </>
