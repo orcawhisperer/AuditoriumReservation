@@ -259,13 +259,25 @@ export default function HomePage() {
 
   const showsTotalPages = Math.ceil(upcomingShows.length / showsPerPage);
 
-  // Paginate reservations
+  // Sort and paginate reservations (latest first)
+  const sortedReservations = useMemo(() => {
+    return [...reservations].sort((a, b) => {
+      // Sort by creation date (newest first), fallback to ID for consistent ordering
+      const dateA = new Date(a.createdAt || 0).getTime();
+      const dateB = new Date(b.createdAt || 0).getTime();
+      if (dateA !== dateB) {
+        return dateB - dateA; // Newest first
+      }
+      return b.id - a.id; // Higher ID first as fallback
+    });
+  }, [reservations]);
+
   const paginatedReservations = useMemo(() => {
     const startIndex = (reservationsPage - 1) * reservationsPerPage;
-    return reservations.slice(startIndex, startIndex + reservationsPerPage);
-  }, [reservations, reservationsPage, reservationsPerPage]);
+    return sortedReservations.slice(startIndex, startIndex + reservationsPerPage);
+  }, [sortedReservations, reservationsPage, reservationsPerPage]);
 
-  const reservationsTotalPages = Math.ceil(reservations.length / reservationsPerPage);
+  const reservationsTotalPages = Math.ceil(sortedReservations.length / reservationsPerPage);
 
   if (showsLoading) {
     return (
@@ -476,14 +488,14 @@ export default function HomePage() {
                       {t("translation.home.yourReservations")}
                     </CardTitle>
                     <CardDescription>
-                      {reservations.length} active {reservations.length === 1 ? 'booking' : 'bookings'}
+                      {sortedReservations.length} active {sortedReservations.length === 1 ? 'booking' : 'bookings'}
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="max-h-[600px] overflow-y-auto pr-2 space-y-3">
-                  {reservations.length === 0 ? (
+                  {sortedReservations.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
                       <div className="p-4 bg-muted/20 rounded-full mb-4">
                         <Ticket className="h-8 w-8 text-muted-foreground" />
