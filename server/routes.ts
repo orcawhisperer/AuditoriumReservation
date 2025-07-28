@@ -401,6 +401,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 : []);
             console.log(`[Transaction ${retryCount}] Attempting to reserve seats:`, seatNumbers);
 
+            // Debug user information
+            console.log(`[Transaction ${retryCount}] User info:`, {
+              id: req.user!.id,
+              username: req.user!.username,
+              isAdmin: req.user!.isAdmin,
+              seatCount: seatNumbers.length
+            });
+
             // Check if the number of seats exceeds the user's seat limit
             // Handle the case where seatLimit column might not exist yet
             // Skip seat limit check for admin users
@@ -413,10 +421,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 console.log(`[Transaction ${retryCount}] seatLimit not found, using default of 4`);
               }
               
+              console.log(`[Transaction ${retryCount}] Seat limit check: ${seatNumbers.length} seats requested, limit is ${seatLimit}`);
+              
               if (seatNumbers.length > seatLimit) {
                 console.log(`[Transaction ${retryCount}] Seat limit exceeded: ${seatNumbers.length} > ${seatLimit}`);
                 throw new Error(`You can only reserve up to ${seatLimit} seats`);
               }
+              console.log(`[Transaction ${retryCount}] Seat limit check passed`);
             } else {
               console.log(`[Transaction ${retryCount}] Skipping seat limit check for admin user`);
             }
