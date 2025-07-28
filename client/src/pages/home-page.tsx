@@ -480,11 +480,7 @@ function ReservationCard({
                 <p className="text-sm text-muted-foreground">
                   {t("translation.common.seats")}: {seatNumbers.join(", ")}
                 </p>
-                {show.price && show.price > 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    {t("translation.show.price")}: ₹{show.price} × {seatNumbers.length} = ₹{show.price * seatNumbers.length}
-                  </p>
-                )}
+
                 {isPastShow && (
                   <p className="text-sm text-destructive mt-1">
                     {t("translation.admin.pastShowModificationsDisabled")}
@@ -586,9 +582,7 @@ function ReservationCard({
                       <p><strong>Date & Time:</strong> {show && format(new Date(show.date), "PPP 'at' p")}</p>
                       <p><strong>Seats:</strong> {seatNumbers.join(", ")}</p>
                       <p><strong>Quantity:</strong> {seatNumbers.length} {seatNumbers.length === 1 ? 'ticket' : 'tickets'}</p>
-                      {show?.price && show.price > 0 && (
-                        <p><strong>Total Amount:</strong> ₹{show.price * seatNumbers.length}</p>
-                      )}
+
                       <p><strong>Booking ID:</strong> #{reservation.id}</p>
                       <p><strong>Booked On:</strong> {format(new Date(reservation.createdAt), "PPP 'at' p")}</p>
                     </div>
