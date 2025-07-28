@@ -326,6 +326,7 @@ export function SeatGrid({
       : [];
 
   console.log("FAFA Exclusive Rows:", fafaExclusiveRows, "Show data:", show.fafaExclusiveRows);
+  console.log("Show object:", show);
 
   // Helper function to check if a seat is in a FAFA exclusive row
   const isFafaExclusiveSeat = (seatId: string) => {
@@ -342,6 +343,7 @@ export function SeatGrid({
     }
     
     const isExclusive = fafaExclusiveRows.includes(row);
+    console.log(`Checking seat ${seatId} with row '${row}' against FAFA rows:`, fafaExclusiveRows, 'Result:', isExclusive);
     if (isExclusive) {
       console.log(`Seat ${seatId} is FAFA exclusive (row: ${row}), user category: ${user?.category}`);
     }
