@@ -1979,6 +1979,8 @@ function EditUserDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      // Also invalidate current user data in case they are editing their own profile
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       setOpen(false);
       onClose();
       toast({
@@ -2325,6 +2327,8 @@ function UserList() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      // Also invalidate current user data in case they are editing their own profile
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Success",
         description: "User status updated successfully",
@@ -2360,6 +2364,8 @@ function UserList() {
         if (!oldUsers) return [data];
         return oldUsers.map((user) => (user.id === data.id ? data : user));
       });
+      // Also invalidate current user data in case they are editing their own profile
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
 
       toast({
         title: "Success",
