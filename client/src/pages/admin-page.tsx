@@ -1960,6 +1960,7 @@ function EditUserDialog({
       name: user.name || "",
       gender: user.gender || "other",
       dateOfBirth: user.dateOfBirth || "",
+      category: user.category || "single",
       isAdmin: user.isAdmin,
       isEnabled: user.isEnabled,
       seatLimit: user.seatLimit || 4,
@@ -2092,6 +2093,31 @@ function EditUserDialog({
                   <FormControl>
                     <Input type="date" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>User Category</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="single">Single</SelectItem>
+                      <SelectItem value="family">Family</SelectItem>
+                      <SelectItem value="fafa">FAFA</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
