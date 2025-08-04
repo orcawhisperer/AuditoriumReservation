@@ -234,11 +234,19 @@ export function SeatGrid({
         showId: parseInt(showId),
         seatNumbers: selectedSeats,
       };
+      
+      console.log(`[RESERVATION] Starting reservation with payload:`, payload);
+      console.log(`[RESERVATION] User data at time of reservation:`, user);
+      console.log(`[RESERVATION] Selected seats:`, selectedSeats);
+      console.log(`[RESERVATION] User seat limit:`, user?.seatLimit);
 
       const parsed = insertReservationSchema.safeParse(payload);
       if (!parsed.success) {
+        console.log(`[RESERVATION] Schema validation failed:`, parsed.error);
         throw new Error(parsed.error.message);
       }
+      
+      console.log(`[RESERVATION] Schema validation passed, sending request...`);
 
       const res = await fetch("/api/reservations", {
         method: "POST",
@@ -246,12 +254,17 @@ export function SeatGrid({
         body: JSON.stringify(payload),
       });
 
+      console.log(`[RESERVATION] Response status:`, res.status, res.statusText);
+
       if (!res.ok) {
         const error = await res.text();
+        console.log(`[RESERVATION] Request failed with error:`, error);
         throw new Error(error);
       }
 
-      return res.json();
+      const result = await res.json();
+      console.log(`[RESERVATION] Request successful:`, result);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -363,8 +376,13 @@ export function SeatGrid({
   };
 
   const handleSeatSelect = (seatId: string) => {
+    console.log(`[SEAT SELECTION] Starting seat selection for ${seatId}`);
+    console.log(`[SEAT SELECTION] User data:`, user);
+    console.log(`[SEAT SELECTION] Current selected seats:`, internalSelectedSeats);
+    
     // If we have an external seat selection handler, use it
     if (propOnSeatSelect) {
+      console.log(`[SEAT SELECTION] Using external seat selection handler`);
       propOnSeatSelect(seatId);
       return;
     }
@@ -372,19 +390,22 @@ export function SeatGrid({
     // Otherwise, handle seat selection internally
     // If the seat is already selected, remove it (toggle off)
     if (internalSelectedSeats.includes(seatId)) {
+      console.log(`[SEAT SELECTION] Deselecting seat ${seatId}`);
       setInternalSelectedSeats(internalSelectedSeats.filter((id) => id !== seatId));
       return;
     }
 
     // Trying to add a new seat
+    console.log(`[SEAT SELECTION] Attempting to add seat ${seatId}`);
 
     // Admin users bypass all category restrictions
     if (!user?.isAdmin) {
       // Check FAFA exclusive row restrictions - non-FAFA users cannot select FAFA exclusive seats
       const userCategory = user?.category || "single";
-      console.log(`Attempting to select seat ${seatId}, user category: ${userCategory}, is FAFA exclusive: ${isFafaExclusiveSeat(seatId)}`);
+      console.log(`[SEAT SELECTION] User category: ${userCategory}, FAFA exclusive: ${isFafaExclusiveSeat(seatId)}`);
       
       if (isFafaExclusiveSeat(seatId) && userCategory !== "fafa") {
+        console.log(`[SEAT SELECTION] BLOCKED: FAFA exclusive seat for non-FAFA user`);
         toast({
           title: "FAFA-Exclusive Seat",
           description: `This seat is only available to FAFA category users. Your category: ${userCategory}`,
@@ -402,7 +423,9 @@ export function SeatGrid({
             : show.allowedCategories.split(",").map((s) => s.trim()).filter(s => s)
           : ["single", "family", "fafa"];
 
+      console.log(`[SEAT SELECTION] Show allowed categories:`, allowedCategories);
       if (!allowedCategories.includes(userCategory)) {
+        console.log(`[SEAT SELECTION] BLOCKED: User category not allowed for show`);
         toast({
           title: "Category Not Allowed",
           description: `This show is not available for ${userCategory} category users`,
@@ -410,12 +433,16 @@ export function SeatGrid({
         });
         return;
       }
+    } else {
+      console.log(`[SEAT SELECTION] Admin user - bypassing all restrictions`);
     }
 
     // Admins have no seat limit, but regular users are limited to their assigned seat limit
     if (!user?.isAdmin) {
       const seatLimit = user?.seatLimit || 4; // Use user's seat limit, default to 4
+      console.log(`[SEAT SELECTION] Checking seat limit: ${internalSelectedSeats.length} selected, limit is ${seatLimit}`);
       if (internalSelectedSeats.length >= seatLimit) {
+        console.log(`[SEAT SELECTION] BLOCKED: Seat limit reached`);
         toast({
           title: "Maximum seats reached",
           description: `You can only reserve up to ${seatLimit} seats`,
@@ -426,6 +453,7 @@ export function SeatGrid({
     }
 
     // Add the new seat and sort the array
+    console.log(`[SEAT SELECTION] SUCCESS: Adding seat ${seatId}`);
     setInternalSelectedSeats([...internalSelectedSeats, seatId].sort());
   };
 
