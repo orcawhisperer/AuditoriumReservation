@@ -240,8 +240,8 @@ export const insertReservationSchema = createInsertSchema(reservations)
             const row = seat[0];
             const number = parseInt(seat.slice(1));
 
-            // Balcony (rows O-P)
-            if ((row === "O" || row === "P") && number >= 1 && number <= 9) {
+            // Balcony (rows O-P) - updated to allow seats 1-7, 9-11 (missing seat 8)
+            if ((row === "O" || row === "P") && (number >= 1 && number <= 7 || number >= 9 && number <= 11)) {
               return true;
             }
 
