@@ -412,9 +412,9 @@ export function SeatGrid({
       }
     }
 
-    // Admins have no seat limit, but regular users are limited to 4 seats
+    // Admins have no seat limit, but regular users are limited to their assigned seat limit
     if (!user?.isAdmin) {
-      const seatLimit = 4; // Fixed limit for non-admin users
+      const seatLimit = user?.seatLimit || 4; // Use user's seat limit, default to 4
       if (internalSelectedSeats.length >= seatLimit) {
         toast({
           title: "Maximum seats reached",
