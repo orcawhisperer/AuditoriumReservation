@@ -223,12 +223,12 @@ export const insertReservationSchema = createInsertSchema(reservations)
   })
   .extend({
     seatNumbers: z
-      .array(z.string().regex(/^([A-P][0-9]{1,2}|R[123][0-9]{1,2})$/, "Invalid seat format"))
+      .array(z.string().regex(/^([A-P][0-9]{1,2}|R[123][0-9]{1,3})$/, "Invalid seat format"))
       .refine(
         (seats) =>
           seats.every((seat) => {
             // Check for plastic seats format (R1, R2, R3 followed by seat number)
-            if (/^R[123][0-9]{1,2}$/.test(seat)) {
+            if (/^R[123][0-9]{1,3}$/.test(seat)) {
               const row = seat.substring(0, 2); // R1, R2, or R3
               const number = parseInt(seat.slice(2));
               
