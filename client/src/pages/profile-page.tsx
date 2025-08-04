@@ -58,7 +58,6 @@ const profileUpdateSchema = z.object({
   name: z.string().optional(),
   gender: z.string().optional(),
   dateOfBirth: z.string().optional(),
-  category: z.enum(["single", "family", "fafa"]).optional(),
 });
 
 type ProfileUpdateFormValues = z.infer<typeof profileUpdateSchema>;
@@ -258,7 +257,6 @@ function ProfileUpdateCard() {
       name: user?.name || "",
       gender: user?.gender || "male",
       dateOfBirth: user?.dateOfBirth || "",
-      category: user?.category || "single",
     },
   });
 
@@ -363,31 +361,7 @@ function ProfileUpdateCard() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>User Category</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="single">Single</SelectItem>
-                      <SelectItem value="family">Family</SelectItem>
-                      <SelectItem value="fafa">FAFA</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
 
             <Button
               type="submit"

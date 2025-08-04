@@ -1735,6 +1735,7 @@ function CreateUserDialog() {
       name: "",
       gender: "male",
       dateOfBirth: "",
+      category: "single",
       isAdmin: false,
       isEnabled: true,
       seatLimit: 4,
@@ -1868,6 +1869,31 @@ function CreateUserDialog() {
                   <FormControl>
                     <Input type="date" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>User Category</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="single">Single</SelectItem>
+                      <SelectItem value="family">Family</SelectItem>
+                      <SelectItem value="fafa">FAFA</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
