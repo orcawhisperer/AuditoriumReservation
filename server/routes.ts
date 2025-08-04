@@ -480,7 +480,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Check if the number of seats exceeds the user's seat limit
             // Skip seat limit check for admin users - they can book unlimited seats
             if (!req.user!.isAdmin) {
-              const seatLimit = 4; // Fixed limit for non-admin users
+              const seatLimit = req.user!.seatLimit || 4; // Use user's seat limit, default to 4
               
               console.log(`[Transaction ${retryCount}] Seat limit check: ${seatNumbers.length} seats requested, limit is ${seatLimit}`);
               

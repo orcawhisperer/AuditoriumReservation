@@ -4,11 +4,14 @@
 A military-themed cinema reservation system providing a comprehensive, user-friendly platform for movie screenings and precise seat allocation. Previously known as "Shahbaaz Auditorium", the system has been rebranded to "BaazCine" to better reflect its cinema focus.
 
 ## Recent Changes
-- **2025-01-28**: Fixed User Seat Limit Enforcement
+- **2025-01-28**: Fixed User Seat Limit Enforcement and Validation
   - Fixed hardcoded 4-seat limit in seat-grid-new.tsx that was ignoring user's actual seatLimit
+  - Fixed hardcoded 4-seat limit in server/routes.ts reservation API that was ignoring user's actual seatLimit
+  - Fixed seat validation regex to properly handle plastic seats R110-R118 format (up to 3 digits)
+  - Updated validation logic to correctly parse plastic seat IDs like R110, R111, etc.
   - Now properly uses user.seatLimit field set by admin for individual seat booking limits
   - Users with custom seat limits (e.g., 7 seats) can now book up to their assigned limit
-  - Admin-set seat limits are now fully enforced across all booking interfaces
+  - Admin-set seat limits are now fully enforced across all booking interfaces (frontend and backend)
 - **2025-01-28**: Complete Mobile Responsiveness Enhancement
   - Enhanced admin dashboard shows management with responsive card layout
   - Shows list now stacks vertically on mobile with improved poster sizes and text scaling
