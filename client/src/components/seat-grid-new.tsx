@@ -6,9 +6,9 @@ import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useParams, useLocation } from "wouter";
 import { format } from "date-fns";
-import { useState, useMemo } from "react";
+import { useState, useMemo, memo } from "react";
 import { cn } from "@/lib/utils";
-import { Loader2, AlertTriangle, Clock } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -25,7 +25,7 @@ type SeatProps = {
   isFafaExclusive?: boolean; // Add this to indicate FAFA exclusive seats
 };
 
-export function Seat({
+export const Seat = memo(function Seat({
   seatId,
   isReserved,
   isBlocked,
@@ -109,7 +109,7 @@ export function Seat({
       {seatNumber}
     </button>
   );
-}
+});
 
 // Exit component for auditorium layout
 function Exit({ position }: { position: "left" | "right" | "top" | "bottom" }) {
@@ -234,19 +234,11 @@ export function SeatGrid({
         showId: parseInt(showId),
         seatNumbers: selectedSeats,
       };
-      
-      console.log(`[RESERVATION] Starting reservation with payload:`, payload);
-      console.log(`[RESERVATION] User data at time of reservation:`, user);
-      console.log(`[RESERVATION] Selected seats:`, selectedSeats);
-      console.log(`[RESERVATION] User seat limit:`, user?.seatLimit);
 
       const parsed = insertReservationSchema.safeParse(payload);
       if (!parsed.success) {
-        console.log(`[RESERVATION] Schema validation failed:`, parsed.error);
         throw new Error(parsed.error.message);
       }
-      
-      console.log(`[RESERVATION] Schema validation passed, sending request...`);
 
       const res = await fetch("/api/reservations", {
         method: "POST",
@@ -254,17 +246,12 @@ export function SeatGrid({
         body: JSON.stringify(payload),
       });
 
-      console.log(`[RESERVATION] Response status:`, res.status, res.statusText);
-
       if (!res.ok) {
         const error = await res.text();
-        console.log(`[RESERVATION] Request failed with error:`, error);
         throw new Error(error);
       }
 
-      const result = await res.json();
-      console.log(`[RESERVATION] Request successful:`, result);
-      return result;
+      return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -339,17 +326,6 @@ export function SeatGrid({
         : show.fafaExclusiveRows.split(",").map((s) => s.trim()).filter(s => s)
       : [];
 
-  console.log("FAFA Exclusive Rows:", fafaExclusiveRows, "Show data:", show.fafaExclusiveRows);
-  console.log("Seat Layout:", layout);
-  
-  // Log Back section specifically to check if M and N rows exist
-  const backSection = layout.find((s: any) => s.section === "Back");
-  if (backSection) {
-    console.log("Back section found with rows:", backSection.rows.map((r: any) => r.row));
-  } else {
-    console.log("Back section NOT found in layout!");
-  }
-
   // Helper function to check if a seat is in a FAFA exclusive row
   const isFafaExclusiveSeat = (seatId: string) => {
     if (fafaExclusiveRows.length === 0) return false;
@@ -364,48 +340,28 @@ export function SeatGrid({
       row = seatId.charAt(0);
     }
     
-    const isExclusive = fafaExclusiveRows.includes(row);
-    // Only log for FAFA rows to reduce noise
-    if (row === 'M' || row === 'N' || isExclusive) {
-      console.log(`🔍 CHECKING FAFA SEAT: ${seatId} with row '${row}' against FAFA rows:`, fafaExclusiveRows, 'Result:', isExclusive);
-    }
-    if (isExclusive) {
-      console.log(`Seat ${seatId} is FAFA exclusive (row: ${row}), user category: ${user?.category}`);
-    }
-    return isExclusive;
+    return fafaExclusiveRows.includes(row);
   };
 
   const handleSeatSelect = (seatId: string) => {
-    console.log(`[SEAT SELECTION] Starting seat selection for ${seatId}`);
-    console.log(`[SEAT SELECTION] User data:`, user);
-    console.log(`[SEAT SELECTION] Current selected seats:`, internalSelectedSeats);
-    
     // If we have an external seat selection handler, use it
     if (propOnSeatSelect) {
-      console.log(`[SEAT SELECTION] Using external seat selection handler`);
       propOnSeatSelect(seatId);
       return;
     }
     
-    // Otherwise, handle seat selection internally
     // If the seat is already selected, remove it (toggle off)
     if (internalSelectedSeats.includes(seatId)) {
-      console.log(`[SEAT SELECTION] Deselecting seat ${seatId}`);
       setInternalSelectedSeats(internalSelectedSeats.filter((id) => id !== seatId));
       return;
     }
-
-    // Trying to add a new seat
-    console.log(`[SEAT SELECTION] Attempting to add seat ${seatId}`);
 
     // Admin users bypass all category restrictions
     if (!user?.isAdmin) {
       // Check FAFA exclusive row restrictions - non-FAFA users cannot select FAFA exclusive seats
       const userCategory = user?.category || "single";
-      console.log(`[SEAT SELECTION] User category: ${userCategory}, FAFA exclusive: ${isFafaExclusiveSeat(seatId)}`);
       
       if (isFafaExclusiveSeat(seatId) && userCategory !== "fafa") {
-        console.log(`[SEAT SELECTION] BLOCKED: FAFA exclusive seat for non-FAFA user`);
         toast({
           title: "FAFA-Exclusive Seat",
           description: `This seat is only available to FAFA category users. Your category: ${userCategory}`,
@@ -423,9 +379,7 @@ export function SeatGrid({
             : show.allowedCategories.split(",").map((s) => s.trim()).filter(s => s)
           : ["single", "family", "fafa"];
 
-      console.log(`[SEAT SELECTION] Show allowed categories:`, allowedCategories);
       if (!allowedCategories.includes(userCategory)) {
-        console.log(`[SEAT SELECTION] BLOCKED: User category not allowed for show`);
         toast({
           title: "Category Not Allowed",
           description: `This show is not available for ${userCategory} category users`,
@@ -433,16 +387,12 @@ export function SeatGrid({
         });
         return;
       }
-    } else {
-      console.log(`[SEAT SELECTION] Admin user - bypassing all restrictions`);
     }
 
     // Admins have no seat limit, but regular users are limited to their assigned seat limit
     if (!user?.isAdmin) {
-      const seatLimit = user?.seatLimit || 4; // Use user's seat limit, default to 4
-      console.log(`[SEAT SELECTION] Checking seat limit: ${internalSelectedSeats.length} selected, limit is ${seatLimit}`);
+      const seatLimit = user?.seatLimit || 4;
       if (internalSelectedSeats.length >= seatLimit) {
-        console.log(`[SEAT SELECTION] BLOCKED: Seat limit reached`);
         toast({
           title: "Maximum seats reached",
           description: `You can only reserve up to ${seatLimit} seats`,
@@ -453,7 +403,6 @@ export function SeatGrid({
     }
 
     // Add the new seat and sort the array
-    console.log(`[SEAT SELECTION] SUCCESS: Adding seat ${seatId}`);
     setInternalSelectedSeats([...internalSelectedSeats, seatId].sort());
   };
 
@@ -618,16 +567,7 @@ export function SeatGrid({
                 )}
 
                 {/* Render each row */}
-                {section.rows.map((rowData: any, rowIndex: number) => {
-                  console.log(`Rendering ${section.section} section, row: ${rowData.row}`);
-                  
-                  // Log sample seat ID generation for Back section
-                  if (section.section === "Back" && (rowData.row === "M" || rowData.row === "N")) {
-                    const sampleSeatId = `${rowData.row}1`;
-                    console.log(`🎯 SAMPLE BACK SEAT ID: ${sampleSeatId}, is FAFA exclusive: ${isFafaExclusiveSeat(sampleSeatId)}`);
-                  }
-                  
-                  return (
+                {section.rows.map((rowData: any) => (
                   <div
                     key={rowData.row}
                     className="flex gap-1 sm:gap-2 md:gap-3 justify-center"
@@ -657,16 +597,7 @@ export function SeatGrid({
                             {Array.from({ length: 9 }).map((_, idx) => {
                               const seatNumber = idx + 1;
                               const seatId = `${rowData.row}${seatNumber}`;
-
-                              console.log(
-                                "Seat ID:",
-                                seatId,
-                                show.blockedSeats,
-                              );
-
-                              // Check if this seat is reserved by the user
                               const isUserReservation = checkIfUserReservation(seatId);
-
                               return renderSeat(seatId, isUserReservation, "regular");
                             })}
                           </div>
@@ -765,57 +696,8 @@ export function SeatGrid({
                                 {Array.from({ length: 4 }).map((_, idx) => {
                                   const seatNumber = idx + 13;
                                   const seatId = `${rowData.row}${seatNumber}`;
-
-                                  const isUserReservation =
-                                    userReservations.some((reservation) => {
-                                      if (
-                                        reservation.showId !== parseInt(showId)
-                                      )
-                                        return false;
-
-                                      try {
-                                        const seats =
-                                          typeof reservation.seatNumbers ===
-                                          "string"
-                                            ? reservation.seatNumbers.startsWith(
-                                                "[",
-                                              )
-                                              ? JSON.parse(
-                                                  reservation.seatNumbers,
-                                                )
-                                              : reservation.seatNumbers
-                                                  .split(",")
-                                                  .map((s) => s.trim())
-                                            : reservation.seatNumbers || [];
-
-                                        return (
-                                          Array.isArray(seats) &&
-                                          seats.includes(seatId)
-                                        );
-                                      } catch (e) {
-                                        console.error(
-                                          "Error parsing user reservation seats:",
-                                          e,
-                                        );
-                                        return false;
-                                      }
-                                    });
-
-                                  return (
-                                    <Seat
-                                      key={seatId}
-                                      seatId={seatId}
-                                      isReserved={reservedSeats.has(seatId)}
-                                      isBlocked={blockedSeats.has(seatId)}
-                                      isSelected={selectedSeats.includes(
-                                        seatId,
-                                      )}
-                                      isUserReservation={isUserReservation}
-                                      onSelect={handleSeatSelect}
-                                  isAdminMode={isAdminMode}
-                                      isFafaExclusive={isFafaExclusiveSeat(seatId)}
-                                    />
-                                  );
+                                  const isUserReservation = checkIfUserReservation(seatId);
+                                  return renderSeat(seatId, isUserReservation, "regular");
                                 })}
                               </div>
                             </>
@@ -826,57 +708,8 @@ export function SeatGrid({
                                 {Array.from({ length: 4 }).map((_, idx) => {
                                   const seatNumber = idx + 1;
                                   const seatId = `${rowData.row}${seatNumber}`;
-
-                                  const isUserReservation =
-                                    userReservations.some((reservation) => {
-                                      if (
-                                        reservation.showId !== parseInt(showId)
-                                      )
-                                        return false;
-
-                                      try {
-                                        const seats =
-                                          typeof reservation.seatNumbers ===
-                                          "string"
-                                            ? reservation.seatNumbers.startsWith(
-                                                "[",
-                                              )
-                                              ? JSON.parse(
-                                                  reservation.seatNumbers,
-                                                )
-                                              : reservation.seatNumbers
-                                                  .split(",")
-                                                  .map((s) => s.trim())
-                                            : reservation.seatNumbers || [];
-
-                                        return (
-                                          Array.isArray(seats) &&
-                                          seats.includes(seatId)
-                                        );
-                                      } catch (e) {
-                                        console.error(
-                                          "Error parsing user reservation seats:",
-                                          e,
-                                        );
-                                        return false;
-                                      }
-                                    });
-
-                                  return (
-                                    <Seat
-                                      key={seatId}
-                                      seatId={seatId}
-                                      isReserved={reservedSeats.has(seatId)}
-                                      isBlocked={blockedSeats.has(seatId)}
-                                      isSelected={selectedSeats.includes(
-                                        seatId,
-                                      )}
-                                      isUserReservation={isUserReservation}
-                                      onSelect={handleSeatSelect}
-                                  isAdminMode={isAdminMode}
-                                      isFafaExclusive={isFafaExclusiveSeat(seatId)}
-                                    />
-                                  );
+                                  const isUserReservation = checkIfUserReservation(seatId);
+                                  return renderSeat(seatId, isUserReservation, "regular");
                                 })}
                               </div>
 
@@ -888,57 +721,8 @@ export function SeatGrid({
                                 {Array.from({ length: 4 }).map((_, idx) => {
                                   const seatNumber = idx + 5;
                                   const seatId = `${rowData.row}${seatNumber}`;
-
-                                  const isUserReservation =
-                                    userReservations.some((reservation) => {
-                                      if (
-                                        reservation.showId !== parseInt(showId)
-                                      )
-                                        return false;
-
-                                      try {
-                                        const seats =
-                                          typeof reservation.seatNumbers ===
-                                          "string"
-                                            ? reservation.seatNumbers.startsWith(
-                                                "[",
-                                              )
-                                              ? JSON.parse(
-                                                  reservation.seatNumbers,
-                                                )
-                                              : reservation.seatNumbers
-                                                  .split(",")
-                                                  .map((s) => s.trim())
-                                            : reservation.seatNumbers || [];
-
-                                        return (
-                                          Array.isArray(seats) &&
-                                          seats.includes(seatId)
-                                        );
-                                      } catch (e) {
-                                        console.error(
-                                          "Error parsing user reservation seats:",
-                                          e,
-                                        );
-                                        return false;
-                                      }
-                                    });
-
-                                  return (
-                                    <Seat
-                                      key={seatId}
-                                      seatId={seatId}
-                                      isReserved={reservedSeats.has(seatId)}
-                                      isBlocked={blockedSeats.has(seatId)}
-                                      isSelected={selectedSeats.includes(
-                                        seatId,
-                                      )}
-                                      isUserReservation={isUserReservation}
-                                      onSelect={handleSeatSelect}
-                                  isAdminMode={isAdminMode}
-                                      isFafaExclusive={isFafaExclusiveSeat(seatId)}
-                                    />
-                                  );
+                                  const isUserReservation = checkIfUserReservation(seatId);
+                                  return renderSeat(seatId, isUserReservation, "regular");
                                 })}
                               </div>
 
@@ -950,57 +734,8 @@ export function SeatGrid({
                                 {Array.from({ length: 4 }).map((_, idx) => {
                                   const seatNumber = idx + 9;
                                   const seatId = `${rowData.row}${seatNumber}`;
-
-                                  const isUserReservation =
-                                    userReservations.some((reservation) => {
-                                      if (
-                                        reservation.showId !== parseInt(showId)
-                                      )
-                                        return false;
-
-                                      try {
-                                        const seats =
-                                          typeof reservation.seatNumbers ===
-                                          "string"
-                                            ? reservation.seatNumbers.startsWith(
-                                                "[",
-                                              )
-                                              ? JSON.parse(
-                                                  reservation.seatNumbers,
-                                                )
-                                              : reservation.seatNumbers
-                                                  .split(",")
-                                                  .map((s) => s.trim())
-                                            : reservation.seatNumbers || [];
-
-                                        return (
-                                          Array.isArray(seats) &&
-                                          seats.includes(seatId)
-                                        );
-                                      } catch (e) {
-                                        console.error(
-                                          "Error parsing user reservation seats:",
-                                          e,
-                                        );
-                                        return false;
-                                      }
-                                    });
-
-                                  return (
-                                    <Seat
-                                      key={seatId}
-                                      seatId={seatId}
-                                      isReserved={reservedSeats.has(seatId)}
-                                      isBlocked={blockedSeats.has(seatId)}
-                                      isSelected={selectedSeats.includes(
-                                        seatId,
-                                      )}
-                                      isUserReservation={isUserReservation}
-                                      onSelect={handleSeatSelect}
-                                  isAdminMode={isAdminMode}
-                                      isFafaExclusive={isFafaExclusiveSeat(seatId)}
-                                    />
-                                  );
+                                  const isUserReservation = checkIfUserReservation(seatId);
+                                  return renderSeat(seatId, isUserReservation, "regular");
                                 })}
                               </div>
 
@@ -1012,57 +747,8 @@ export function SeatGrid({
                                 {Array.from({ length: 4 }).map((_, idx) => {
                                   const seatNumber = idx + 13;
                                   const seatId = `${rowData.row}${seatNumber}`;
-
-                                  const isUserReservation =
-                                    userReservations.some((reservation) => {
-                                      if (
-                                        reservation.showId !== parseInt(showId)
-                                      )
-                                        return false;
-
-                                      try {
-                                        const seats =
-                                          typeof reservation.seatNumbers ===
-                                          "string"
-                                            ? reservation.seatNumbers.startsWith(
-                                                "[",
-                                              )
-                                              ? JSON.parse(
-                                                  reservation.seatNumbers,
-                                                )
-                                              : reservation.seatNumbers
-                                                  .split(",")
-                                                  .map((s) => s.trim())
-                                            : reservation.seatNumbers || [];
-
-                                        return (
-                                          Array.isArray(seats) &&
-                                          seats.includes(seatId)
-                                        );
-                                      } catch (e) {
-                                        console.error(
-                                          "Error parsing user reservation seats:",
-                                          e,
-                                        );
-                                        return false;
-                                      }
-                                    });
-
-                                  return (
-                                    <Seat
-                                      key={seatId}
-                                      seatId={seatId}
-                                      isReserved={reservedSeats.has(seatId)}
-                                      isBlocked={blockedSeats.has(seatId)}
-                                      isSelected={selectedSeats.includes(
-                                        seatId,
-                                      )}
-                                      isUserReservation={isUserReservation}
-                                      onSelect={handleSeatSelect}
-                                  isAdminMode={isAdminMode}
-                                      isFafaExclusive={isFafaExclusiveSeat(seatId)}
-                                    />
-                                  );
+                                  const isUserReservation = checkIfUserReservation(seatId);
+                                  return renderSeat(seatId, isUserReservation, "regular");
                                 })}
                               </div>
                             </>
@@ -1078,96 +764,20 @@ export function SeatGrid({
                             {Array.from({ length: 3 }).map((_, idx) => {
                               const seatNumber = idx + 1;
                               const seatId = `${rowData.row}${seatNumber}`;
-
-                              const isUserReservation = userReservations.some(
-                                (reservation) => {
-                                  if (reservation.showId !== parseInt(showId))
-                                    return false;
-
-                                  try {
-                                    const seats =
-                                      typeof reservation.seatNumbers ===
-                                      "string"
-                                        ? reservation.seatNumbers.startsWith(
-                                            "[",
-                                          )
-                                          ? JSON.parse(reservation.seatNumbers)
-                                          : reservation.seatNumbers
-                                              .split(",")
-                                              .map((s) => s.trim())
-                                        : reservation.seatNumbers || [];
-
-                                    return (
-                                      Array.isArray(seats) &&
-                                      seats.includes(seatId)
-                                    );
-                                  } catch (e) {
-                                    console.error(
-                                      "Error parsing user reservation seats:",
-                                      e,
-                                    );
-                                    return false;
-                                  }
-                                },
-                              );
-
-                              return (
-                                <Seat
-                                  key={seatId}
-                                  seatId={seatId}
-                                  isReserved={reservedSeats.has(seatId)}
-                                  isBlocked={blockedSeats.has(seatId)}
-                                  isSelected={selectedSeats.includes(seatId)}
-                                  isUserReservation={isUserReservation}
-                                  onSelect={handleSeatSelect}
-                                  isAdminMode={isAdminMode}
-                                      isFafaExclusive={isFafaExclusiveSeat(seatId)}
-                                />
-                              );
+                              const isUserReservation = checkIfUserReservation(seatId);
+                              return renderSeat(seatId, isUserReservation, "regular");
                             })}
                           </div>
 
                           {/* Gap between groups */}
                           <div className="w-2 sm:w-3 md:w-4"></div>
 
-                          {/* Second group (5-7) */}
+                          {/* Second group (5-7) - has special blocked seats */}
                           <div className="flex gap-1 mr-2">
                             {Array.from({ length: 3 }).map((_, idx) => {
                               const seatNumber = idx + 5;
                               const seatId = `${rowData.row}${seatNumber}`;
-
-                              const isUserReservation = userReservations.some(
-                                (reservation) => {
-                                  if (reservation.showId !== parseInt(showId))
-                                    return false;
-
-                                  try {
-                                    const seats =
-                                      typeof reservation.seatNumbers ===
-                                      "string"
-                                        ? reservation.seatNumbers.startsWith(
-                                            "[",
-                                          )
-                                          ? JSON.parse(reservation.seatNumbers)
-                                          : reservation.seatNumbers
-                                              .split(",")
-                                              .map((s) => s.trim())
-                                        : reservation.seatNumbers || [];
-
-                                    return (
-                                      Array.isArray(seats) &&
-                                      seats.includes(seatId)
-                                    );
-                                  } catch (e) {
-                                    console.error(
-                                      "Error parsing user reservation seats:",
-                                      e,
-                                    );
-                                    return false;
-                                  }
-                                },
-                              );
-
+                              const isUserReservation = checkIfUserReservation(seatId);
                               return (
                                 <Seat
                                   key={seatId}
@@ -1175,17 +785,13 @@ export function SeatGrid({
                                   isReserved={reservedSeats.has(seatId)}
                                   isBlocked={
                                     blockedSeats.has(seatId) ||
-                                    isSpecialBlockedSeat(
-                                      section.section,
-                                      rowData.row,
-                                      seatNumber,
-                                    )
+                                    isSpecialBlockedSeat(section.section, rowData.row, seatNumber)
                                   }
                                   isSelected={selectedSeats.includes(seatId)}
                                   isUserReservation={isUserReservation}
                                   onSelect={handleSeatSelect}
                                   isAdminMode={isAdminMode}
-                                      isFafaExclusive={isFafaExclusiveSeat(seatId)}
+                                  isFafaExclusive={isFafaExclusiveSeat(seatId)}
                                 />
                               );
                             })}
@@ -1194,44 +800,12 @@ export function SeatGrid({
                           {/* Gap between groups */}
                           <div className="w-2 sm:w-3 md:w-4"></div>
 
-                          {/* Third group (9-11) */}
+                          {/* Third group (9-11) - has special blocked seats */}
                           <div className="flex gap-1">
                             {Array.from({ length: 3 }).map((_, idx) => {
                               const seatNumber = idx + 9;
                               const seatId = `${rowData.row}${seatNumber}`;
-
-                              const isUserReservation = userReservations.some(
-                                (reservation) => {
-                                  if (reservation.showId !== parseInt(showId))
-                                    return false;
-
-                                  try {
-                                    const seats =
-                                      typeof reservation.seatNumbers ===
-                                      "string"
-                                        ? reservation.seatNumbers.startsWith(
-                                            "[",
-                                          )
-                                          ? JSON.parse(reservation.seatNumbers)
-                                          : reservation.seatNumbers
-                                              .split(",")
-                                              .map((s) => s.trim())
-                                        : reservation.seatNumbers || [];
-
-                                    return (
-                                      Array.isArray(seats) &&
-                                      seats.includes(seatId)
-                                    );
-                                  } catch (e) {
-                                    console.error(
-                                      "Error parsing user reservation seats:",
-                                      e,
-                                    );
-                                    return false;
-                                  }
-                                },
-                              );
-
+                              const isUserReservation = checkIfUserReservation(seatId);
                               return (
                                 <Seat
                                   key={seatId}
@@ -1239,17 +813,13 @@ export function SeatGrid({
                                   isReserved={reservedSeats.has(seatId)}
                                   isBlocked={
                                     blockedSeats.has(seatId) ||
-                                    isSpecialBlockedSeat(
-                                      section.section,
-                                      rowData.row,
-                                      seatNumber,
-                                    )
+                                    isSpecialBlockedSeat(section.section, rowData.row, seatNumber)
                                   }
                                   isSelected={selectedSeats.includes(seatId)}
                                   isUserReservation={isUserReservation}
                                   onSelect={handleSeatSelect}
                                   isAdminMode={isAdminMode}
-                                      isFafaExclusive={isFafaExclusiveSeat(seatId)}
+                                  isFafaExclusive={isFafaExclusiveSeat(seatId)}
                                 />
                               );
                             })}
@@ -1269,8 +839,7 @@ export function SeatGrid({
                       <div className="w-[62px]"></div>
                     )}
                   </div>
-                  );
-                })}
+                  ))}
 
                 {/* Exits between Front and Back sections */}
                 {section.section === "Front" && (
