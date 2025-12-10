@@ -54,7 +54,7 @@ This document provides comprehensive instructions for deploying the BaazCine Sea
    npm run dev
    ```
 
-6. Access the application at `http://localhost:5000`
+6. Access the application at `http://localhost:8000`
 
 ## Management Script
 
@@ -97,7 +97,7 @@ npm run dev
 
 This runs the application with:
 - Hot reloading for development
-- Application accessible at `http://localhost:5000`
+- Application accessible at `http://localhost:8000`
 - SQLite database with file persistence
 
 ### Production Deployment
@@ -220,7 +220,7 @@ server {
     server_name your-domain.com www.your-domain.com;
 
     location / {
-        proxy_pass http://localhost:5000;
+        proxy_pass http://localhost:8000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -302,7 +302,7 @@ pm2 save
 
 2. Check for port conflicts:
    ```bash
-   sudo netstat -tulpn | grep 5000
+   sudo netstat -tulpn | grep 8000
    ```
 
 3. Verify Node.js version:

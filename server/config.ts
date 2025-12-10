@@ -22,7 +22,7 @@ export function getEnv(name: string, defaultValue?: string, required = false): s
  */
 export const config = {
   // Server configuration
-  port: parseInt(getEnv('PORT', '5000')),
+  port: parseInt(getEnv('PORT', '8000')),
   isDevelopment: getEnv('NODE_ENV', 'development') === 'development',
   
   // Session configuration

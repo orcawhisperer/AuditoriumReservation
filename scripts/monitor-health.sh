@@ -99,7 +99,7 @@ echo
 
 # Check application HTTP endpoint
 echo -e "${YELLOW}Checking application API endpoint...${NC}"
-HTTP_CHECK=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/api/user)
+HTTP_CHECK=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/api/user)
 if [ "$HTTP_CHECK" = "401" ] || [ "$HTTP_CHECK" = "200" ]; then
     echo -e "${GREEN}✓ Application API is responding (HTTP $HTTP_CHECK)${NC}"
 else

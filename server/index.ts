@@ -62,9 +62,9 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Use the configured port or default to 5000
+  // Use the configured port or default to 8000
   // this serves both the API and the client
-  const port = config.port || 5000;
+  const port = config.port || 8000;
   server.listen(
     {
       port,
